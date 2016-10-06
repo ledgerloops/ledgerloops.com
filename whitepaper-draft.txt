@@ -1,0 +1,16 @@
+OpenTabs: Money without Currency
+
+abstract:
+This whitepaper proposes a novel money transfer system, called OpenTabs. Its defining feature is
+that money flows in the system are decomposed into a sum of local cycles. This allows the system
+to achieve transitivity of money transfers, while avoiding transitivity of trust. Intuitively, the
+money being transferred in multiple hops through the network is anonymized after each hop, and
+individual transfer hops are achieved without reliance on a trusted third party or on a trusted
+currency. This feature sets the system apart from not only government-backed currencies and banks,
+but also from blockchain-based crypto-currencies.
+
+Motivation
+
+Efficient exchange of services requires some form of money. Most money systems are vulnerable to
+rent extraction by speculation on fluctuations in a currency's value. Ripple is not, but requires a UNL.
+
