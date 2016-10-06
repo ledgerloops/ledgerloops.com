@@ -1,16 +1,75 @@
-OpenTabs: Money without Currency
+OpenTabs: Cross-ledger Settlements without Trust
 
 abstract:
-This whitepaper proposes a novel money transfer system, called OpenTabs. Its defining feature is
-that money flows in the system are decomposed into a sum of local cycles. This allows the system
-to achieve transitivity of money transfers, while avoiding transitivity of trust. Intuitively, the
-money being transferred in multiple hops through the network is anonymized after each hop, and
-individual transfer hops are achieved without reliance on a trusted third party or on a trusted
-currency. This feature sets the system apart from not only government-backed currencies and banks,
-but also from blockchain-based crypto-currencies.
+Debt and money transfers are typically recorded in ledgers that record the state of a number of
+bank accounts or wallets. Transferring money is then only possible within the same ledger, or through
+a federation protocol that forms a connection between two or more ledgers.
+
+This whitepaper proposes a novel system for federating ledgers, called OpenTabs. Its defining feature is
+that settlements can occur without transitivity of trust, and without exposing the full content of
+the ledgers involved to the rest of the network.
+
+
+Introduction
+
+Ledgers for transferring money can typically be either private to the parties involved (like a piece of paper or a spreadsheet),
+managed by a trusted third party (like a traditional bank),
+or open and public (like the Bitcoin ledger).
+
+Each of these ledger types have their own advantages and drawbacks. A private ledger only allows settling debts
+within a closed group of participating parties.
+A traditional bank needs to be trusted, will likely extract rent
+from its customers' account balance, and typically needs to be backed by a trusted government in order to provide a reliable service.
+An open public ledger needs to be trusted based on network consensus and community politics, and requires parties to keep their
+account number secret, or deal with the side-effect of making all details about their assets and transactions public.
+
+OpenTabs is a novel protocol for cross-ledger settlements that allows private ledgers to be federated without the need for an
+additional third-party ledger or public ledger.
+
 
 Motivation
 
-Efficient exchange of services requires some form of money. Most money systems are vulnerable to
-rent extraction by speculation on fluctuations in a currency's value. Ripple is not, but requires a UNL.
+Both third-party ledgers and public ledgers have disadvantages, meaning parties may choose to keep their ledgers private to only
+the debtors and creditors involved. Using a private ledger avoids making sensitive information public, and avoids the risk involved
+in trusting a third party like a bank, or a network community like Bitcoin or a Ripple UNL. For a more complete and opionated
+motivation, see Appendix A
 
+// ... rest of white paper should describe the protocol for proposing, voting, and accepting cross-ledger settlements
+
+
+Appendix A: Full Motivation
+
+Capitalism forms a layer of power that is starting to stand above humanity, in the sense that humans are not organized enough
+to control or veto outcomes of financial processes. As giant companies will use more artificial intelligence, they will become
+more powerful, and create more powerful monopolies on the job market. Big companies will make their employees work for the interests
+of that company, which may not align with the interests of the humans affected by this activity. In particular, this may lead to two
+problems.
+
+First, an ever smaller portion of the profit a company makes will flow back to the employees, as long as the job market allows this
+and employees are not effectively organized to negotiate their working conditions.
+
+Second, an ever smaller portion of employees will work on activities that actually benefit humans, and more employees will instead
+be hired to work on things like advertising and patent wars, whose benefit to humanity is only marginal.
+
+Technology is making humanity every more efficient in producing value, but this surplus may more and more be directed to what David
+Gaeber calls Bullshit Jobs. A possible doom scenario for humanity, extrapolating from the current trend, would be a dystopia where
+all resources are owned by large companies, and humans work an ever larger portion of their time on advancing the power of the company
+they work for, and an ever smaller portion of their time on actually producing value for humanity.
+
+When the percentage of time humanity spends on useful work drops under, say, 10%, it will become very attractive for people to move
+off the grid, and work in worker cooperations instead of in commercial companies. Eventually, worker coops would be more productive
+than commercial companies, because their workers can spend 100% of their time on creating value for humanity.
+
+To organize such worker coops, and the trade between them, traditional bank services can not necessarily be trusted indefinitely.
+For instance, they may require customers to trade in government-backed currencies only, and as the gap between the very rich and
+the rest of the world becomes more extreme, a day's wage will of a worker will represent such a small spending power compared to the
+world average spending power per person, that traditional currencies become unstable, and workers in a coop would choose instead to pay
+themselves in local currencies (for instance in a "Bank of Time" system). Even if traditional banks will continue to play a central
+role in providing services to their customers, innovation in ledger technology is an exciting research field that might one day have
+a big impact in improving people's daily lives.
+
+This doom scenario, where humanity and its democratic governments lose control over currency stability, is probably very unlikely to
+happen within the next 25 years, but it could possibly happen on the longer term, especially if artificial intelligence advances reach
+the singularity (where machines become smarter than humans for the first time). Working on better finance tools for humans could possibly
+provide protection against the unwanted effects of AI-driven investment power, and help protect the freedom of humans to work for the
+benefit of humans.
