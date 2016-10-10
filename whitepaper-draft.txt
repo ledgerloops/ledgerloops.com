@@ -1,37 +1,22 @@
-OpenTabs: Cross-ledger Settlements without Trust
+OpenTabs: Trading Assets with Unknown Third Parties
 
-abstract:
-Debt and money transfers are typically recorded in ledgers that record the state of a number of
-bank accounts or wallets. Transferring money is then only possible within the same ledger, or through
-a federation protocol that forms a connection between two or more ledgers.
-
-This whitepaper proposes a novel system for federating ledgers, called OpenTabs. Its defining feature is
-that settlements can occur without transitivity of trust, and without exposing the full content of
-the ledgers involved to the rest of the network.
+Abstract:
+OpenTabs is a system for trading assets with unknown third parties. A trade agreement can involve
+any number of participing parties, connected in a cycle where each party only trusts one debtor and
+one creditor. Rather than an alternative currency, or an alternative money system, OpenTabs can be
+seen as an alternative to using money at all to settle the trade of an asset between two parties.
 
 
 Introduction
 
-Ledgers for transferring money can typically be either private to the parties involved (like a piece of paper or a spreadsheet),
-managed by a trusted third party (like a traditional bank),
-or open and public (like the Bitcoin ledger).
-
-Each of these ledger types have their own advantages and drawbacks. A private ledger only allows settling debts
-within a closed group of participating parties.
-A traditional bank needs to be trusted, will likely extract rent
-from its customers' account balance, and typically needs to be backed by a trusted government in order to provide a reliable service.
-An open public ledger needs to be trusted based on network consensus and community politics, and requires parties to keep their
-account number secret, or deal with the side-effect of making all details about their assets and transactions public.
-
-OpenTabs is a novel protocol for cross-ledger settlements that allows private ledgers to be federated without the need for an
-additional third-party ledger or public ledger.
-
-
-Motivation
-
-Both third-party ledgers and public ledgers have disadvantages, meaning parties may choose to keep their ledgers private to only
-the debtors and creditors involved. Using a private ledger avoids making sensitive information public, and avoids the risk involved
-in trusting a third party like a bank, or a network community like Bitcoin or a Ripple UNL.
+Suppose Alice owns an asset which she wants to trade to Bob, receiving something in return. If Bob
+does not own any assets that interest Alice (removing one-to-one barter as an option), there are
+several things Alice and Bob can do. They can add more persons who are willing to
+enter in a group deal to which all parties agree, and who they both trust, but such persons may not
+always exist. Or Alice can accept a money payment (commodity or
+fiat) from Bob, hoping to pass this money on in a future transaction (and running the risk of
+devaluation). OpenTabs provides a way to establish cyclic deals for trading assets without trusting
+the additional participants, and without requiring trust in a commodity, institution, or community.
 
 Cyclic Contracts
 
