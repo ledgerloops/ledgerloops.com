@@ -31,45 +31,116 @@ Motivation
 
 Both third-party ledgers and public ledgers have disadvantages, meaning parties may choose to keep their ledgers private to only
 the debtors and creditors involved. Using a private ledger avoids making sensitive information public, and avoids the risk involved
-in trusting a third party like a bank, or a network community like Bitcoin or a Ripple UNL. For a more complete and opionated
-motivation, see Appendix A
+in trusting a third party like a bank, or a network community like Bitcoin or a Ripple UNL.
 
-// ... rest of white paper should describe the protocol for proposing, voting, and accepting cross-ledger settlements
+Cyclic Contracts
+
+A contract  between three parties will usually contain ten important parts:
+* an identifier for party A
+* something party A should do
+* a signature by party A
+* same three things for B
+* same three things for C
+* a statement that all parties are happy to keep their promise, and in return for it not demand anything more than each other party keeping their ends of the deal. That's to say, an agreement that all parties involved consider the trade a fair deal.
+
+Party A hopes that parties B and C will keep their promise, and "in return", party A will keep their own promise. Party A's signature on the document serves to convince parties B and C that party A will probably keep their promise. Of course, this hope is based on the psychology and willingness to cooperate of party A,but at least the contract gives an exact definition of whether A has played by the social rules or not. This then allows other parties to either punish party A for breach of contract, or allow parties B and C to do so.
+
+In a cyclic three-party contract, each party only trusts one of the other two parties to uphold their promise.
+
+In this case, party A makes a promise to party B, but is not interested in the promise party B makes. However, party C is interested in party B's promise, and is willing to make a promise that interests party A.
+
+Party A does not have to make a global statement that they think the contract is a fair deal, just that they are happy to keep their promise to B if C keep their promise to them. The contract is only binding if all parties signed it, creating a cycle of parties promising to keep their promise if the previous party does, and even if the previous party breaks the contract, that will be handled locally and does not give the losing party the right to break the contract themselves.
+
+Example of a cyclic contract:
+
+DOCUMENT A1: description of Alice's offer to Bob (not binding).
+Hi Bob,
+Would you be interested in an apple? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interest in seeing what Charlie has to offer, do you know him?
+Signed,
+Alice.
+
+DOCUMENT B1: description of Bob's offer to Charlie (conditionally binding).
+Hi Charlie,
+Would you be interested in an orange? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interested in the item Alice described to me in document A1. Do you know him?
+Signed,
+Bob.
+
+DOCUMENT C1: description of Charlie's offer to Alice (conditionally binding).
+Hi Alice,
+Would you be interested in a banana? I would give it to you if I receive something else that is of more value to me.
+Maybe there's something you can offer me in return, or otherwise I would also be interest in the item Bob described in document B1. He promised me to execute on B1 on the condition that you execute on A1. So if you can prove to me that you promised Bob that you'll execute on A1, I'll give you the banana because I'm satisfied that I can bring Bob to execute on B1 afterwards by confronting him with that proof.
+Signed,
+Charlie.
+
+DOCUMENT A2:
+Hi again Bob,
+I'll give you the apple if you can prove to me that Charlie will execute on C1.
+Signed,
+Alice.
+
+DOCUMENT B2:
+Hi again Charlie,
+I'll give you the orange if you bindingly promise to execute on C1.
+Signed,
+Bob.
+
+DOCUMENT C2:
+Hi Alice (CC: Bob),
+I hereby bindingly promise to execute on C2.
+In combination with B2, this binds Bob (CC'ed) to execute on B1.
+Signed,
+Charlie.
+
+DOCUMENT B3:
+Hi Charlie (CC: Alice),
+Thanks for your document C2, in which you bindingly promise to execute on C1.
+I have no idea what you offered Alice there, but you're right in saying that your document C2, in combination with my B2, binds me to execute on my document B1.
+And that, in turn, in combination with document A2, binds Alice (CC'd) to execute on 1A.
+Signed,
+Bob.
 
 
-Appendix A: Full Motivation
+Protocol:
+It starts with a search phase where document 1 is composed and sent round.
+In the second phase
+# cross-ledger settlement protocol
 
-Capitalism forms a layer of power that is starting to stand above humanity, in the sense that humans are not organized enough
-to control or veto outcomes of financial processes. As giant companies will use more artificial intelligence, they will become
-more powerful, and create more powerful monopolies on the job market. Big companies will make their employees work for the interests
-of that company, which may not align with the interests of the humans affected by this activity. In particular, this may lead to two
-problems.
+step 1: search phase
+  * if you don't have both at least one debtor and at least one creditor, do nothing.
+  * pick  a one-time identity, a currency and maximum amount, and send out 'want to sell' to one of your creditors (it would lower your debt), and 'want to buy' to your debtors.
+  * if you receive 'want to sell' or 'want to buy', remember who it came from and link them to the last identity in the list, then forward it, adding your own identity to the list, possibly lowering the maximum
+  * if you receive one from yourself, link the contact you received it from and start announcement phase for that proposal
+  * if you receive a 'want to sell', compare to your 'want to buy's to see if they have any signers in common, and vice versa. if they do, start proposal combination phase
+step 2: proposal combination phase
+  * merge as follows:
+   ab X dE F
+           F Gh X ij
+   =================
+      X dE F Gh X
+  * link identities for E and G.
 
-First, an ever smaller portion of the profit a company makes will flow back to the employees, as long as the job market allows this
-and employees are not effectively organized to negotiate their working conditions.
+step 3: announcement phase (maybe call this signing phase)
+  * you have a list of identities, only your own and direct neighbors are known to you (because you linked them). You already told you're committing to selliing/buying a maaximum aaamoooount of debt if a cycle is found, and it has been found. your neighbors have committed to the same, but so far you're the only one who knows about the cycle. Sign and announce it in both directions and wait for it to come back from both directions.
+  * if you receib\ve a settlement announcement, add your signature and forward it.
+  * if you received it back in both directions, you're the first one to know that everybody knows. That is also important information, because you cannot hold someone to executing a sale if they thought it may have failed during  announcement phase, so send the document with all the signatures to both your neighbors.
+ * check that the setllement (stil) fits in the ledger and don't sign more settlements than you can afford to execute (better to do multiple consecutive settlements to get rid of a large debt/credit on a ledger..
+step 4: execution phase
+  * update ledger on each side, linking to the signed document. inform neighbors of ledger update
+  * wait for neighbors to confirm ledger update. if they don't, start a discussion, because they signed the settlemnet so should also agree to the new ledger state.
+  * if you forwarded a settlemnent announcement before and now receive the signed announcement, send it to your forward neighbor.
+  * consider if you would want to repeat the same setllement again (basically, reuse search results)
 
-Second, an ever smaller portion of employees will work on activities that actually benefit humans, and more employees will instead
-be hired to work on things like advertising and patent wars, whose benefit to humanity is only marginal.
+security considerations:
 
-Technology is making humanity every more efficient in producing value, but this surplus may more and more be directed to what David
-Gaeber calls Bullshit Jobs. A possible doom scenario for humanity, extrapolating from the current trend, would be a dystopia where
-all resources are owned by large companies, and humans work an ever larger portion of their time on advancing the power of the company
-they work for, and an ever smaller portion of their time on actually producing value for humanity.
+* a player may annoy their neighbors by not signinng in announcement phase (breaking the whole deal) or by refusing to update the ledger, but it's probably easier for them to annoy their neighbors in other ways without involving cross-ledger.
+* signatures could be forged if identities are cryptographically weak or private key is compromised, causing havoc, misunderstanding and distrust
+* a player could claim their key was forged and their other neighbor is unknown to them, or even that they'e not even on opentabs in the first place, and ask to back out, telling their debtor 'you still owe me money'. and the debtor will say 'no, but now I already payed X'
+* if an attacker knows about a ledger, they could pretend to be one of the people on their, so it's important that communication between ledger-participants is safe to begin with.
 
-When the percentage of time humanity spends on useful work drops under, say, 10%, it will become very attractive for people to move
-off the grid, and work in worker cooperations instead of in commercial companies. Eventually, worker coops would be more productive
-than commercial companies, because their workers can spend 100% of their time on creating value for humanity.
+adding groups:
+* if you have credit on a group ledger, pick one of its debtors as your neighbor
+* and vice versa
 
-To organize such worker coops, and the trade between them, traditional bank services can not necessarily be trusted indefinitely.
-For instance, they may require customers to trade in government-backed currencies only, and as the gap between the very rich and
-the rest of the world becomes more extreme, a day's wage will of a worker will represent such a small spending power compared to the
-world average spending power per person, that traditional currencies become unstable, and workers in a coop would choose instead to pay
-themselves in local currencies (for instance in a "Bank of Time" system). Even if traditional banks will continue to play a central
-role in providing services to their customers, innovation in ledger technology is an exciting research field that might one day have
-a big impact in improving people's daily lives.
-
-This doom scenario, where humanity and its democratic governments lose control over currency stability, is probably very unlikely to
-happen within the next 25 years, but it could possibly happen on the longer term, especially if artificial intelligence advances reach
-the singularity (where machines become smarter than humans for the first time). Working on better finance tools for humans could possibly
-provide protection against the unwanted effects of AI-driven investment power, and help protect the freedom of humans to work for the
-benefit of humans.
+adding fees and currencies:
+* forward a "want to sell/buy" by stating not only your maximum in one currency, but separate receive- and send-currencies, and an exchange rate
+* when you detect a loop or forward an announcement,  don't sign unleas you agree to the fees and conversion rates
