@@ -51,7 +51,39 @@ In this case, party A makes a promise to party B, but is not interested in the p
 
 Party A does not have to make a global statement that they think the contract is a fair deal, just that they are happy to keep their promise to B if C keep their promise to them. The contract is only binding if all parties signed it, creating a cycle of parties promising to keep their promise if the previous party does, and even if the previous party breaks the contract, that will be handled locally and does not give the losing party the right to break the contract themselves.
 
-Example of a cyclic contract:
+Simple example with two parties and time limit:
+DOCUMENT A1: (Monday)
+Hi Bob,
+Would you be interested in an apple? I would give it to you if I receive something else that (according to my sole judgement) is of more value to me. Maybe there's something you can offer me in return?
+CHeers,
+Alice.
+
+DOCUMENT B1: (Tuesday)
+Hi Alice,
+Yes, would you be interested in an orange? I hereby bindingly promise to give it to you on the condition that you bindingly and unconditionally promise me to give me that apple.
+I have reserved the orange for you until the end of the week, in the hope we can reach an agreement in time.
+Signed,
+Bob.
+
+DOCUMENT A2: (Wednesday)
+Hi again Bob,
+Sure, I love oranges! I successfully checked your signature on document B1. So I hereby bindingly promise you to give you that apple. I'll send it now. Let me know if it doesn't arrive!
+Signed,
+Alice.
+
+DOCUMENT B2: (Thursday)
+Hi again Alice,
+Thanks for your promise in document A2. I hereby confirm that your signature on document A2 is correct, and it reached me yesterday, so in combination with my document B1, I am now bound to sending you the orange. I'm sending it now, let me know if the orange doesn't reach you. Looking forward to receiving your apple! :)
+Signed,
+Bob.
+
+
+Note that both parties can still pretend that they did send the piece of fruit but it was lost in the mail, or that the fruit they hoped to receive never arrived. Bob can even fail to send document B2 and claim he never received document A2 from Alice (or received it too late), and therefore the reservation on the orange expired. So Alice and Bob still need to trust each other enough risk being lied to by the other party. Also, if either the communication channel or the delivery mechanism is unreliable, there is a chance that Bob really does receive document A2 too late (he would have to keep the orange reserved until communication with Alice is reestablished), and there is a chance that delivery fails even though the other party did everything in their power to uphold their part of the deal.
+
+Since there are only two parties in this example, there is no need to use pseudonyms.
+
+
+Longer example of a cyclic contract, with three participants (time limit and pseudonyms removed from this example for simplicity):
 
 DOCUMENT A1: description of Alice's offer to Bob (not binding).
 Hi Bob,
@@ -107,9 +139,73 @@ Charlie, I'm looking forward to receiving your item described in C1 and C2. I ch
 Signed,
 Alice.
 
-It took 8 messages, but now everybody knows they will receive the item they're interested in, and everybody knows they're now contractually bound to sending the item they offered.
+It took 8 messages, but now everybody knows they will receive the item they're interested in, and everybody knows they're now contractually bound to sending the item they offered. Since no pseudonyms were used, this example allows Bob to test whether Charlie knows Alice, and Charlie has to leak this information to Bob in order for this flow to work.
 
-This is the happy path, it could also be that Charlie's offer of a banana is too low for Alice, or that Alice doesn't know Charlie, or doesn't trust him to execute on his promise. The case with 4 or more participants (say Alice, Bob, Charlie and David) is similar - then, Alice knows what she has offered to Bob, and what David offered to her, but she has no idea what Bob offered to Charlie, nor what Charlie offered to David, nor even who this Charlie person is anyway (!). She only needs to know that Charlie is some person who offers something to David in return to something he receives from Bob, and that both Bob and Charlie agree on an unforgeable identifier for Charlie, so that they can both check his signature (at no point does Alice have to check a signature from Charlie, only his direct neighbors Bob and David do).
+This is the happy path, it could also be that Charlie's offer of a banana is too low for Alice, or that Alice doesn't know Charlie, or doesn't trust him to execute on his promise.
+
+The case with 4 or more participants (say Alice, Bob, Charlie and David) is similar - then, Alice knows what she has offered to Bob, and what David offered to her, but she has no idea what Bob offered to Charlie, nor what Charlie offered to David, nor even who this Charlie person is anyway (!). She only needs to know that Charlie is some person who offers something to David in return to something he receives from Bob, and that both Bob and Charlie agree on an unforgeable identifier for Charlie, so that they can both check his signature (at no point does Alice have to check a signature from Charlie, only his direct neighbors Bob and David do).
+
+Using pseudonyms and slightly changing the flow to obscure the length of the cycle, even less information needs to be leaked. Here is an example which has many participants, but only the communication on between two neighbors in the cycle is visible. Neither of them know how many participants there really are.
+In practice you wouldn't want to give out put options without an expiry date, since it requires you to reserve your assets indefinitely while waiting for the network to find a cycle.
+But for simplicity, we left the expiry date out in this example. Note that Alice and Bob don't hide their identity from each other because they need to trust each other, and not some anonymous third party, to deliver on their promises.
+
+
+DOCUMENT A1:
+Hi Bob,
+Would you be interested in an apple? I would give it to you if I receive something else that (according to my sole judgement) is of more value to me. Maybe there's something you, or someone else, can offer me in return?
+For the purpose of this offer, you can refer to me as pseudonym Mr. X, with the following public key: [...]. You can refer to the apple in question as "Object 1".
+Cheers,
+Alice.
+
+DOCUMENT B1:
+Hi Charlie,
+Would you be interested in an orange? I will give it to you if you can prove that someone will give Mr. X (public key: ...) something he calls "Object 1".
+You can refer to me as Mr. Y (public key: ...), and to the orange as "Object 2".
+Signed,
+Bob.
+
+DOCUMENT C1:
+Hi Alice,
+If you know Mr. X, you can give him "Object 1", and if you do, I promise to give you a banana.
+You can refer to me as Mr. Z1 (public key: ...) and to the banana as "Object 3".
+Signed,
+Charlie.
+
+DOCUMENT C2:
+Hi Bob,
+That orange sounds great, I will try to get someone to satisfy Mr. X's needs.
+You can refer to me as Mr. Z2 (public key: ...).
+Signed,
+Charlie.
+
+DOCUMENT B2:
+Hi Alice,
+Thanks for sending me your offer and your temporary identity of Mr. X.
+I also wanted to give you this pseudonymous promise from a certain Mr. Y [*) Bob himself, of course, but he's not reveiling this to Alice as this could leak his friendship with Charlie to her], in case it helps you to get your requirements satisfied:
+> Dear Mr. Z1,
+> If Mr. X receives "Object 1", then I will give you "Object 2".
+> Signed,
+> Mr. Y.
+Signed,
+Bob.
+
+DOCUMENT A2:
+Hi Charlie,
+Yes, I do know Mr. X indirectly [*) this is a lie, since she herself is of course Mr. X.], and apparently a certain Mr. Y does too, who knows a certain Mr. Z1; forwarding his message:
+> Dear Mr. Z1,
+> If Mr. X receives "Object 1", then I will give you "Object 2".
+> Signed,
+> Mr. Y.
+I hereby also promise you to make sure Mr. X receives "Object 1" if you promise to send me that banana.
+Signed,
+Alice.
+
+DOCUMENT C3:
+Hi Alice,
+I hereby promise to send you the banana, so now you have to give Mr. X "Object 1", which obliges Mr. Y to give "Object 2" to Mr. Z1, and then I'll also discovered there are ways to force Mr. Z1 to transfer something to Mr. Z2 (which, as you know, is me).
+Signed,
+Charlie.
+
 
 Protocol:
 Provided you have a number of contacts, and which each of them you have a way to check their signatures, and you have a secure private communication channel for sending documents.
