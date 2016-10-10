@@ -55,92 +55,70 @@ Example of a cyclic contract:
 
 DOCUMENT A1: description of Alice's offer to Bob (not binding).
 Hi Bob,
-Would you be interested in an apple? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interest in seeing what Charlie has to offer, do you know him?
+Would you be interested in an apple? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interested in seeing what Charlie has to offer, do you know him?
 Signed,
 Alice.
 
 DOCUMENT B1: description of Bob's offer to Charlie (conditionally binding).
 Hi Charlie,
-Would you be interested in an orange? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interested in the item Alice described to me in document A1. Do you know him?
+Would you be interested in an orange? I would give it to you if I receive something else that is of more value to me. Maybe there's something you can offer me in return, or otherwise I would also be interested in the item Alice described to me in document A1. Do you know her?
 Signed,
 Bob.
 
 DOCUMENT C1: description of Charlie's offer to Alice (conditionally binding).
 Hi Alice,
 Would you be interested in a banana? I would give it to you if I receive something else that is of more value to me.
-Maybe there's something you can offer me in return, or otherwise I would also be interest in the item Bob described in document B1. He promised me to execute on B1 on the condition that you execute on A1. So if you can prove to me that you promised Bob that you'll execute on A1, I'll give you the banana because I'm satisfied that I can bring Bob to execute on B1 afterwards by confronting him with that proof.
+Maybe there's something you can offer me in return, or otherwise I would also be interested in the item Bob described in document B1. It seems you know him, because he promised me to execute on B1 on the condition that you execute on A1. Did you send him an offer by that identifier?
 Signed,
 Charlie.
 
 DOCUMENT A2:
 Hi again Bob,
-I'll give you the apple if you can prove to me that Charlie will execute on C1.
+I heard you talked to Charlie! Great. I'll give you the apple if you can prove to me that Charlie will execute on C1.
 Signed,
 Alice.
 
 DOCUMENT B2:
 Hi again Charlie,
-I'll give you the orange if you bindingly promise to execute on C1.
+I heard you sent Alice a conditionally binding offer identified as C1; I have no idea what's in there, but Alice told me she's interested
+in it, so I'll give you the orange if you bindingly promise to execute on C1.
 Signed,
 Bob.
 
 DOCUMENT C2:
 Hi Alice (CC: Bob),
-I hereby bindingly promise to execute on C2.
-In combination with B2, this binds Bob (CC'ed) to execute on B1.
+This is document C2. I hereby bindingly and unconditionally promise to execute on C1.
+I'm not doing this as a charity to you, or because I want something back from you in return, but just because I'm interested in the item which Bob (CC'ed) described in B1, and in combination with B2, this now binds Bob to execute on B1. I checked Bob's signature on both documents, so I trust that they were signed by him. I've known Bob for a while now, and I trust him on his word! :)
 Signed,
 Charlie.
 
 DOCUMENT B3:
 Hi Charlie (CC: Alice),
 Thanks for your document C2, in which you bindingly promise to execute on C1.
-I have no idea what you offered Alice there, but you're right in saying that your document C2, in combination with my B2, binds me to execute on my document B1.
-And that, in turn, in combination with document A2, binds Alice (CC'd) to execute on 1A.
+I have no idea what you offered Alice there, but you're right in saying that your document C2, in combination with my B2, binds me to execute on my document B1. I agree that I'm now bound to this, and it makes me happy because that, in turn, in combination with document A2, binds Alice (CC'd) to execute on A1! I checked the signatures on documents A1 and A2, and they seem to come from Alice, whom I trust. :)
 Signed,
 Bob.
 
+DOCUMENT A3:
+Hi Bob (CC: Charlie),
+Thanks to both of you, this is a great deal which we all benefit from.
+Bob, I checked Charlie's signatures on C1 and C2, and indeed, in combination with A2, this binds me to giving you the item described in A1.
+Charlie, I'm looking forward to receiving your item described in C1 and C2. I checked your signatures, and trust you to give me the item soon.
+Signed,
+Alice.
+
+It took 8 messages, but now everybody knows they will receive the item they're interested in, and everybody knows they're now contractually bound to sending the item they offered.
+
+This is the happy path, it could also be that Charlie's offer of a banana is too low for Alice, or that Alice doesn't know Charlie, or doesn't trust him to execute on his promise. The case with 4 or more participants (say Alice, Bob, Charlie and David) is similar - then, Alice knows what she has offered to Bob, and what David offered to her, but she has no idea what Bob offered to Charlie, nor what Charlie offered to David, nor even who this Charlie person is anyway (!). She only needs to know that Charlie is some person who offers something to David in return to something he receives from Bob, and that both Bob and Charlie agree on an unforgeable identifier for Charlie, so that they can both check his signature (at no point does Alice have to check a signature from Charlie, only his direct neighbors Bob and David do).
 
 Protocol:
-It starts with a search phase where document 1 is composed and sent round.
-In the second phase
-# cross-ledger settlement protocol
+Provided you have a number of contacts, and which each of them you have a way to check their signatures, and you have a secure private communication channel for sending documents.
 
-step 1: search phase
-  * if you don't have both at least one debtor and at least one creditor, do nothing.
-  * pick  a one-time identity, a currency and maximum amount, and send out 'want to sell' to one of your creditors (it would lower your debt), and 'want to buy' to your debtors.
-  * if you receive 'want to sell' or 'want to buy', remember who it came from and link them to the last identity in the list, then forward it, adding your own identity to the list, possibly lowering the maximum
-  * if you receive one from yourself, link the contact you received it from and start announcement phase for that proposal
-  * if you receive a 'want to sell', compare to your 'want to buy's to see if they have any signers in common, and vice versa. if they do, start proposal combination phase
-step 2: proposal combination phase
-  * merge as follows:
-   ab X dE F
-           F Gh X ij
-   =================
-      X dE F Gh X
-  * link identities for E and G.
+If you have something to offer, offer it to one of your contacts. Apart from the message text, include a message identifier (these strings would be long hashes instead of short strings like 'A1'), and a one-time identity (again, a long hash and not your real-life name 'Alice') which the contact can use to refer to you and to the documents you sent.
+Now send that same one-time identity to your other contacts, so they know you're now also known as that identifier.
 
-step 3: announcement phase (maybe call this signing phase)
-  * you have a list of identities, only your own and direct neighbors are known to you (because you linked them). You already told you're committing to selliing/buying a maaximum aaamoooount of debt if a cycle is found, and it has been found. your neighbors have committed to the same, but so far you're the only one who knows about the cycle. Sign and announce it in both directions and wait for it to come back from both directions.
-  * if you receib\ve a settlement announcement, add your signature and forward it.
-  * if you received it back in both directions, you're the first one to know that everybody knows. That is also important information, because you cannot hold someone to executing a sale if they thought it may have failed during  announcement phase, so send the document with all the signatures to both your neighbors.
- * check that the setllement (stil) fits in the ledger and don't sign more settlements than you can afford to execute (better to do multiple consecutive settlements to get rid of a large debt/credit on a ledger..
-step 4: execution phase
-  * update ledger on each side, linking to the signed document. inform neighbors of ledger update
-  * wait for neighbors to confirm ledger update. if they don't, start a discussion, because they signed the settlemnet so should also agree to the new ledger state.
-  * if you forwarded a settlemnent announcement before and now receive the signed announcement, send it to your forward neighbor.
-  * consider if you would want to repeat the same setllement again (basically, reuse search results)
+If you receive an offer, proceed as per the example above to try to help make it into a binding cyclic contract.
 
-security considerations:
+In the example above, the last documents are sent out with CC's, but that reveals to party A that party B and party C know each other and do business together. When using one-time identities, there's no need to reveal that. Of course, party A will known that party B and C know each other at least indirectly, but when talking to Bob, Charlie can pretend that he's not satisfying Alice's requirements himself, but that there's a David or even an Edward etc. in between them. Let's look at a more sophisticated example:
 
-* a player may annoy their neighbors by not signinng in announcement phase (breaking the whole deal) or by refusing to update the ledger, but it's probably easier for them to annoy their neighbors in other ways without involving cross-ledger.
-* signatures could be forged if identities are cryptographically weak or private key is compromised, causing havoc, misunderstanding and distrust
-* a player could claim their key was forged and their other neighbor is unknown to them, or even that they'e not even on opentabs in the first place, and ask to back out, telling their debtor 'you still owe me money'. and the debtor will say 'no, but now I already payed X'
-* if an attacker knows about a ledger, they could pretend to be one of the people on their, so it's important that communication between ledger-participants is safe to begin with.
-
-adding groups:
-* if you have credit on a group ledger, pick one of its debtors as your neighbor
-* and vice versa
-
-adding fees and currencies:
-* forward a "want to sell/buy" by stating not only your maximum in one currency, but separate receive- and send-currencies, and an exchange rate
-* when you detect a loop or forward an announcement,  don't sign unleas you agree to the fees and conversion rates
+...
