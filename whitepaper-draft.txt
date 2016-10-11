@@ -18,6 +18,66 @@ fiat) from Bob, hoping to pass this money on in a future transaction (and runnin
 devaluation). OpenTabs provides a way to establish cyclic deals for trading assets without trusting
 the additional participants, and without requiring trust in a commodity, institution, or community.
 
+Machine-readable approach:
+var tasks = {
+  <hash>: {
+    type: MONEY_TRANSFER,
+    currency: BITCOIN,
+    recipient: <wallet>,
+    before: <date>
+  }
+};
+
+var events: {
+  eventHash: {
+    provider: <pubkey>,
+    task: <hash>,
+  },
+};
+
+var conditionalPromises = {
+  <payloadHash>: {
+    payload: {
+      ifClause: <eventHash>,
+      thenClause: <eventHash>,
+    },
+    conditionalPromiseHash: <payloadHash>,
+    signer: <pubkey>,
+    signature: <sig>
+  },
+  // ...
+};
+
+"If ifClause.provider promises to perform ifClause.task then I (signer) promise (or vouch) that thenClause.provider will perform thenClause.task."
+
+Chain backward:
+* For an inference rule, find the `ifClause` fields
+* If an inference rule is found with a matching `thenClause` (same <eventHash> as the other rule's `ifClause`), and correct `signature` field, you can chain the two together
+
+Chain forward:
+* For an inference rule, decide if you're interested in the `thenClause` event happening.
+* If so, take its `thenClause` as the `ifClause` of a new conditionalPromise. Add your own `thenClause` offer, calculate the new `payloadHash`, add yourself as the `signer`, sign the `payloadHash`, and add that as the `signature`.
+
+
+
+If you find a cycle of which you are the signer of at least one of the conditionalPromises, make that promise unconditional:
+
+var unconditionalPromises = {
+  <payloadHash>: {
+    payload: {
+      ifClause: null,
+      thenClause: <eventHash>,
+    },
+    conditionalPromiseHash: <payloadHash>,
+    promiseHash: <payloadHash>,
+    signer: <pubkey>,
+    signature: <sig>
+  },
+  // ...
+};
+
+This will fulfill the ifClause of the next promise in the chain, and therefore the next, etc., until the ifClause of your own promise is also inferred. Note that ifClause is not "Once that is done", it's "Once that is promised", and so you can immediately force your provider to fulfill your if-clause by showing them the cycle.
+
 Cyclic Contracts
 
 A contract  between three parties will usually contain ten important parts:
