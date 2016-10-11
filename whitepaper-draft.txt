@@ -1,22 +1,200 @@
-OpenTabs: Trading Assets with Unknown Third Parties
+OpenTabs: Second-order promise loops
 
-Abstract:
-OpenTabs is a system for trading assets with unknown third parties. A trade agreement can involve
-any number of participing parties, connected in a cycle where each party only trusts one debtor and
-one creditor. Rather than an alternative currency, or an alternative money system, OpenTabs can be
-seen as an alternative to using money at all to settle the trade of an asset between two parties.
+Introduction to promise loops
+=============================
+If everybody would only look after their own needs, the world would be a lot less efficient. It's often
+useful if one person performs a task that benefits a different person. For instance, you can cook for me,
+or I can fix your bicycle. A society in which everybody cooperates altruistically is hard to keep together,
+because if some people only consume and don't contribute, they can easily destablize such a cooperating
+society. To avoid that, apart from exchanging neutral information about what activities are needed and who
+plans to do what, we can exchange promises.
+
+A promise is a statement that has a more complex social function than simply the exchange of information.
+For instance, if you say to you "You will cook for me", that sounds very different from you yourself saying
+"I will cook for you". The first may be acceptable as a command from a boss to a worker, or from a parent to
+a child. The second is not a command, because you yourself make a statement about what you will do. This
+statement can turn out to be true or false, but since we both automatically interpret it as a promise,
+your reputation will be damaged if you don't attempt to make the statement true, that is, I will trust you
+to keep your promise, or at least to try to do so.
+
+When interpreting your promise, I can take into account several factors:
+
+* your ethics (that is, you are not a mean person who tries to achieve personal gain by making empty promises),
+* your intelligence and mental sanity (that is, you are not demented, delusional, or quick to forget what you
+promised),
+* the difficulty of the task you promise to perform (whether you promise to do the impossible),
+* related to that, your skill and ability to successfully complete the task (that is, you know how to cook,
+have access to the necessary ingredients and tools, etc.),
+* your reputation risk (that is, even if your ethics are questionable, or unknown to me, I can trust that you
+will keep your promise based on social connections we share, and who would like you less if they found out you
+made an empty promise to me),
+* your punishment risk (you could be arrested and punished by some government authority or mafia boss if they
+notice you making empty promises to people they protect),
+* your retaliation risk (I could personally have more or less opportunity to punish you myself),
+
+and probably maybe some other factors. In order to mitigate some of these risks, you and I can make
+promises that are not absolute, but only applicable if some conditions are true. For instance, you could promise
+"I will cook for you, if you fix my bicycle". If I then also promise "I will fix your bicycle if you will cook for me",
+then we have the opportunity to barter. Once we both made our conditional promise, we can trigger both of them into
+action by agreeing to both go ahead and perform the task we mentioned. Ideally, to minimize the risk even more for both
+of us, we could do our tasks at the same time, so that I can see you are at least starting to cook, and you can see I'm
+starting to work on your bicycle. If after a short time one of us would stop investing effort in our task, then the other
+person would notice, ask what the reason is, and renegotiate the barter. If we both invest into our cooperation bit-by-bit,
+instead of making a big investment upfront, our exposure to the risk of the other person not keeping their promise is also
+smaller.
+
+If barter is not possible (for instance, if your bicycle is not currently broken), we can use debt to still achieve a deal
+that is fair (you cook for me today because you know it will make me remember my debt when the time comes that you ask me
+to fix your bicycle). If debt-based cooperation is not possible, (for instance, we're only meeting briefly and will likely return
+to being strangers soon), we can use money. If you are a restaurant owner, and your bicycle is not currently broken, I might
+promise to pay you in commodity money (like gold), or fiat money (like bank notes). We can also use virtual money, which is
+neither commodity that has intrinsic value, nor fiat backed by a government, but instead is backed by a community of people
+who happen to use this money as currency (like bitcoin or bank-of-time).
+
+Another option, if your bicycle is not broken, but you do need a haircut, and we can find a hairdresser with a broken bicycle,
+would be group barter: we agree that you cook for me, I fix the hairdresser's bicycle, the hairdresser
+cuts your hair, and all three of us gain something that is of more value to us than the effort we invest in the task we
+perform for the next person in the loop. In a graph:
 
 
-Introduction
+    your promise      > my promise                   > hairdresser's promise
+          |          /      |                       /          |
+          v         /       v                      /           v
+    you cook for me     I fix hairdresser's bicycle     you get a haircut
 
-Suppose Alice owns an asset which she wants to trade to Bob, receiving something in return. If Bob
-does not own any assets that interest Alice (removing one-to-one barter as an option), there are
-several things Alice and Bob can do. They can add more persons who are willing to
-enter in a group deal to which all parties agree, and who they both trust, but such persons may not
-always exist. Or Alice can accept a money payment (commodity or
-fiat) from Bob, hoping to pass this money on in a future transaction (and running the risk of
-devaluation). OpenTabs provides a way to establish cyclic deals for trading assets without trusting
-the additional participants, and without requiring trust in a commodity, institution, or community.
+In this graph, your promise creates a debt, my promise is conditional on you keeping your promise, and forwards the debt
+to the hairdresser. The hairdresser then cuts your hair to eliminate the debt.
+
+But in practice, we will probably go through three phases of discussion before we reach this group barter deal. First,
+we search for people to barter with (let's call this the search phase). Once you, me, and the hairdresser found each
+other, we each make our conditional promise (let's call this the negotiation phase):
+* You promise to cook for me if you get a haircut from the hairdresser
+* I promise to fix the hairdresser's bicycle if you cook for me
+* The hairdresser promises to cut your hair if I fix their bicycle
+
+The three conditional promises form a three-step loop in the way they refer to each other. Let's call this a
+"first-order promise loop" for reasons that will become clear later.
+
+At this point, we can all see that there is an opportunity for cooperation, and we might negotiate exchange rates to make
+the deal as fair as possible for everybody involved, adjusting maybe the amount of food you promise to cook, stating more
+precisely which defects of the bicycle I promise fix, and which type of haircut you will get. Once we all agree that the
+deal is fair, we can move on to the execution phase.
+
+Ideally, we all start at the same time, so that no person needs to take more risk than the others, but this may not always be
+practical (especially the combination of cooking food and getting a haircut at the same time!). This means one person (let's
+call this person the "starter") needs to convert their conditional promise into an absolute promise, thereby forcing the
+next promise to become absolute as well. As a logical rule of inference on the contents of my promise:
+   
+* I promised to:  [fix the hairdresser's bicycle] if you cook for me
+* And given that:                                    You cook for me
+* Conclusion:     --------------------------------------------------- +
+* I should now:   [fix the hairdresser's bicycle]
+
+But now we can notice a problem with using first-order promise loops for organizing cooperation: you may have only just
+met this hairdresser, and once you cook, you now have a double risk of not obtaining your haircut: either I fail to
+keep my promise, or the hairdresser fails to keep theirs. For very long first-order promise loops, the likelyhood that,
+somewhere along the line, someone fails to deliver on their promise, becomes very high. Second-order
+promise loops address this problem.
+
+Second-order promise loops
+==========================
+
+After understanding the above introduction to first-order promise loops, the idea behind second-order promise loops is
+in itself surprisingly simple. The search phase is the same - you and me and the hairdresser somehow need to discover
+each other, and each other's needs. But the negotiation phase is different.
+Remember that in the negotiation phase for the first-order promise loop, we made the following promises:
+
+* You promise to [[cook for me] if [you get a haircut from the hairdresser]]
+* I promise to [[fix the hairdresser's bicycle] if [you cook for me]]
+* The hairdresser promises to [[cut your hair] if [I fix their bicycle]]
+
+In a second-order promise loop, we don't make our promises conditional on the other participants
+*keeping* their promise, but on the other participants merely *making* their promise:
+
+* You promise to [[cook for me] if [the hairdresser promises to [cut your hair]]]
+* I promise to [[fix the hairdresser's bicycle] if [you promise to [cook for me]]]
+* The hairdresser promises to [[cut your hair] if [I promise to [fix their bicycle]]]
+
+After this negotiation phase, where we all establish and communicate our conditional promises, we can move on to the commitment
+phase, where one person (the "committer") converts their conditional promise to an absolute one. Before moving on to the
+execution phase, where you would actually start to cook, you first announce your decision to us that you will do so. That means
+we now have one absolute promise (from you) and two conditional ones (from me and from the hairdresser):
+
+* You promise to [cook for me]
+* I promise to [[fix the hairdresser's bicycle] if [you promise to [cook for me]]]
+* The hairdresser promises to [[cut your hair] if [I promise to [fix their bicycle]]]
+
+Now, regardless of whether you actually keep your promise, we can already apply inference to the other two promises:
+
+* I promised to:                      [fix the hairdresser's bicycle] if [you promise to [cook for me]]
+* And given that:                                                        You promised to [cook for me]
+* Conclusion:                         ----------------------------------------------------------------- +
+* I should now:                       [fix the hairdresser's bicycle]
+* Also, the hairdresser promised to:  [cut your hair] if [I promise to [fix their bicycle]]
+* And because:                                            I should now [fix their bicycle]
+* Conclusion:                         ---------------------------------------------------- +
+* The hairdresser should now:         [cut your hair]
+
+The term "second-order" refers to the fact that promises are conditional on promises, so instead of one layer of promises on top
+of statements about reality, we now have promises on top of promises (let us know if you can think of a better name for this!).
+
+The advantage of second-order promise loops over first-order promise loops is, in terms of this example, that you can now claim
+your haircut, even if the hairdresser's bicycle remains broken.
+
+OpenTabs is a system that formalizes the messages which can be exchanged to implement the search, negotiation,
+commitment, and execution phase. Assuming each party has a number of contacts, and with each contact has a secure communcation
+channel (including a way to check the other party's signature on cryptographically signed messages), you might imagine roughly
+what the messages in each phase would look like.
+
+I haven't fully worked out the details of these message types yet, but will try to write up a first version soon. Let me know
+if you're interested in collaborating on this!
+
+Cheers,
+Michiel de Jong.
+
+. My conditional promise, in combination with the fact that you cook for me, 
+
+Given a list of promisers, identified by their public keys P_0..P_(N-1), and a list of tasks, uniquely
+identified by hashes T_0..T_(N-1) of their descriptions, a promise loop is a list of conditional statements
+C_0..C_(N-1) such that each C_i has the following form:
+C_i = "P_i promises to perform task T_i on the condition that person P_((i-1)%N) promises to perform task T_((i-1)%N)"
+
+The loop of conditional statements is an undirected graph with arcs from C_((i-1)%N) to C_i, and we call
+C_((i-1)%N) the "predecessor" of C_i. So if for example N=3:
+
+i (i-1) N ((i-1)%N) C_i predecessor(C_i)
+========================================
+0  -1   3   2       C_0  C_2
+1   0   3   0       C_1  C_0
+2   1   3   1       C_2  C_1
+
+In a graph:
+
+
+       C_0
+
+     ^     \
+    /       v
+
+ C_2   <--   C_1
+
+The same predecessor concept is defined for P_i and T_i.
+
+A loop of conditional promises is not useful by itself, because none of the promises is binding by itself; they
+are all conditional on their predecessor. One of the promisers in the loop should take the initiative to start
+a chain reaction to make all promises binding. This can be done by spontaneously performing the task that was mentioned
+in the promise, but then the promiser must trust all other promisers in the chain before their own condition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+A starter statement S_i differs from the corresponding conditional statement C_i in that the condition
+has been removed, so:
+S_i = "P_i promises to perform task T_i"
+An inferred statement I_i consists of a conditional statement C_i, plus either a starter statement S_((i-1)%N)
+for its predecessor in the loop, or a starter statement S_i for i itself:
+I_i = S_i | "C_i AND I_((i-1)%N)"
+
+
+T_i 
+The TRIGGER operation on a statement S_i is defined as removing that statement's condition, meaning that
+it will become:
 
 Machine-readable approach:
 var tasks = {
