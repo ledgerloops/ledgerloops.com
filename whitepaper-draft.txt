@@ -141,13 +141,100 @@ of statements about reality, we now have promises on top of promises (let us kno
 The advantage of second-order promise loops over first-order promise loops is, in terms of this example, that you can now claim
 your haircut, even if the hairdresser's bicycle remains broken.
 
+Promise loops and debt
+======================
+If you and I know each other, we don't have to settle each value exchange every time, you can just cook for me spontaneously, and we'll both remember that debt.
+
+This allows for a much more liquid cooperation - as long as you and I have some way to remember the contents of our private ledger of debts between the two of us, we don't have to search for promise loops every time we want to do something for the other person.
+As long as we take care that your debt to me stays roughly equal to my debt to you (don't let the balance between us become too uneven), we probably trust each other enough to take the risk that the other person takes off without ever repaying their debt.
+So instead of finding a hairdresser with a broken bicycle, you could say "I promise to cook for you", and I could say "If you cook for me, then I will owe you something of comparable value", basically paying you for the cooking with an IOU note (short for "I owe you"), signed by me.
+Since it's only you and me involved, there's no need for second-order promises, a simple ledger for writing down debts will do just fine. The shortcoming of a two-party debt ledger is, of course, that you may want to collaborate with other specialists (like hairdressers) to obtain the things you need. And if I owe you a debt, that does not enable you to get a haircut.
+
+So a better way to combine peer-to-peer debt with second-order promise loops is to write all debts in our ledger whenever one of us does something for the other person, and for each of us to also have peer-to-peer debt ledgers with other people, with whom we interact in the same way. This means that the group barter process can be entirely asynchronous from the actual commercial activity it negotiates. This is also where the name OpenTabs comes from: people keep a tab open (like a tab in a bar), and given a network of such open tabs, the OpenTabs protocol allows participants to search, negotiate, commit, and execute second-order promise loops that act like settlements to resolve or decrease the outstanding amounts of debt on each ledger.
+
+Comparison between OpenTabs and Money
+=====================================
+As an OpenTabs user, you can convert your credit with people who owe you a favor into things you need from other people. This means that using OpenTabs will feel like what we know as money and you could define peer-to-peer debts as some sort of one-time coin that gets anonymized into a different currency every time it passes to the next person, but we think that doesn't help a lot to make the process more intuitive.
+Money has two important features which peer-to-peer debts and promise loops don't:
+* as long as the community using the currency in question doesn't collapse, you're pretty sure that your money will keep its value, in the sense that, there will always be someone in the future who will be happy to accept your commodity money or your fiat money in return for something valuable.
+* for many types of money, especially cash, you don't have to reveal information about where you got the money in order to use the money. Even when paying by creditcard in a restaurant, the restaurant owner will not discover how the money got in your bank account (although of course your bank will). Bitcoin does not have this feature, but since for many wallets it's not publically known which real-world person this wallet belongs to, and it's not necessary to reveal this if you're careful, a high level of obfuscation can still be achieved.
+
+In OpenTabs, the ability to find useful promise loops grows with the network size of people actively looking for such promise loops, with the number of connections between them, and with the frequency with which users put their activities and peer-to-peer debts up for barter.
+However, and this may seem unintuitive, OpenTabs usage can safely die and be revived in other places. It can be used in several communities around the globe, which may stay disconnected from each other, become connected, and become disconneted again, without risk of devaluation of people's outstanding credits and debts. This is because there is no central currency or "bubble" of trust in the community (or its government) paying you back in the future.
+At any time, you can only owe debt to your direct peers, and only they can owe debts to you. If someone defaults on their debt, they only hurt their direct contacts, not the other participants in the network (remember that second-order promises will still hold, even if the first-order promise they are based on is not kept).
+Another way of seeing this is to say that OpenTabs is not a form of money, it is a ledger federation protocol. This does leave us with one important shortcoming of second-order money loops: privacy. Let's see if we can improve the system described so far by being more careful in what personal information you and I reveal to this hairdresser person.
+
+Keeping our details more private
+================================
+Remember that in the process described so far, you, me, and the hairdresser engaged in a group conversation about the following set of conditional promises:
+
+* You promise to [[cook for me] if [the hairdresser promises to [cut your hair]]]
+* I promise to [[fix the hairdresser's bicycle] if [you promise to [cook for me]]]
+* The hairdresser promises to [[cut your hair] if [I promise to [fix their bicycle]]]
+
+Instead of making these statements in one group conversation, we can also make them in three private conversations:
+
+* Between you and me, conversation "YM"
+  * Let's refer to "cook for me" as task "YM-1"
+  * You promise to [[perform task "YM-1"] if [the hairdresser promises to [perform task "YH-1"]]]
+  * I promise to [[perform task "HM-1"] if [you promise to [perform task "YM-1"]]]
+
+* Between you and the hairdresser, conversation "YH"
+  * Let's refer to "cut your hair" as task "YH-1"
+  * You promise to [[perform task "YM-1"] if [the hairdresser promises to [perform task "YH-1"]]]
+  * The hairdresser promises to [[perform task "YH-1"] if [I promise to [perform task "HM-1"]]]
+
+* Between the hairdresser and me, conversation "HM"
+  * Let's refer to "fix the hairdresser's bicycle" as task "HM-1"
+  * The hairdresser promises to [[perform task "YH-1"] if [I promise to [perform task "HM-1"]]]
+  * I promise to [[perform task "HM-1"] if [the you-person promises to [perform task "YM-1"]]]
+
+Since you participate in both conversation "YM" and conversation "YH", you now have all the same information as in the group conversation case, except for the nature of task "HM-1". Likewise I have all the same information except for the nature of task "YH-1", and the hairdresser can compose all information they need to get their bike fixed in exchange for giving you a haircut, without knowing that "YM-1" stands for you cooking me a meal. So having three separate conversations instead of one group conversation is an improvement in terms of implementation. But we can do even better.
+
+Suppose there is a fourth person involved, and the second-order promise loops looks like this:
+
+* You promise to [[cook for me] if [the hairdresser promises to [cut your hair]]]
+* I promise to [[fix the neighbor's bicycle] if [you promise to [cook for me]]]
+* The neighbor promises to [[pay the hairdresser 10 US dollars] if [I promise to [fix their bicycle]]]
+* The hairdresser promises to [[cut your hair] if [the neighbor promises to [pay them 10 US dollars]]]
+
+We can now create four conversations, hiding even more information that does not need to be shared with the whole list of participants:
+
+* Between you and me, conversation "YM"
+  * Let's refer to "cook for me" as task "YM-1", to me as "the M-person", and to you as "the Y-person"
+  * The Y-person promises to [[perform task "YM-1"] if [the H-person promises to [perform task "YH-1"]]]
+  * The M-person promises to [[perform task "HN-1"] if [the Y-person promises to [perform task "YM-1"]]]
+
+* Between you and the hairdresser, conversation "YH"
+  * Let's refer to "cut your hair" as task "YH-1", to you as "the Y-person", and to the hairdresser as "the H-person"
+  * The Y-person promises to [[perform task "YM-1"] if [the H-person promises to [perform task "YH-1"]]]
+  * The H-person promises to [[perform task "YH-1"] if [the N-person promises to [perform task "HN-1"]]]
+
+* Between the hairdresser and the neighbor, conversation "HN"
+  * Let's refer to "pay 10 US dollars" as task "HN-1", to the hairdresser as "the H-person", and to the neighbor as "the N-person"
+  * The H-person promises to [[perform task "YH-1"] if [the N-person promises to [perform task "HN-1"]]]
+  * The N-person promises to [[perform task "HN-1"] if [the M-person promises to [perform task "NM-1"]]]
+
+* Between the neighbor and me, conversation "NM"
+  * Let's refer to "fix the neighbor's bicycle" as task "NM-1", to me as "the M-person", and to the neighbor as "the N-person"
+  * The N-person promises to [[perform task "HN-1"] if [The M-person promises to [perform task "NM-1"]]]
+  * The M-person promises to [[perform task "NM-1"] if [the Y-person promises to [perform task "YM-1"]]]
+
+Now some more information is hidden from you, so what you see is this:
+
+* You promise to [[cook for me] if [the hairdresser promises to [cut your hair]]]
+* I promise to [[perform task "NM-1"] if [you promise to [cook for me]]]
+* ??? - you can't see how, if at all, NM-1 is linked to HN-1, nor who this "N"-person is, or even if the loop has 4 or 5 or more participants
+* The hairdresser promises to [[cut your hair] if [the N-person promises to [perform task "HN-1"]]]
+
+FIXME: So now you can no longer see if a promise loop exists or not. We need some more smart tricks to fix this.
+
 OpenTabs is a system that formalizes the messages which can be exchanged to implement the search, negotiation,
 commitment, and execution phase. Assuming each party has a number of contacts, and with each contact has a secure communcation
 channel (including a way to check the other party's signature on cryptographically signed messages), you might imagine roughly
 what the messages in each phase would look like.
 
-I haven't fully worked out the details of these message types yet, but will try to write up a first version soon. Let me know
-if you're interested in collaborating on this!
+I haven't fully worked out the details of these message types yet, that will be the next phase of this projects, after I collect feedback on the general concept of second-order promise loops, and the above description in human-language. Let me know if you're interested in collaborating on this!
 
 Cheers,
 Michiel de Jong.
