@@ -318,15 +318,221 @@ are between you and me, and between me and the neighbor. So the hairdresser can 
 In this case, there were two degrees of separation between the hairdresser and me, and a loop was found after two
 participants made a local inference. But there might have been 10 degrees of separation, that led to my interest in your task
 "YM-1", and another 10 that led to the neighbor's interest in my task "NM-1". There is no way
-you can know conclude anything about direct connections between your peers from the hairdresser's statement by itself,
+you can conclude anything about direct connections between your peers from the hairdresser's statement by itself,
 although you could time how fast the message arrived after you had your initial conversations with me and with the hairdresser,
 and do some statistics to discover which of your peers seem to be more closely connected to each other on the OpenTabs network
-than others. A simple random delay before forwarding an inferred statement would mean you will need to do (many) more
-measurements to obtain the same amount of information about your peers, but would also make the system slower.
-Suggestions for mechanisms that might mitigate this very welcome, as well as other reactions or review remarks very welcome!
-Please add them on https://github.com/michielbdejong/opentabs.net-website/issues.
+than others. Apart from such timing attacks, the system can be made "partially anonymous", so that only your direct peers need to know
+exactly who you are in real life. In fact, if we use asymmetric cryptography to check digital signatures, you only need to trust the
+person who makes a promise to you, and none of the other participants in the promise loop.
+
+Example of an OpenTabs message sequence
+=======================================
+
+Let's get some definitions down first. These definitions will be referred to in the messages participants send, and all participants
+will understand them to mean the following:
+
+* Person: a physical person who can perform an action in the real world, who may use a computer to send messages to other persons,
+and whom other persons may trust to keep their promises, whether made in natural language, or using a computer. That is, a message
+sent by software running on the computer will be interpreted as intentionally sent by the person, even if the person did not explicitly
+initiate the sending of the message; they gave the computer a mandate to act on their behalf by installing software on it. If a person
+claims their computer sent a message which they did not want to be sent, then this will be considered as a miscommunication just like
+a miscommunication caused by language barriers or human error. The two persons involved can then say sorry to each other and renegotiate
+how to proceed after the miscommunication has been cleared up.
+
+* Task: something a person can do, which might benefit another person. This could be doing work (creating new value), or giving some asset
+to another person (moving the ownership of existing value around between one person to another). Tasks are identified by a hash.
+
+* Message: a text string, sent from person A to person B, signed with a public key of which person B knows that it belongs to person A.
+
+* Task description: A message in which person A links the identifier of a task to a description in human language, which has enough detail
+so that person A and person B can agree on whether person A has successfully performed the task (to which that identifier refers), or not.
+
+* Key publication: A message from person A to person B, containing a public key. This message is to be interpreted as follows:
+  * When communicating with other persons, person B is to refer to person A by that public key, and not reveal person A's real identity
+  * If a promise statement (as described below) contains a correct signature with that public key, then it will be understood (and person
+    B can count on this) that promise was made by person A. This means that person A should make sure not to share the private key
+    corresponding to that public key with any other person.
+
+* Promise statement: A message from person A to person B, sent in machine-readable format, containing the following fields:
+  * a public key of person A
+  * a promise (as described below),
+  * a correct signature, with that public key, of that promise
+
+* Promise: A machine-readable text string (to be included in a promise statement), containing a task identifier, along with zero or more
+condition statement. If (and only if) all conditions described by these condition statements have been met, the person who (in a promise
+statement) signed a promise, will be indebted to do their best to succesfully perform the task identified in the promise.
+
+* Condition statement: A machine-readable string containing a public key and a a task identifier.
+
+* Condition: A logical predicate which can be true ("met") or false ("unmet").
+Once a condition has been met, it can never become unmet again (although, of course, it can seem like it has been met, but then later
+turn out to have been unmet all along, when new information arrives. When that happens, renegotation of that new situation is up to the
+persons involved, and outside the scope of OpenTabs. It is therefore important to, for instance, use strong cryptographic keying material
+so that it is very unlikely that someone would be able to forge a signature.
+The condition described by a condition statement has been met if, and only if:
+  * The condition statement in question contains a public key and a task identifier,
+  * A promise statement exists, with the same public key, a promise, and a correct signature,
+  * That promise contains the same task identifier as the condition statement,
+  * All conditions (if any) from that promise have themselves been met.
+
+Note that the only way for a condition to have been met is to either refer to a promise that itself has zero conditions, or refer to
+a promise, that only has conditions that refer to promises, that only have conditions that refer to promises (etc.), that eventually
+only refer to promises that have zero conditions.
 
 
+The following sequence of messages is roughly how a set of peer-to-peer conversations could lead to the discovery and execution of a second-order promise loop:
+
+
+* You to me:
+  >  Task description:
+  >  I could cook for you! Would you like that?  Let's refer to 'cooking for you' as 'omZXXHOrxyk='.
+  >
+  >  Key publication:
+  >  I created a one-time asymmetric key pair to refer to the 'me' that would (conditionally promise to) do the cooking,
+  >  the public key is: 'tFijlG95+R0EV381pYl5Kw=='.
+  >
+  >  Anyway, let me know if you're interested! :)
+
+
+* Me to the neighbor:
+  >  Task description:
+  >  I could fix your bicycle! Would you like that?  Let's refer to 'fixing your bicycle' as 'gUbL+BUIctY='.
+  >
+  >  Key publication:
+  >  I created a one-time asymmetric key pair to refer to the 'me' that would (conditionally promise to) do the bicycle fixing,
+  >  the public key is: '+RQ6tAsPI5FKbmd1r6eFcQ=='.
+  >
+  >  Also, a friend of a friend of mine suggested they could do a thing. I may not be interested in whether they actually do that thing or not,
+  >  but if they were to conditionally promise to do it, and the conditions of that promise would be met, then that would eventually
+  >  benefit me, through possibly some other conditional promises I'm involved in.
+  >  This friend of a friend refers to that thing as 'omZXXHOrxyk=', and one of their public keys is 'tFijlG95+R0EV381pYl5Kw=='.
+
+  >  Promise statement:
+  >  > I promise, on the following condition, to perform task 'gUbL+BUIctY=':
+  >  > * a promise to perform task 'omZXXHOrxyk=' exists, is correctly signed with public key 'tFijlG95+R0EV381pYl5Kw==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > '+RQ6tAsPI5FKbmd1r6eFcQ=='.
+
+
+* Neighbor to hairdresser:
+  >  Task description:
+  >  I could give you 10 US dollars! Would you like that?  Let's refer to 'giving you 10 US dollars' as '203c2gfRsgI='.
+  >
+  >  Key publication:
+  >  I created a one-time asymmetric key pair to refer to the 'me' that would (conditionally promise to) give you the 10 US dollars,
+  >  the public key is: 'xuSctraZJQSWocI4LwFjJQ=='.
+  >
+  >  Also, several people suggested they could do a thing. I may not be interested in whether they actually do that thing or not,
+  >  but if they were to conditionally promise to do it, and the conditions of that promise would be met, then that would eventually
+  >  benefit me, through possibly some other conditional promises I'm involved in.
+  >  One of them refers to their thing as 'omZXXHOrxyk=', and has public key 'tFijlG95+R0EV381pYl5Kw=='.
+  >  The other refers to their thing as 'gUbL+BUIctY=', and has public key '+RQ6tAsPI5FKbmd1r6eFcQ=='.
+
+  >  Promise statement 1:
+  >  > I promise, on the following condition, to perform task '203c2gfRsgI=':
+  >  > * a promise to perform task 'omZXXHOrxyk=' exists, is correctly signed with public key 'tFijlG95+R0EV381pYl5Kw==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > 'xuSctraZJQSWocI4LwFjJQ=='.
+
+  >  Promise statement 2:
+  >  > I promise, on the following condition, to perform task '203c2gfRsgI=':
+  >  > * a promise to perform task 'gUbL+BUIctY=' exists, is correctly signed with public key '+RQ6tAsPI5FKbmd1r6eFcQ==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > 'xuSctraZJQSWocI4LwFjJQ=='.
+
+* Hairdresser to you:
+  >  Task description:
+  >  I could cut your hair! Would you like that?  Let's refer to 'cutting your hair' as 'JWkyqz02PPU='.
+  >
+  >  Key publication:
+  >  I created a one-time asymmetric key pair to refer to the 'me' that would (conditionally promise to) cut your hair,
+  >  the public key is: 'PbG/84/lk2yoWUEK23fbjQ=='.
+  >
+  >  Also, several people suggested they could do a thing. I may not be interested in whether they actually do that thing or not,
+  >  but if they were to conditionally promise to do it, and the conditions of that promise would be met, then that would eventually
+  >  benefit me, through possibly some other conditional promises I'm involved in.
+  >  One of them refers to their thing as 'omZXXHOrxyk=', and has public key 'tFijlG95+R0EV381pYl5Kw=='.
+  >  Another refers to their thing as 'gUbL+BUIctY=', and has public key '+RQ6tAsPI5FKbmd1r6eFcQ=='.
+  >  Yet another refers to their thing as '203c2gfRsgI=', and has public key 'xuSctraZJQSWocI4LwFjJQ=='.
+
+  >  Promise statement 1:
+  >  > I promise, on the following condition, to perform task 'JWkyqz02PPU=':
+  >  > * a promise to perform task 'omZXXHOrxyk=' exists, is correctly signed with public key 'tFijlG95+R0EV381pYl5Kw==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+
+  >  Promise statement 2:
+  >  > I promise, on the following condition, to perform task 'JWkyqz02PPU=':
+  >  > * a promise to perform task 'gUbL+BUIctY=' exists, is correctly signed with public key '+RQ6tAsPI5FKbmd1r6eFcQ==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+
+  >  Promise statement 3:
+  >  > I promise, on the following condition, to perform task 'JWkyqz02PPU=':
+  >  > * a promise to perform task '203c2gfRsgI=' exists, is correctly signed with public key 'xuSctraZJQSWocI4LwFjJQ==',
+  >  >   and that promise is either unconditional, or all of its conditions have been met.
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+
+Note that the condition of promise statement 1 there, unbeknown to the hairdresser, refers to you cooking for me! You're more then
+willing to cook for me if that allows you to meet the hairdresser's condition for the haircut, so your respond:
+
+* You to hairdresser:
+  >  I can hereby prove that the condition for your promise statement 1 has been met, look at this quote from a signed statement
+  >  by some friend of a friend of mine:
+  >
+  >  > I hereby promise to perform task 'JWkyqz02PPU=':
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+  >
+  >  As you can see, the signature is correct, so please cut my hair!
+
+
+* Hairdresser to neighbor:
+  >  I can hereby prove that the condition for your promise statement 1 has been met, look at this quote from a signed statement
+  >  by some friend of a friend of mine:
+  >
+  >  > I hereby promise to perform task 'JWkyqz02PPU=':
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+  >
+  >  As you can see, the signature is correct, so please give me the 10 US dollars!
+
+* Neighbor to me:
+  >  I can hereby prove that the condition for your promise statement 1 has been met, look at this quote from a signed statement
+  >  by some friend of a friend of mine:
+  >
+  >  > I hereby promise to perform task 'JWkyqz02PPU=':
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+  >
+  >  As you can see, the signature is correct, so please give fix my bicycle!
+
+* Me to you:
+  >  Hey, a friend of a friend of mine just quoted an unconditional promise which caught my eye:
+  >
+  >  > I hereby promise to perform task 'JWkyqz02PPU=':
+  >  > Signed,
+  >  > <signature>
+  >  > 'PbG/84/lk2yoWUEK23fbjQ=='.
+  >
+  >  As you can see, the signature is correct, so it was you, right? Thanks! Looking forward to you cooking for me! :)
+
+ 
 Conclusion
 ==========
 OpenTabs is a system that formalizes the messages which can be exchanged to implement the search, negotiation,
@@ -338,6 +544,11 @@ the hairdresser, and the neighbor, in the examples above.
 I haven't fully worked out the details of these message types yet, that will be the next phase of this projects, after I collect
 feedback on the general concept of second-order promise loops, and the above description in human-language. Let me know if you're
 interested in collaborating on this!
+
+Suggestions for mechanisms that might mitigate timing attacks to reveal network structure would be very welcome, as well as suggestions
+for a better name for "second-order promise loop", and other reactions or review remarks!
+Please contribute on https://github.com/michielbdejong/opentabs.net-website/issues.
+
 
 Cheers,
 Michiel de Jong.
