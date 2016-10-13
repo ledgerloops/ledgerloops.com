@@ -532,22 +532,29 @@ willing to cook for me if that allows you to meet the hairdresser's condition fo
   >
   >  As you can see, the signature is correct, so it was you, right? Thanks! Looking forward to you cooking for me! :)
 
- 
-Conclusion
-==========
-OpenTabs is a system that formalizes the messages which can be exchanged to implement the search, negotiation,
-commitment, and execution phase. Assuming each party has a number of contacts, and with each contact has a secure communcation
-channel (including a way to check the other party's signature on cryptographically signed messages), you might imagine roughly
-what the messages in each phase would look like. They would be a machine-readable version of the conversations between you, me,
-the hairdresser, and the neighbor, in the examples above.
+After tasks have been completed, it would probably make sense for the benefitting person to send a receipt to the person who
+completed the task, so that there can be no confusion, for instance a year later, whether a promise was already fullfilled,
+or is still outstanding. Promises should also probably have an expiry date, especially when offering unique items. From the
+moment I offer you the painting from my living room in exchange for something else, I need to reserve that painting in case
+a deal is reached (a promise loop is found), and you claim the painting from me. However, if no promise loop is found within
+a few days, I probably don't want to keep it reserved forever, I would want to try offering it to someone else next week.
 
-I haven't fully worked out the details of these message types yet, that will be the next phase of this projects, after I collect
-feedback on the general concept of second-order promise loops, and the above description in human-language. Let me know if you're
-interested in collaborating on this!
+It would also make sense to have a message format for promise statements with multiple lists of condition statements (instead
+of persons sending 2 or 3 or more separate promise statements about the same task).
+
+Finally, apart from timing attacks, in the example above, it would be easy for the neighbor to conclude that I benefit from task
+'JWkyqz02PPU=' directly, and therefore probably have a close connection to person 'PbG/84/lk2yoWUEK23fbjQ=='.
+them directly. Therefore, a person (or their software tool) may introduce fake condition lists in a promise statement, to obfuscate
+which one of the condition lists would benefit the person directly.
 
 Suggestions for mechanisms that might mitigate timing attacks to reveal network structure would be very welcome, as well as suggestions
 for a better name for "second-order promise loop", and other reactions or review remarks!
-Please contribute on https://github.com/michielbdejong/opentabs.net-website/issues.
+
+There are possible several more such improvements that can be made, and other issues that will come up once we try to implement the
+basic parts of a software tool for the protocol described, and dig deeper into the details and dynamics.
+
+Improvements to this whitepaper-draft are currently being tracked on https://github.com/michielbdejong/opentabs.net-website/issues.
+Thanks a lot for reading this far, please join the discussion there!
 
 
 Cheers,
