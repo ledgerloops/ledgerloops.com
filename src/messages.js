@@ -7,7 +7,7 @@ module.exports = {
 // * [pubkey-announce] A to C: My pubkey is ${A1}.
   pubkeyAnnounce: function(pubkey) {
     return stringify({
-      msgType: 'public-announce',
+      msgType: 'pubkey-announce',
       pubkey,
     });
   },
