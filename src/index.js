@@ -1,4 +1,5 @@
 var simulator = require('./simulator');
+var messages = require('./settlement-engine');
 
 simulator.addAgent('michiel');
 simulator.addAgent('joop');
