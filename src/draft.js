@@ -244,3 +244,102 @@ function samePeerSettlement(peerNickname, currencyMyDebtGrowsIn, amountMyDebtGro
     updatedDebts: peers[peerNickname].debts,
   };
 }
+
+function getCreditors() {
+}
+function getDebtors() {
+}
+function proposeLocalTrade(creditor, debtor) {
+  createOneTimeIdentity(creditor);
+  createTaskDescription(creditor);
+  choosePrices(creditorCurrencies, debtorCurrencies);
+  offerToDebtor(id, task, prices, debtor);
+}
+
+function onOfferFromCreditor(creditor, offerId, offerTask, offerPrices) {
+  addToOffersList(offerId, offerTask, offerPrice, creditor);
+  if (offerWasMine(offerId, offerTask) && priceIsGood(offerPrices)) {
+    accept(offerId, offerTask, creditor, currency);
+  } else {
+    // forward to own debtors
+  }
+}
+
+function Wallet() {
+}
+
+wallet.prototype.addDebt = function(peer, amount, unit) {
+};
+
+wallet.prototype.addCredit = function(peer, amount, unit) {
+;
+
+wallet.prototype.setExchangeRate = function(fromUnit, toUnit, factor) {
+};
+
+wallet.prototype.think = function() {
+};
+
+function Peer(nickname, wayToContact, onMessage) {
+  this.nickname = nickname;
+  this.wayToContact = wayToContact;
+  onMessage(this.handleMessage.bind(this));
+}
+
+peer.prototype.offerObligation = function(obligation, price, unit) {
+  peer.wayToMessage(obligation.getDecoderMessage());  
+};
+
+peer.prototype.offerObligation = function(obligation, price, unit) {
+  
+};
+
+function Obligation(creditor, amount, unit) {
+  this.creditor = creditor;
+  this.amount = amount;
+  this.unit = unit;
+  this.keypair = null;
+  this.codename = null;
+}
+
+Obligation.prototype.ensureReady = function() {
+  if (this.ready) {
+    return Promise.resolve();
+  }
+  return generateKeyPair().then((pub, priv) => {
+    this.keypair = { pub, priv };
+    return generateCodename();
+  }).then((codename) => {
+    this.codename = codename;
+    this.ready = true;
+  });
+});
+
+Obligation.prototype.getDecoderMessage = function() {
+  return this.ensureReady().then(() => {
+    return new DecoderMessage(this);
+  });
+};
+
+Obligation.prototype.getEncodedMessage = function() {
+  return this.ensureReady().then(() => {
+    return new EncodedMessage(this);
+  });
+};
+
+  }).then((decoderMessage) => {
+    this.creditor.wayToContact(decoderMessage);
+
+
+// step 1:
+* simulator for wayToConcact / on Message
+* unit test to create a few peers and send some message
+
+// step 2:
+* peerDebts
+
+// step 3:
+* (amount, unit, peerNick, myNick) -> message containing newly generated keypair and task id
+
+// step 4: searchSettlement
+* 
