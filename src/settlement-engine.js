@@ -42,46 +42,64 @@ const messages = require('./messages');
 // * [confirm-ledger-update] A to C: OK, ledger updated, added a reference to
 //                                   ${signatureFromA1} in the ledger entry.
 
-function announcePubkeyToDebtor(debtor) { // you are A
-  // generate A1
-  // send it to C
+function SettlementEngine() {
 }
 
-function onMessageFromCreditor(creditor, msg) {
-  switch(msg.type) {
-  case 'pubkey-announce': // you are C
-    // generate C2
-    var condProm = createConditionalPromise(msg.pubkey, C2);
-    // send condProm to B
-    break;
-  case 'conditional-promise':
-    if (msg.pubkey1 == A1) { // you are A
-      // create embeddable promise
-      // sign it with A1
-      // put it inside a satisfy-condition
-      // send it to B
-    } else { // you are B
-      // send msg to A
+SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
+  if (from === 'debtor') {
+    switch(msg.type) {
+    case 'satisfy-condition':
+      if (msg.embeddablePromise.pubkey2 === this.pubkey) { // you are C
+        // reduce B's debt on ledger
+        return [
+          { to: 'debtor', msg: messages.confirmLedgerUpdate() },
+          { to: 'creditor', msg: messages.claimFulfillment(msg.embeddablePromise) },
+        ];
+      } else { // you are B
+        // reduce A's debt on ledger
+        return [
+          { to: 'debtor', msg: messages.confirmLedgerUpdate() },
+          { to: 'creditor', msg ) },
+        ];
+      }
+      break;
+    case 'claim-fulfillment': // you are A
+      // reduce C's debt
+      return [
+        { to: 'debtor', msg: messages.confirmLedgerUpdate() },
+      ];
+      break;
     }
-    break;
-  }
-}
-function onMessageFromDebtor(debtor, msg) {
-  switch(msg.type) {
-  case 'satisfy-condition':
-    if (msg.embeddablePromise.pubkey2 === C2) { // you are C
-      // reduce B's debt on ledger
-      // send confirm-ledger-update to B
-      // send claim-fulfillment to A
-    } else { // you are B
-      // reduce A's debt on ledger
-      // send confirm-ledger-update to A
-      // send msg to C
+  } else if (from === 'creditor') {
+    switch(msg.msgType) {
+    case 'pubkey-announce': // you are C
+      this.keypair = signatures.generateKeypair();
+      var condProm = messages.conditionalPromise(msg.pubkey, this.keypair.pub);
+      return [
+        { to: 'debtor', msg },
+      ];
+      break;
+    case 'conditional-promise':
+      if (msg.pubkey1 == this.keypair.pub) { // you are A
+        // create embeddable promise
+        var embeddablePromise = messages.embeddablePromise(this.keypair.pub, msg.pubkey2);
+        var signature = signatures.sign(embeddablePromise, this.keypair);
+        var msg2 = messages.satisfyCondition(this.keypair.pub, msg.pubkey2, embeddablePromise, signature);
+        return [
+          { to: 'creditor', msg: msg2 },
+         ];
+      } else { // you are B
+        return [
+          { to: 'debtor', msg },
+        ];
+      }
+      break;
     }
-    break;
-  case 'claim-fulfillment': // you are A
-    // reduce C's debt
-      // send confirm-ledger-update to C
-    break;
+  } else {
+    this.keypair = signatures.generateKeypair();
+    var msg = messages.announcePubkey(this.keypair.pub);
+    return [
+      { to: 'debtor', msg },
+    ];
   }
 }
