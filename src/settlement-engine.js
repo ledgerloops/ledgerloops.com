@@ -47,6 +47,9 @@ const signatures = require('./signatures');
 function SettlementEngine(messagesMock, signaturesMock) {
   // for unit tests, FIXME: use proper mocking tools for this (but for now this is
   // just exploratory draft code, not meant for publication, so good enough like this).
+  // note that this is not currently used as there is only an integration test for
+  // settlements which tests this settlement-engine + messages + signatures,
+  // not a unit test for settlement-engine itself.
   if (messagesMock) {
     this.messages = messagesMock;
   } else {
@@ -60,62 +63,85 @@ function SettlementEngine(messagesMock, signaturesMock) {
 }
 
 SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
-  if (from === 'debtor') {
-    switch(msg.type) {
-    case 'satisfy-condition':
-      if (msg.embeddablePromise.pubkey2 === this.pubkey) { // you are C
-        // reduce B's debt on ledger
-        return [
-          { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
-          { to: 'creditor', msg: this.messages.claimFulfillment(msg.embeddablePromise) },
-        ];
-      } else { // you are B
-        // reduce A's debt on ledger
-        return [
-          { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
-          { to: 'creditor', msg },
-        ];
-      }
-      break;
-    case 'claim-fulfillment': // you are A
-      // reduce C's debt
-      return [
-        { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
-      ];
-      break;
+  console.log('generateReactions', incomingMsg, from);
+  return new Promise((resolve, reject) => {
+    var msgObj;
+    try {
+      msgObj = JSON.parse(incomingMsg);
+    } catch(e) {
+      console.error(typeof incomingMsg, incomingMsg);
+      reject(new Error('Unparseable incoming message'));
+      return;
     }
-  } else if (from === 'creditor') {
-    switch(msg.msgType) {
-    case 'pubkey-announce': // you are C
+    if (from === 'debtor') {
+      switch(msgObj.msgType) {
+      case 'satisfy-condition':
+        console.log('satisfy-condition from debtor', msgObj);
+        if (this.keypair && msgObj.embeddablePromise.pubkey2 === this.keypair.pub) { // you are C
+          // reduce B's debt on ledger
+          resolve([
+            { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
+            { to: 'creditor', msg: this.messages.claimFulfillment(msgObj.embeddablePromise) },
+          ]);
+        } else { // you are B
+          // reduce A's debt on ledger
+          resolve([
+            { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
+            { to: 'creditor', msg: JSON.stringify(msgObj) },
+          ]);
+        }
+        break;
+      case 'claim-fulfillment': // you are A
+        // reduce C's debt:
+        resolve([
+          { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
+        ]);
+        break;
+      default:
+        reject(`unknown msgType to debtor: ${msgObj.msgType}`);
+      }
+    } else if (from === 'creditor') {
+      switch(msgObj.msgType) {
+      case 'pubkey-announce': // you are C
+        this.keypair = this.signatures.generateKeypair();
+        var condProm = this.messages.conditionalPromise(msgObj.pubkey, this.keypair.pub);
+        resolve([
+          { to: 'debtor', msg: condProm },
+        ]);
+        break;
+      case 'conditional-promise':
+        console.log('conditional-promise from creditor');
+        if (this.keypair && msgObj.pubkey1 == this.keypair.pub) { // you are A
+          console.log('pubkey1 is mine');
+          // create embeddable promise
+          var embeddablePromise = this.messages.embeddablePromise(this.keypair.pub, msgObj.pubkey2);
+          var signature = this.signatures.sign(embeddablePromise, this.keypair);
+          // FIXME: not sure yet if embeddablePromise should be double-JSON-encoded to make signature deterministic,
+          // or included in parsed form (as it is now), to make the message easier to machine-read later:
+          var msg2 = this.messages.satisfyCondition(this.keypair.pub, msgObj.pubkey2, JSON.parse(embeddablePromise), signature);
+          resolve([
+            { to: 'creditor', msg: msg2 },
+           ]);
+        } else { // you are B
+          resolve([
+            { to: 'debtor', msg: JSON.stringify(msgObj) },
+          ]);
+        }
+        break;
+      case 'confirm-ledger-update':
+        resolve([]);
+        break;
+      default:
+        reject(`unknown msgType to creditor: ${msgObj.msgType}`);
+      }
+    } else {
       this.keypair = this.signatures.generateKeypair();
-      var condProm = this.messages.conditionalPromise(msg.pubkey, this.keypair.pub);
-      return [
+      var msg = this.messages.pubkeyAnnounce(this.keypair.pub);
+      resolve([
         { to: 'debtor', msg },
-      ];
-      break;
-    case 'conditional-promise':
-      if (msg.pubkey1 == this.keypair.pub) { // you are A
-        // create embeddable promise
-        var embeddablePromise = this.messages.embeddablePromise(this.keypair.pub, msg.pubkey2);
-        var signature = this.signatures.sign(embeddablePromise, this.keypair);
-        var msg2 = this.messages.satisfyCondition(this.keypair.pub, msg.pubkey2, embeddablePromise, signature);
-        return [
-          { to: 'creditor', msg: msg2 },
-         ];
-      } else { // you are B
-        return [
-          { to: 'debtor', msg },
-        ];
-      }
-      break;
+      ]);
     }
-  } else {
-    this.keypair = this.signatures.generateKeypair();
-    var msg = this.messages.announcePubkey(this.keypair.pub);
-    return [
-      { to: 'debtor', msg },
-    ];
-  }
+  });
 }
 
 module.exports = SettlementEngine;
