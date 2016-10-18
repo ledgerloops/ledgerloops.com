@@ -23,6 +23,7 @@ var agents = {};
 module.exports = {
   addAgent: function(nick) {
     agents[nick] = new Agent(nick);
+    console.log(`Agent ${nick} created.`);
   },
   addConnection: function(fromNick, toNick) {
     agents[fromNick].addPeer(toNick,
@@ -31,9 +32,11 @@ module.exports = {
         agents[fromNick].onmessage.bind(agents[fromNick]));
   },
   setMessageHandler: function(nick, handler) {
+    console.log(`Setting message handler for ${nick}`);
     agents[nick].messageHandler = handler;
   },
   simulateMessage: function(fromNick, toNick, text) {
+    console.log(`Simulating message from ${fromNick} to ${toNick}: ${text}`);
     agents[fromNick].sendMessage(toNick, text);
   },
 };
