@@ -1,4 +1,6 @@
 const messages = require('./messages');
+const signatures = require('./signatures');
+
 //  pubkeyAnnounce: function(pubkey) {
 //  conditionalPromise: function(pubkey1, pubkey2) {
 //  embeddablePromise: function(pubkey1, pubkey2) {
@@ -42,7 +44,19 @@ const messages = require('./messages');
 // * [confirm-ledger-update] A to C: OK, ledger updated, added a reference to
 //                                   ${signatureFromA1} in the ledger entry.
 
-function SettlementEngine() {
+function SettlementEngine(messagesMock, signaturesMock) {
+  // for unit tests, FIXME: use proper mocking tools for this (but for now this is
+  // just exploratory draft code, not meant for publication, so good enough like this).
+  if (messagesMock) {
+    this.messages = messagesMock;
+  } else {
+    this.messages = messages;
+  }
+  if (signaturesMock) {
+    this.signatures = signaturesMock;
+  } else {
+    this.signatures = signatures;
+  }
 }
 
 SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
@@ -52,29 +66,29 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
       if (msg.embeddablePromise.pubkey2 === this.pubkey) { // you are C
         // reduce B's debt on ledger
         return [
-          { to: 'debtor', msg: messages.confirmLedgerUpdate() },
-          { to: 'creditor', msg: messages.claimFulfillment(msg.embeddablePromise) },
+          { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
+          { to: 'creditor', msg: this.messages.claimFulfillment(msg.embeddablePromise) },
         ];
       } else { // you are B
         // reduce A's debt on ledger
         return [
-          { to: 'debtor', msg: messages.confirmLedgerUpdate() },
-          { to: 'creditor', msg ) },
+          { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
+          { to: 'creditor', msg },
         ];
       }
       break;
     case 'claim-fulfillment': // you are A
       // reduce C's debt
       return [
-        { to: 'debtor', msg: messages.confirmLedgerUpdate() },
+        { to: 'debtor', msg: this.messages.confirmLedgerUpdate() },
       ];
       break;
     }
   } else if (from === 'creditor') {
     switch(msg.msgType) {
     case 'pubkey-announce': // you are C
-      this.keypair = signatures.generateKeypair();
-      var condProm = messages.conditionalPromise(msg.pubkey, this.keypair.pub);
+      this.keypair = this.signatures.generateKeypair();
+      var condProm = this.messages.conditionalPromise(msg.pubkey, this.keypair.pub);
       return [
         { to: 'debtor', msg },
       ];
@@ -82,9 +96,9 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
     case 'conditional-promise':
       if (msg.pubkey1 == this.keypair.pub) { // you are A
         // create embeddable promise
-        var embeddablePromise = messages.embeddablePromise(this.keypair.pub, msg.pubkey2);
-        var signature = signatures.sign(embeddablePromise, this.keypair);
-        var msg2 = messages.satisfyCondition(this.keypair.pub, msg.pubkey2, embeddablePromise, signature);
+        var embeddablePromise = this.messages.embeddablePromise(this.keypair.pub, msg.pubkey2);
+        var signature = this.signatures.sign(embeddablePromise, this.keypair);
+        var msg2 = this.messages.satisfyCondition(this.keypair.pub, msg.pubkey2, embeddablePromise, signature);
         return [
           { to: 'creditor', msg: msg2 },
          ];
@@ -96,10 +110,12 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
       break;
     }
   } else {
-    this.keypair = signatures.generateKeypair();
-    var msg = messages.announcePubkey(this.keypair.pub);
+    this.keypair = this.signatures.generateKeypair();
+    var msg = this.messages.announcePubkey(this.keypair.pub);
     return [
       { to: 'debtor', msg },
     ];
   }
 }
+
+module.exports = SettlementEngine;
