@@ -3,50 +3,33 @@ var SettlementEngine = require('../../src/settlement-engine');
 function nextStep(actors, incoming) {
   var outgoing = [];
   var promises = [];
-  function reactTo(receiver, text, sendingPeer) {
-    return actors[receiver].generateReactions(text, sendingPeer).then((reactions) => {
-      for (var j=0; j<reactions.length; j++) {
-        if (reactions[j].to === 'debtor') {
-          rotation = 2;
-        } else if (reactions[j].to === 'creditor') {
-          rotation = 1;
-        } else {
-          console.error(reactions);
-          throw new Error('message to unknown peer type!');
-        }
-        // console.log('adding outgoing', {
-        //   sender: receiver,
-        //   receiver: ((receiver + rotation) % actors.length),
-        //   text: reactions[j].msg,
-        // });
+  function reactTo(sender, receiver, msgObj) {
+    var debtorNick = actors[receiver].debtorNick;
+    var creditorNick = actors[receiver].creditorNick;
+    var fromRole;
+    if (sender === debtorNick) {
+      fromRole = 'debtor';
+    } else if (sender === creditorNick) {
+      fromRole = 'creditor';
+    } else if (typeof sender === 'undefined') {
+      fromRole = 'kickstarter';
+    } else {
+      console.log(sender, receiver, msgObj);
+      throw new Error('sender is neither debtor nor creditor of receiver');
+    }
+    return actors[receiver].engine.generateReactions(fromRole, msgObj, debtorNick, creditorNick).then((reactions) => {
+      for (var i=0; i<reactions.length; i++) {
         outgoing.push({
           sender: receiver,
-          receiver: ((receiver + rotation) % actors.length),
-          text: reactions[j].msg,
+          receiver: reactions[i].to,
+          msgObj: JSON.parse(reactions[i].msg),
         });
       }
     });
   }
+
   for (var i=0; i<incoming.length; i++) {
-    var sendingPeer;
-    switch(incoming[i].sender - incoming[i].receiver) {
-    //val sender receiver
-    case -2:  //  0      2
-      sendingPeer = 'creditor';
-      break;
-    case -1:   // 0      1
-          // 1      2
-      sendingPeer = 'debtor';
-      break;
-    case 1:   //  1      0
-         //  2      1
-      sendingPeer = 'creditor';
-      break;
-    case 2:   //  2      0
-      sendingPeer = 'debtor';
-      break;
-    };
-    promises.push(reactTo(incoming[i].receiver, incoming[i].text, sendingPeer));
+    promises.push(reactTo(incoming[i].sender, incoming[i].receiver, incoming[i].msgObj));
   }
   // console.log('promises gather, now executing:');
   return Promise.all(promises).then((results) => {
@@ -58,15 +41,27 @@ function nextStep(actors, incoming) {
 }
 
 function test_settlement_sequence() {
-  var actors = [
-    new SettlementEngine(),
-    new SettlementEngine(),
-    new SettlementEngine(),
-  ];
+  var actors = {
+    'a': {
+      debtorNick: 'b',
+      creditorNick: 'c',
+      engine: new SettlementEngine(),
+    },
+    'b': {
+      debtorNick: 'c',
+      creditorNick: 'a',
+      engine: new SettlementEngine(),
+    },
+    'c': {
+      debtorNick: 'a',
+      creditorNick: 'b',
+      engine: new SettlementEngine(),
+    },
+  };
   var traffic1 = [{
     sender: undefined,
-    receiver: 0,
-    text: '{}',
+    receiver: 'a',
+    msgObj: {},
   }];
   console.log('Step 1:');
   return nextStep(actors, traffic1).then((traffic2) => {

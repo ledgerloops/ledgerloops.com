@@ -5,13 +5,26 @@ function Ledger(peerNick, myNick) {
   this._history = [];
 }
 
-Ledger.prototype._addToHistory = function(debtor, note, addedDebts) {
-  this._history.push({
-    debtor,
-    note,
-    addedDebts,
-  }); 
+Ledger.prototype._addToHistory = function(debt) {
+  this._history.push(debt);
 }  
+
+Ledger.prototype._normalizeDebt = function(currency) {
+  if (this._debts[currency].amount === 0) {
+    // remove settled debt:
+    delete this._debts[currency];
+  } else if (this._debts[currency].amount < 0) {
+    var creditor;
+    if (this._debts[currency].debtor === this._peerNick) {
+      creditor = this._myNick;
+    } else {
+      creditor = this._peerNick;
+    }
+    // reverse debt direction to make amount > 0:
+    this._debts[currency].debtor = creditor;
+    this._debts[currency].amount = -this._debts[currency].amount;
+  }
+}
 
 Ledger.prototype._addToDebts = function(debtor, amount, currency) {
   if (typeof this._debts[currency] === 'undefined') {
@@ -25,29 +38,41 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
     } else {
       this._debts[currency].amount -= amount;
     }
-    if (this._debts[currency].amount < 0) {
-      this._debts[currency].debtor = (this._debts[currency].debtor === this._peerNick ? this._myNick : this._peerNick);
-      this._debts[currency].amount = -this._debts[currency].amount;
-    }
+    this._normalizeDebt(currency);
   }
 }
 
-// debtor should be either peerNick or myNick
-// note can be any human-readable string, or a settlement signature reference
-// addedDebts should be a map { currency: amount }
-Ledger.prototype.addDebt = function(debtor, note, addedDebts) {
-  this._addToHistory(debtor, note, addedDebts);
-  for (var currency in addedDebts) {
-    this._addToDebts(debtor, addedDebts[currency], currency);
-  }
-}
 
 Ledger.prototype.toObj = function() {
   return {
     peers: [ this._peerNick, this._myNick ].sort(),
     debts: this._debts,
-    history: this._history,
+    history: this._history.slice(-2),
   };
+}
+
+Ledger.prototype.createIOU = function(amount, currency) {
+  var debt = {
+    debtor: this._myNick,
+    note: `IOU sent from ${this._myNick} to ${this._peerNick} on ${new Date()}`,
+    addedDebts: {
+      [currency]: amount,
+     },
+     confirmedByPeer: false,
+  };
+  this._addToHistory(debt);
+  this._addToDebts(this._myNick, amount, currency);
+  return debt;
+}
+
+Ledger.prototype.markIOUConfirmed = function(note) {
+  for (var i=0; i<this._history.length; i++) {
+    if (this._history[i].note === note) {
+      this._history[i].confirmedByPeer = true;
+      return true;
+    }
+  }
+  return false;
 }
 
 module.exports = Ledger;

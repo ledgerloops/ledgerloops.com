@@ -1,6 +1,18 @@
 var stringify = require('./stringify');
 
 module.exports = {
+  IOU: function(debt) {
+    return stringify({
+      msgType: 'IOU',
+      debt,
+    });
+  },
+  confirmIOU: function(note) {
+    return stringify({
+      msgType: 'confirm-IOU',
+      note,
+    });
+  },
 // * [pubkey-announce] A to C: My pubkey is ${A1}.
   pubkeyAnnounce: function(pubkey) {
     return stringify({
@@ -55,10 +67,10 @@ module.exports = {
   },
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to
 //                                   ${signatureFromA1} in the ledger entry.
-  confirmLedgerUpdate: function(signature) {
+  confirmLedgerUpdate: function(debt) {
     return stringify({
       msgType: 'confirm-ledger-update',
-      signature,
+      debt,
     });
   },
 };

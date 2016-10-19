@@ -63,51 +63,43 @@ function SettlementEngine() { // messagesMock, signaturesMock) {
 //  }
 }
 
-SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
-  console.log('generateReactions', incomingMsg, from);
+SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
+  console.log('generateReactions', fromRole, msgObj, debtorNick, creditorNick);
   return new Promise((resolve, reject) => {
-    var msgObj;
-    try {
-      msgObj = JSON.parse(incomingMsg);
-    } catch(e) {
-      console.error(typeof incomingMsg, incomingMsg);
-      reject(new Error('Unparseable incoming message'));
-      return;
-    }
-    if (from === 'debtor') {
+    if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
       case 'satisfy-condition':
         console.log('satisfy-condition from debtor', msgObj);
         if (this.keypair && msgObj.embeddablePromise.pubkey2 === this.keypair.pub) { // you are C
           // reduce B's debt on ledger
           resolve([
-            { to: 'debtor', msg: messages.confirmLedgerUpdate() },
-            { to: 'creditor', msg: messages.claimFulfillment(msgObj.embeddablePromise) },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate() },
+            { to: creditorNick, msg: messages.claimFulfillment(msgObj.embeddablePromise) },
           ]);
         } else { // you are B
           // reduce A's debt on ledger
           resolve([
-            { to: 'debtor', msg: messages.confirmLedgerUpdate() },
-            { to: 'creditor', msg: stringify(msgObj) },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate() },
+            { to: creditorNick, msg: stringify(msgObj) },
           ]);
         }
         break;
       case 'claim-fulfillment': // you are A
         // reduce C's debt:
         resolve([
-          { to: 'debtor', msg: messages.confirmLedgerUpdate() },
+          { to: debtorNick, msg: messages.confirmLedgerUpdate() },
         ]);
         break;
       default:
         reject(`unknown msgType to debtor: ${msgObj.msgType}`);
       }
-    } else if (from === 'creditor') {
+    } else if (fromRole === 'creditor') {
       switch(msgObj.msgType) {
       case 'pubkey-announce': // you are C
         this.keypair = signatures.generateKeypair();
         var condProm = messages.conditionalPromise(msgObj.pubkey, this.keypair.pub);
         resolve([
-          { to: 'debtor', msg: condProm },
+          { to: debtorNick, msg: condProm },
         ]);
         break;
       case 'conditional-promise':
@@ -121,25 +113,27 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           var msg2 = messages.satisfyCondition(this.keypair.pub, msgObj.pubkey2, JSON.parse(embeddablePromise), signature);
           resolve([
-            { to: 'creditor', msg: msg2 },
+            { to: creditorNick, msg: msg2 },
            ]);
         } else { // you are B
           resolve([
-            { to: 'debtor', msg: stringify(msgObj) },
+            { to: debtorNick, msg: stringify(msgObj) },
           ]);
         }
         break;
       case 'confirm-ledger-update':
+        // TODO: encode ledger update into reactions returned here
         resolve([]);
         break;
       default:
         reject(`unknown msgType to creditor: ${msgObj.msgType}`);
       }
+    // TODO: Make this a separate function:
     } else {
       this.keypair = signatures.generateKeypair();
       var msg = messages.pubkeyAnnounce(this.keypair.pub);
       resolve([
-        { to: 'debtor', msg },
+        { to: debtorNick, msg },
       ]);
     }
   });

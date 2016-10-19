@@ -4,6 +4,8 @@ var tests = [
   (function test_msgTypeMatches() {
     return new Promise((resolve, reject) => {
       var msgTypes = {
+        IOU: 'IOU',
+        confirmIOU: 'confirm-IOU',
         pubkeyAnnounce: 'pubkey-announce',
         conditionalPromise: 'conditional-promise',
         embeddablePromise: 'embeddable-promise',
