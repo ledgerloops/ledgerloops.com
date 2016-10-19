@@ -1,5 +1,4 @@
-
-module.exports.search = function(ledgers) {
+function search(ledgers) {
   var debtors = {};
   var creditors = {};
   for (var i=0; i<ledgers.length; i++) {
@@ -42,4 +41,13 @@ module.exports.search = function(ledgers) {
     }
   }
   return peerPairs;
+};
+
+function getPeerPair(pubkey) {
+  return ['unknown', 'unknown'];
+}
+
+module.exports = {
+  search,
+  getPeerPair,
 };

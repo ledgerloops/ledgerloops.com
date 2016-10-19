@@ -51,6 +51,13 @@ Ledger.prototype.toObj = function() {
   };
 }
 
+Ledger.prototype.addDebt = function(debt) {
+  this._addToHistory(debt);
+  for (var currency in debt.addedDebts) {
+    this._addToDebts(this._myNick, debt.addedDebts[currency], currency);
+  }
+}
+
 Ledger.prototype.createIOU = function(amount, currency) {
   var debt = {
     debtor: this._myNick,
@@ -60,8 +67,7 @@ Ledger.prototype.createIOU = function(amount, currency) {
      },
      confirmedByPeer: false,
   };
-  this._addToHistory(debt);
-  this._addToDebts(this._myNick, amount, currency);
+  this.addDebt(debt);
   return debt;
 }
 
