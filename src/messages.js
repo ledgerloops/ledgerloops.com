@@ -22,18 +22,18 @@ module.exports = {
   },
 // * [conditional-promise] C to B: If ${A1} promises to give 0.01USD to ${C2},
 //                                 I will substract it from your debt.
-  conditionalPromise: function(pubkey1, pubkey2) {
+  conditionalPromise: function(pubkey, pubkey2) {
     return stringify({
       msgType: 'conditional-promise',
-      pubkey1,
+      pubkey,
       pubkey2,
     });
   },
 // * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
-  embeddablePromise: function(pubkey1, pubkey2) {
+  embeddablePromise: function(pubkey, pubkey2) {
     return stringify({
       msgType: 'embeddable-promise',
-      pubkey1,
+      pubkey,
       pubkey2,
     });
   },
@@ -41,10 +41,10 @@ module.exports = {
 //                               to ${C2}, satisfying your condition:
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Please distract it from my debt as promised.
-  satisfyCondition: function(pubkey1, pubkey2, embeddablePromise, signature) {
+  satisfyCondition: function(pubkey, pubkey2, embeddablePromise, signature) {
     return stringify({
       msgType: 'satisfy-condition',
-      pubkey1,
+      pubkey,
       pubkey2,
       embeddablePromise,
       signature,
@@ -55,22 +55,22 @@ module.exports = {
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Let's settle it against my debt.
 //                               ${proofOfOwningC2}
-  claimFulfillment: function(pubkey1, pubkey2, embeddablePromise, signature1, proofOfOwnership2) {
+  claimFulfillment: function(pubkey, pubkey2, embeddablePromise, signature1, proofOfOwnership2) {
     return stringify({
       msgType: 'claim-fulfillment',
       embeddablePromise,
-      pubkey1,
+      pubkey,
       signature1,
       pubkey2,
       proofOfOwnership2,
     });
   },
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to
-//                                   ${signatureFromA1} in the ledger entry.
-  confirmLedgerUpdate: function(debt) {
+//                                   chain ${A1} in the ledger entry.
+  confirmLedgerUpdate: function(pubkey) {
     return stringify({
       msgType: 'confirm-ledger-update',
-      debt,
+      pubkey,
     });
   },
 };

@@ -1,4 +1,8 @@
-function search(ledgers) {
+var signatures = require('./signatures');
+
+var peerPairs = {};
+
+function findNewPeerPairs(ledgers) {
   var debtors = {};
   var creditors = {};
   for (var i=0; i<ledgers.length; i++) {
@@ -27,7 +31,7 @@ function search(ledgers) {
   // TODO: smart way to choose this value:
   var amount = 0.01;
 
-  var peerPairs = [];
+  var newPeerPairs = [];
   for (var currency in debtors) {
     // TODO: randomize order in which peerPairs are formed:
     for (var i=0; i<debtors[currency].length; i++) {
@@ -35,19 +39,26 @@ function search(ledgers) {
         debtors[currency][i].amount -= amount;
         creditors[currency][j].amount -= amount;
         if ((debtors[i].amount >= 0) && (creditors[j].amount >= 0)) {
-          peerPairs.push({ debtorNick: debtors[i].peerNick, creditorNick: creditors[j].peerNick, amount, currency });
+          var pubkey = signatures.generateKeyPair().pub;
+          peerPairs[pubkey] = {
+            debtorNick: debtors[i].peerNick,
+            creditorNick: creditors[j].peerNick,
+            amount,
+            currency,
+          };
+          newPeerPairs.push(pubkey);
         }
       }
     }
   }
-  return peerPairs;
+  return Promise.resolve(newPeerPairs);
 };
 
 function getPeerPair(pubkey) {
-  return ['unknown', 'unknown'];
+  return peerPairs[pubkey];
 }
 
 module.exports = {
-  search,
+  findNewPeerPairs,
   getPeerPair,
 };

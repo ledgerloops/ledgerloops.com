@@ -1,9 +1,15 @@
 // just a mock, so far:
+var keypairs = {};
 module.exports = {
   generateKeypair: function() {
-    return { pub: 'pub', priv: 'priv' };
+    keypairs['pub'] = 'priv';
+    return 'pub';
   },
-  sign: function(clearText, keypair) {
+  havePubkey: function(pubkey) {
+    return (typeof keypairs[pubkey] !== 'undefined');
+  },
+  sign: function(clearText, pubkey) {
+    var privkey = keypairs[pubkey];
     return 'signature';
   },
 };
