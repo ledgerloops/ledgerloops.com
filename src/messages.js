@@ -1,7 +1,4 @@
-
-function stringify(obj) {
-  return JSON.stringify(obj, null, 2);
-}
+var stringify = require('./stringify');
 
 module.exports = {
 // * [pubkey-announce] A to C: My pubkey is ${A1}.

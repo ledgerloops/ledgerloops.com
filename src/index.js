@@ -1,35 +1,35 @@
 var simulator = require('./simulator');
-var SettlementEngine = require('./settlement-engine');
+var Agent = require('./agents');
 
-var settlementEngines = {
+var agents = {
 };
 
-function react(agent, debtorNick, creditorNick, senderPeerType, text) {
-  console.log('react', agent, debtorNick, creditorNick, senderPeerType, text);
-  return settlementEngines[agent].generateReactions(text, senderPeerType).then((reactions) => {
+function react(agentNick, debtorNick, creditorNick, senderPeerType, text) {
+  console.log('react', agentNick, debtorNick, creditorNick, senderPeerType, text);
+  return agents[agentNick].generateReactions(text, senderPeerType).then((reactions) => {
     console.log(reactions);
     for (var i=0; i<reactions.length; i++) {
       if (reactions[i].to === 'debtor') {
-        simulator.simulateMessage(agent, debtorNick, reactions[i].msg);
+        simulator.simulateMessage(agentNick, debtorNick, reactions[i].msg);
       } else {
-        simulator.simulateMessage(agent, creditorNick, reactions[i].msg);
+        simulator.simulateMessage(agentNick, creditorNick, reactions[i].msg);
       }
     }
   });
 }
 
-function connectEngine(agent, debtorNick, creditorNick) {
-  simulator.setMessageHandler(agent, function(fromNick, text) {
-    console.log(`${agent} received this message from ${fromNick}: ${text}`);
+function connectEngine(agentNick, debtorNick, creditorNick) {
+  simulator.setMessageHandler(agentNick, function(fromNick, text) {
+    console.log(`${agentNick} received this message from ${fromNick}: ${text}`);
     var senderPeerType = (fromNick === debtorNick ? 'debtor' : 'creditor');
-    react(agent, debtorNick, creditorNick, senderPeerType, text);
+    react(agentNick, debtorNick, creditorNick, senderPeerType, text);
   });
 }
 
 function createAgents(nicks) {
   for (var i=0; i<nicks.length; i++) {
     simulator.addAgent(nicks[i]);
-    settlementEngines[nicks[i]] = new SettlementEngine();
+    agents[nicks[i]] = new Agent();
   }
 }
 
@@ -51,7 +51,7 @@ simulator.addConnection('geraldine', 'alice');
 // Let's say Alice owes Bob owes ... owes Geraldine owes Alice 0.01 USD.
 // That means Alice's creditor (to whom she owes) is Bob, and Alice's debtor (who owes her) is Geraldine.
 
-// define who owes, and initialize each agent's SettlementEngine:
+// define who owes, and initialize each agent:
             //	agent:		debtor:		creditor:
 connectEngine(	'alice',	'geraldine',	'bob');
 connectEngine(	'bob',		'alice',	'charlie');

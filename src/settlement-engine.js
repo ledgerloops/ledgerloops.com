@@ -1,5 +1,6 @@
 const messages = require('./messages');
 const signatures = require('./signatures');
+const stringify = require('./stringify');
 
 //  pubkeyAnnounce: function(pubkey) {
 //  conditionalPromise: function(pubkey1, pubkey2) {
@@ -87,7 +88,7 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
           // reduce A's debt on ledger
           resolve([
             { to: 'debtor', msg: messages.confirmLedgerUpdate() },
-            { to: 'creditor', msg: JSON.stringify(msgObj) },
+            { to: 'creditor', msg: stringify(msgObj) },
           ]);
         }
         break;
@@ -124,7 +125,7 @@ SettlementEngine.prototype.generateReactions = function(incomingMsg, from) {
            ]);
         } else { // you are B
           resolve([
-            { to: 'debtor', msg: JSON.stringify(msgObj) },
+            { to: 'debtor', msg: stringify(msgObj) },
           ]);
         }
         break;
