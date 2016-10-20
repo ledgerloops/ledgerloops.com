@@ -1,4 +1,204 @@
-var SettlementEngine = require('../../src/settlement-engine');
+var rewire = require('rewire');
+var SettlementEngine = rewire('../../src/settlement-engine');
+var assert = require('assert');
+var sinon = require('sinon');
+var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
+
+var shouldHaveKeypairs; // TODO: use sinon for this
+SettlementEngine.__set__('signatures', {
+  generateKeypair: function() {
+    return 'pub';
+  },
+  haveKeypair: function(pubkey) {
+    console.log('it is checking keypair', pubkey);
+    return (shouldHaveKeypairs.indexOf(pubkey) !== -1);
+  },
+  proofOfOwnership: function(pubkey) {
+    return 'proof';
+  },
+  sign: function(cleartext, pubkey) {
+    console.log(`signing "${cleartext}" with "${pubkey}"`);
+    return 'signature';
+  },
+});
+console.log('signatures stub set');
+
+describe('SettlementEngine.generateReactions', function() {
+  var engine = new SettlementEngine();
+  it('should react correctly to pubkey-announce', function() {
+    shouldHaveKeypairs = [];
+    return engine.generateReactions('creditor', {
+      msgType: 'pubkey-announce',
+      pubkey: 'asdf',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          msgType: 'conditional-promise',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to conditional-promise if haveKeypair', function() {
+    shouldHaveKeypairs = ['asdf'];
+    return engine.generateReactions('creditor', {
+      msgType: 'conditional-promise',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myCreditor',
+        msg: stringify({
+          msgType: 'satisfy-condition',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+          embeddablePromise: {
+            msgType: 'embeddable-promise',
+            pubkey: 'asdf',
+            pubkey2: 'pub',
+          },
+          signature: 'signature',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to conditional-promise if not haveKeypair', function() {
+    shouldHaveKeypairs = [];
+    return engine.generateReactions('creditor', {
+      msgType: 'conditional-promise',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          msgType: 'conditional-promise',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to satisfy-condition (not have pubkey2)', function() {
+    shouldHaveKeypairs = [];
+    return engine.generateReactions('debtor', {
+      msgType: 'satisfy-condition',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+      embeddablePromise: {
+        msgType: 'embeddable-promise',
+        pubkey: 'asdf',
+        pubkey2: 'pub',
+      },
+      signature: 'signature',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 2);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          msgType: 'confirm-ledger-update',
+          pubkey: 'asdf',
+        })
+      });
+      assert.deepEqual(reactions[1], {
+        to: 'myCreditor',
+        msg: stringify({
+          msgType: 'satisfy-condition',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+          embeddablePromise: {
+            msgType: 'embeddable-promise',
+            pubkey: 'asdf',
+            pubkey2: 'pub',
+          },
+          signature: 'signature',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to satisfy-condition (have pubkey2)', function() {
+    shouldHaveKeypairs = ['pub'];
+    return engine.generateReactions('debtor', {
+      msgType: 'satisfy-condition',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+      embeddablePromise: {
+        msgType: 'embeddable-promise',
+        pubkey: 'asdf',
+        pubkey2: 'pub',
+      },
+      signature: 'signature',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 2);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          msgType: 'confirm-ledger-update',
+          pubkey: 'asdf',
+        })
+      });
+      assert.deepEqual(reactions[1], {
+        to: 'myCreditor',
+        msg: stringify({
+          msgType: 'claim-fulfillment',
+          embeddablePromise: {
+            msgType: 'embeddable-promise',
+            pubkey: 'asdf',
+            pubkey2: 'pub',
+          },
+          pubkey: 'asdf',
+          signature1: 'signature',
+          pubkey2: 'pub',
+          proofOfOwnership2: 'proof',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to claim-fulfillment (have pubkey)', function() {
+    shouldHaveKeypairs = ['asdf'];
+    return engine.generateReactions('debtor', {
+      msgType: 'claim-fulfillment',
+      embeddablePromise: {
+        msgType: 'embeddable-promise',
+        pubkey: 'asdf',
+        pubkey2: 'pub',
+      },
+      pubkey: 'asdf',
+      signature1: 'signature',
+      pubkey2: 'pub',
+      proofOfOwnership2: 'proof',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          msgType: 'confirm-ledger-update',
+          pubkey: 'asdf',
+        })
+      });
+    });
+  });
+
+  it('should react correctly to confirm-ledger-update', function() {
+    shouldHaveKeypair = false;
+    return engine.generateReactions('creditor', {
+      msgType: 'confirm-ledger-update',
+      pubkey: 'asdf',
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 0);
+    });
+  });
+});
 
 function nextStep(actors, incoming) {
   var outgoing = [];
@@ -18,6 +218,7 @@ function nextStep(actors, incoming) {
       throw new Error('sender is neither debtor nor creditor of receiver');
     }
     return actors[receiver].engine.generateReactions(fromRole, msgObj, debtorNick, creditorNick).then((reactions) => {
+      console.log({ reactions });
       for (var i=0; i<reactions.length; i++) {
         outgoing.push({
           sender: receiver,
@@ -40,7 +241,7 @@ function nextStep(actors, incoming) {
   });
 }
 
-function test_settlement_sequence() {
+describe('Settlement process', function() {
   var actors = {
     'a': {
       debtorNick: 'b',
@@ -58,41 +259,147 @@ function test_settlement_sequence() {
       engine: new SettlementEngine(),
     },
   };
+
+  // kickstart process with A sending pubkey-announce to B:
   var traffic1 = [{
-    sender: undefined,
-    receiver: 'a',
-    msgObj: {},
+    sender: 'a',
+    receiver: 'b',
+    msgObj: {
+      msgType: 'pubkey-announce',
+      pubkey: 'fake',
+    },
   }];
-  console.log('Step 1:');
-  return nextStep(actors, traffic1).then((traffic2) => {
-    console.log('Step 2:');
-    return nextStep(actors, traffic2);
-  }).then((traffic3) => {
-    console.log('Step 3:');
-    return nextStep(actors, traffic3);
-  }).then((traffic4) => {
-    console.log('Step 4:');
-    return nextStep(actors, traffic4);
-  }).then((traffic5) => {
-    console.log('Step 5:');
-    return nextStep(actors, traffic5);
-  }).then((traffic6) => {
-    console.log('Step 6:');
-    return nextStep(actors, traffic6);
-  }).then((traffic7) => {
-    console.log('Step 7:');
-    return nextStep(actors, traffic7);
-  }).then((traffic8) => {
-    console.log('Step 8:');
-    return nextStep(actors, traffic8);
-  }).then((traffic9) => {
-    console.log('Step 9:');
-    return nextStep(actors, traffic9);
+  it('should find a settlement', function() {
+    console.log('Step 1:');
+    // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
+    // But we know that B is going to react to this traffic, so it's OK here:
+    shouldHaveKeypairs = [];
+    return nextStep(actors, traffic1).then((traffic2) => {
+      assert.deepEqual(traffic2, [
+        {
+          msgObj: {
+            msgType: 'conditional-promise',
+            pubkey: 'fake',
+            pubkey2: 'pub',
+          },
+          receiver: 'c',
+          sender: 'b',
+        }
+      ]);
+      console.log('Step 2:');
+      shouldHaveKeypairs = []; // c is the only one reacting now
+      return nextStep(actors, traffic2);
+    }).then((traffic3) => {
+      assert.deepEqual(traffic3, [
+        {
+          msgObj: {
+            msgType: 'conditional-promise',
+            pubkey: 'fake',
+            pubkey2: 'pub',
+          },
+          receiver: 'a',
+          sender: 'c',
+        }
+      ]);
+      console.log('Step 3:');
+      shouldHaveKeypairs = ['fake']; // a is the only one reacting now
+      return nextStep(actors, traffic3);
+    }).then((traffic4) => {
+      assert.deepEqual(traffic4, [
+        {
+          msgObj: {
+            msgType: 'satisfy-condition',
+            pubkey: 'fake',
+            pubkey2: 'pub',
+            embeddablePromise: {
+              msgType: 'embeddable-promise',
+              pubkey: 'fake',
+              pubkey2: 'pub',
+            },
+            signature: 'signature',
+          },
+          receiver: 'c',
+          sender: 'a',
+        }
+      ]);
+      console.log('Step 4:');
+      shouldHaveKeypairs = []; // c is the only one reacting now
+      return nextStep(actors, traffic4);
+    }).then((traffic5) => {
+      assert.deepEqual(traffic5, [
+        {
+          msgObj: {
+            msgType: 'confirm-ledger-update',
+           pubkey: 'fake',
+          },
+          receiver: 'a',
+          sender: 'c',
+        },
+        {
+          msgObj: {
+            msgType: 'satisfy-condition',
+            pubkey: 'fake',
+            pubkey2: 'pub',
+            embeddablePromise: {
+              msgType: 'embeddable-promise',
+              pubkey: 'fake',
+              pubkey2: 'pub',
+            },
+            signature: 'signature',
+          },
+          receiver: 'b',
+          sender: 'c',
+        }
+      ]);
+      console.log('Step 5:');
+      shouldHaveKeypairs = ['pub']; // a is now responding only to confirm-legder-update; setting this for b
+      return nextStep(actors, traffic5);
+    }).then((traffic6) => {
+      assert.deepEqual(traffic6, [
+        {
+          msgObj: {
+            msgType: 'confirm-ledger-update',
+           pubkey: 'fake',
+          },
+          receiver: 'c',
+          sender: 'b',
+        },
+        {
+          msgObj: {
+            msgType: 'claim-fulfillment',
+            pubkey: 'fake',
+            pubkey2: 'pub',
+            embeddablePromise: {
+              msgType: 'embeddable-promise',
+              pubkey: 'fake',
+              pubkey2: 'pub',
+            },
+            signature1: 'signature',
+            proofOfOwnership2: 'proof',
+          },
+          receiver: 'a',
+          sender: 'b',
+        }
+      ]);
+      console.log('Step 6:');
+      shouldHaveKeypairs = ['fake']; // c is now responding only to confirm-legder-update; setting this for a
+      return nextStep(actors, traffic6);
+    }).then((traffic7) => {
+      assert.deepEqual(traffic7, [
+        {
+          msgObj: {
+            msgType: 'confirm-ledger-update',
+           pubkey: 'fake',
+          },
+          receiver: 'b',
+          sender: 'a',
+        },
+      ]);
+      shouldHaveKeypairs = ['pub']; // setting this for b
+      console.log('Step 7:');
+      return nextStep(actors, traffic7);
+    }).then((traffic8) => {
+      assert.equal(traffic8.length, 0);
+    });
   });
-}
-
-// TODO: some automated checks on the traffic steps, instead of visually checking console log during this test
-
-Promise.all([
-  test_settlement_sequence(),
-]).then(() => { console.log('OK'); });
+});
