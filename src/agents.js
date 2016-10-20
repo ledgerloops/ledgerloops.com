@@ -30,14 +30,14 @@ Agent.prototype._maybeStartChains = function() {
     }
     return this._sendMessages(messages);
   });
-}
+};
 
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
   messaging.send(this._myNick, creditorNick, messages.IOU(debt));
   return this._maybeStartChains();
-}
+};
 
 Agent.prototype._sendMessages = function(reactions) {
   console.log(reactions);
@@ -74,12 +74,12 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
         msg: messages.confirmLedgerUpdate(fromNick, debt.note),
       }]);
     });
-    break;
+    // break;
 
   case 'confirm-IOU':
     this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
     return this._maybeStartChains();
-    break;
+    // break;
 
   default: // msgType is not related to ledgers, but to settlements:
     var [ debtorNick, creditorNick ] = search.getPeerPair(incomingMsgObj.pubkey);
@@ -94,6 +94,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
         incomingMsgObj).then(this._sendMessages.bind(this));
     break;
   }
-}
+};
 
 module.exports = Agent;

@@ -2,7 +2,7 @@
 var keypairs = {};
 module.exports = {
   generateKeypair: function() {
-    keypairs['pub'] = 'priv';
+    keypairs.pub = 'priv';
     return 'pub';
   },
   havePubkey: function(pubkey) {

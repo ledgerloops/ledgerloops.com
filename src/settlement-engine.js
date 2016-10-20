@@ -123,6 +123,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
       }
     }
   });
-}
+};
 
 module.exports = SettlementEngine;
