@@ -1,8 +1,9 @@
 var messages = require('../../src/messages');
+var assert = require('assert');
 
-var tests = [
-  (function test_msgTypeMatches() {
-    return new Promise((resolve, reject) => {
+describe('Messages', function() {
+  describe('msgObj.msgType', function() {
+    it('should be correct for each type', function() {
       var msgTypes = {
         IOU: 'IOU',
         confirmIOU: 'confirm-IOU',
@@ -13,17 +14,10 @@ var tests = [
         claimFulfillment: 'claim-fulfillment',
         confirmLedgerUpdate: 'confirm-ledger-update',
      }; 
-      for (func in msgTypes) {
-        var msg = JSON.parse(messages[func]());
-        if (msg.msgType !== msgTypes[func]) {
-          console.log(func, msgTypes[func], msg.msgType);
-          reject();
-          return;
-        }
-      }
-      resolve();
+     for (func in msgTypes) {
+       var msgObj = JSON.parse(messages[func]());
+       assert.equal(msgObj.msgType, msgTypes[func]);
+     }
     });
-  })(),
-];
-
-Promise.all(tests).then(() => { console.log('OK'); });
+  });
+});
