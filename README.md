@@ -1,2 +1,6 @@
-# opentabs-redirector
-Redirect opentabs.net to http://unhosted.github.io/opentabs/
+The contents of http://opentabs.net
+
+# Build
+
+$ npm install -g grunt-cli
+$ npm install

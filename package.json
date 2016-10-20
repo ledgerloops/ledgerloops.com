@@ -1,0 +1,30 @@
+{
+  "name": "opentabs",
+  "version": "0.1.0",
+  "description": "Money without Banks",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0"
+  },
+  "scripts": {
+    "test": "grunt jshint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michielbdejong/opentabs.net-website.git"
+  },
+  "author": "Michiel de Jong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/michielbdejong/opentabs.net-website/issues"
+  },
+  "homepage": "https://github.com/michielbdejong/opentabs.net-website#readme"
+}
