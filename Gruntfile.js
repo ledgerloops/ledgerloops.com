@@ -11,13 +11,24 @@ module.exports = function(grunt) {
         src: 'src/**',
         filter: 'isFile'
       }
+    },
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec',
+          clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false) 
+        },
+        src: ['test/unit/*.js']
+      }
     }
   });
 
   // Load plugins
   grunt.loadNpmTasks('grunt-contrib-jshint');
-
+  grunt.loadNpmTasks('grunt-mocha-test');
+ 
   // Default task(s).
-  grunt.registerTask('default', ['jshint']);
+  grunt.registerTask('test', ['jshint', 'mochaTest']);
+  grunt.registerTask('default', ['test']);
 
 };
