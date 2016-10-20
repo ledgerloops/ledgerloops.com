@@ -18,7 +18,7 @@ module.exports = function(grunt) {
           reporter: 'spec',
           clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false) 
         },
-        src: ['test/unit/*.js']
+        src: ['test/unit/*.js', 'test/integration/*.js']
       }
     }
   });

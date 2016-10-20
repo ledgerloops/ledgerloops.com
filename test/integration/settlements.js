@@ -1,4 +1,5 @@
 var SettlementEngine = require('../../src/settlement-engine');
+var assert = require('assert');
 
 function nextStep(actors, incoming) {
   var outgoing = [];
@@ -41,7 +42,7 @@ function nextStep(actors, incoming) {
   });
 }
 
-function test_settlement_sequence() {
+describe('Settlement process', function() {
   var actors = {
     'a': {
       debtorNick: 'b',
@@ -69,36 +70,34 @@ function test_settlement_sequence() {
       pubkey: 'fake',
     },
   }];
-  console.log('Step 1:');
-  return nextStep(actors, traffic1).then((traffic2) => {
-    console.log('Step 2:');
-    return nextStep(actors, traffic2);
-  }).then((traffic3) => {
-    console.log('Step 3:');
-    return nextStep(actors, traffic3);
-  }).then((traffic4) => {
-    console.log('Step 4:');
-    return nextStep(actors, traffic4);
-  }).then((traffic5) => {
-    console.log('Step 5:');
-    return nextStep(actors, traffic5);
-  }).then((traffic6) => {
-    console.log('Step 6:');
-    return nextStep(actors, traffic6);
-  }).then((traffic7) => {
-    console.log('Step 7:');
-    return nextStep(actors, traffic7);
-  }).then((traffic8) => {
-    console.log('Step 8:');
-    return nextStep(actors, traffic8);
-  }).then((traffic9) => {
-    console.log('Step 9:');
-    return nextStep(actors, traffic9);
+  it('should find a settlement', function() {
+    console.log('Step 1:');
+    return nextStep(actors, traffic1).then((traffic2) => {
+      console.log('Step 2:');
+      return nextStep(actors, traffic2);
+    }).then((traffic3) => {
+      console.log('Step 3:');
+      return nextStep(actors, traffic3);
+    }).then((traffic4) => {
+      console.log('Step 4:');
+      return nextStep(actors, traffic4);
+    }).then((traffic5) => {
+      console.log('Step 5:');
+      return nextStep(actors, traffic5);
+    }).then((traffic6) => {
+      console.log('Step 6:');
+      return nextStep(actors, traffic6);
+    }).then((traffic7) => {
+      console.log('Step 7:');
+      return nextStep(actors, traffic7);
+    }).then((traffic8) => {
+      console.log('Step 8:');
+      return nextStep(actors, traffic8);
+    }).then((traffic9) => {
+      console.log('Step 9:');
+      return nextStep(actors, traffic9);
+    }).then((traffic10) => {
+      assert.equal(traffic10, []);
+    });
   });
-}
-
-// TODO: some automated checks on the traffic steps, instead of visually checking console log during this test
-
-Promise.all([
-  test_settlement_sequence(),
-]).then(() => { console.log('OK'); });
+});
