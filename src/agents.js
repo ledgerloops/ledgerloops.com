@@ -1,12 +1,13 @@
 var Ledger = require('./ledgers');
 var SettlementEngine = require('./settlement-engine');
-var search = require('./search');
+var Search = require('./search');
 var stringify = require('./stringify');
 var messaging = require('./messaging');
 var messages = require('./messages');
 
 function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
+  this._search = new Search();
   this._myNick = myNick;
   this._ledgers = {};
   messaging.addChannel(myNick, (fromNick, msgStr) => {
@@ -21,10 +22,10 @@ Agent.prototype._ensurePeer = function(peerNick) {
 };
 
 Agent.prototype._maybeStartChains = function() {
-  return search.findNewPeerPairs(this._ledgers).then((newPubkeys) => {
+  return this._search.findNewPeerPairs(this._ledgers).then((newPubkeys) => {
     var messages = [];
     for (var i=0; i<newPubkeys.length; i++) {
-      var peerPair = search.getPeerPair(newPubkeys[i]);
+      var peerPair = this._search.getPeerPair(newPubkeys[i]);
       var msg = messages.pubkeyAnnounce(newPubkeys[i]); // TODO: include amount and currency in this and other msgTypes
       messages.push({ to: peerPair.debtorNick, msg });
     }
@@ -83,7 +84,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   default: // msgType is not related to ledgers, but to settlements:
-    var [ debtorNick, creditorNick ] = search.getPeerPair(incomingMsgObj.pubkey);
+    var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {
       fromRole = 'debtor';
     } else if (fromNick === creditorNick) { 

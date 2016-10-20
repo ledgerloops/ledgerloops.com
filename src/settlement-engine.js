@@ -1,6 +1,6 @@
 // using var instead of const here because of https://www.npmjs.com/package/rewire#limitations
 var messages = require('./messages');
-var signatures = require('./signatures');
+var Signatures = require('./signatures');
 var stringify = require('./stringify');
 
 //  pubkeyAnnounce: function(pubkey) {
@@ -55,6 +55,7 @@ var stringify = require('./stringify');
 //                                          ${signatureFromA1} in the ledger entry.
 
 function SettlementEngine() {
+  this.signatures = new Signatures();
 }
 
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
@@ -64,9 +65,9 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
       switch(msgObj.msgType) {
       case 'satisfy-condition':
         console.log('satisfy-condition from debtor', msgObj);
-        if (signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
+        if (this.signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
-          var proof = signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
+          var proof = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
           resolve([
             { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
             { to: creditorNick, msg: messages.claimFulfillment(msgObj.pubkey, msgObj.pubkey2, msgObj.embeddablePromise, msgObj.signature, proof) },
@@ -92,7 +93,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
     } else if (fromRole === 'creditor') {
       switch(msgObj.msgType) {
       case 'pubkey-announce': // you are C
-        pubkey = signatures.generateKeypair();
+        pubkey = this.signatures.generateKeypair();
         var condProm = messages.conditionalPromise(msgObj.pubkey, pubkey);
         resolve([
           { to: debtorNick, msg: condProm },
@@ -100,11 +101,11 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         break;
       case 'conditional-promise':
         console.log('conditional-promise from creditor');
-        if (signatures.haveKeypair(msgObj.pubkey)) { // you are A
+        if (this.signatures.haveKeypair(msgObj.pubkey)) { // you are A
           console.log('pubkey is mine');
           // create embeddable promise
           var embeddablePromise = messages.embeddablePromise(msgObj.pubkey, msgObj.pubkey2);
-          var signature = signatures.sign(embeddablePromise, msgObj.pubkey);
+          var signature = this.signatures.sign(embeddablePromise, msgObj.pubkey);
           // FIXME: not sure yet if embeddablePromise should be double-JSON-encoded to make signature deterministic,
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           var msg2 = messages.satisfyCondition(msgObj.pubkey, msgObj.pubkey2, JSON.parse(embeddablePromise), signature);

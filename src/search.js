@@ -1,8 +1,9 @@
-var signatures = require('./signatures');
+function Search() {
+  this.peerPairs = {};
+}
 
-var peerPairs = {};
 
-function findNewPeerPairs(ledgers) {
+Search.prototype.findNewPeerPairs = function(ledgers) {
   var debtors = {};
   var creditors = {};
   var newPeerPairs = [];
@@ -35,7 +36,7 @@ function findNewPeerPairs(ledgers) {
     }
   }
 
-  function pairPeers() {
+  function pairPeers(signatures) {
     for (var currency in debtors) {
       // TODO: randomize order in which peerPairs are formed:
       for (var i=0; i<debtors[currency].length; i++) {
@@ -60,13 +61,10 @@ function findNewPeerPairs(ledgers) {
   findCreditorsAndDebtors();
   pairPeers();
   return Promise.resolve(newPeerPairs);
-}
-
-function getPeerPair(pubkey) {
-  return peerPairs[pubkey];
-}
-
-module.exports = {
-  findNewPeerPairs,
-  getPeerPair,
 };
+
+Search.getPeerPair = function(pubkey) {
+  return peerPairs[pubkey];
+};
+
+module.exports = Search;
