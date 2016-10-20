@@ -5,22 +5,23 @@ var sinon = require('sinon');
 var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
 
 var shouldHaveKeypairs; // TODO: use sinon for this
-SettlementEngine.__set__('signatures', {
-  generateKeypair: function() {
-    return 'pub';
-  },
-  haveKeypair: function(pubkey) {
-    console.log('it is checking keypair', pubkey);
-    return (shouldHaveKeypairs.indexOf(pubkey) !== -1);
-  },
-  proofOfOwnership: function(pubkey) {
-    return 'proof';
-  },
-  sign: function(cleartext, pubkey) {
-    console.log(`signing "${cleartext}" with "${pubkey}"`);
-    return 'signature';
-  },
-});
+function MockSignatures() {};
+
+MockSignatures.prototype.generateKeypair = function() {
+  return 'pub';
+};
+MockSignatures.prototype.haveKeypair = function(pubkey) {
+  console.log('it is checking keypair', pubkey);
+  return (shouldHaveKeypairs.indexOf(pubkey) !== -1);
+};
+MockSignatures.prototype.proofOfOwnership = function(pubkey) {
+  return 'proof';
+};
+MockSignatures.prototype.sign = function(cleartext, pubkey) {
+  console.log(`signing "${cleartext}" with "${pubkey}"`);
+  return 'signature';
+};
+SettlementEngine.__set__('Signatures', MockSignatures);
 console.log('signatures stub set');
 
 describe('SettlementEngine.generateReactions', function() {
