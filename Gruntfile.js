@@ -6,6 +6,7 @@ module.exports = function(grunt) {
     jshint: {
       ignore_warning: {
         options: {
+          'esversion': 6
         },
         src: 'src/**',
         filter: 'isFile'

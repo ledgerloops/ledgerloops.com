@@ -7,7 +7,7 @@ function Ledger(peerNick, myNick) {
 
 Ledger.prototype._addToHistory = function(debt) {
   this._history.push(debt);
-}  
+};
 
 Ledger.prototype._normalizeDebt = function(currency) {
   if (this._debts[currency].amount === 0) {
@@ -24,7 +24,7 @@ Ledger.prototype._normalizeDebt = function(currency) {
     this._debts[currency].debtor = creditor;
     this._debts[currency].amount = -this._debts[currency].amount;
   }
-}
+};
 
 Ledger.prototype._addToDebts = function(debtor, amount, currency) {
   if (typeof this._debts[currency] === 'undefined') {
@@ -40,7 +40,7 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
     }
     this._normalizeDebt(currency);
   }
-}
+};
 
 
 Ledger.prototype.toObj = function() {
@@ -49,14 +49,14 @@ Ledger.prototype.toObj = function() {
     debts: this._debts,
     history: this._history.slice(-2),
   };
-}
+};
 
 Ledger.prototype.addDebt = function(debt) {
   this._addToHistory(debt);
   for (var currency in debt.addedDebts) {
     this._addToDebts(this._myNick, debt.addedDebts[currency], currency);
   }
-}
+};
 
 Ledger.prototype.createIOU = function(amount, currency) {
   var debt = {
@@ -69,7 +69,7 @@ Ledger.prototype.createIOU = function(amount, currency) {
   };
   this.addDebt(debt);
   return debt;
-}
+};
 
 Ledger.prototype.markIOUConfirmed = function(note) {
   for (var i=0; i<this._history.length; i++) {
@@ -79,6 +79,6 @@ Ledger.prototype.markIOUConfirmed = function(note) {
     }
   }
   return false;
-}
+};
 
 module.exports = Ledger;
