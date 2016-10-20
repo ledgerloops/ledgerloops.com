@@ -1,6 +1,7 @@
-const messages = require('./messages');
-const signatures = require('./signatures');
-const stringify = require('./stringify');
+// using var instead of const here because of https://www.npmjs.com/package/rewire#limitations
+var messages = require('./messages');
+var signatures = require('./signatures');
+var stringify = require('./stringify');
 
 //  pubkeyAnnounce: function(pubkey) {
 //  conditionalPromise: function(pubkey, pubkey2) {
@@ -63,24 +64,26 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
       switch(msgObj.msgType) {
       case 'satisfy-condition':
         console.log('satisfy-condition from debtor', msgObj);
-        if (this.keypair && msgObj.embeddablePromise.pubkey2 === this.keypair.pub) { // you are C
+        if (signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
+          var proof = signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate() },
-            { to: creditorNick, msg: messages.claimFulfillment(msgObj.embeddablePromise) },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
+            { to: creditorNick, msg: messages.claimFulfillment(msgObj.pubkey, msgObj.pubkey2, msgObj.embeddablePromise, msgObj.signature, proof) },
           ]);
         } else { // you are B
           // reduce A's debt on ledger
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate() },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
             { to: creditorNick, msg: stringify(msgObj) },
           ]);
         }
         break;
       case 'claim-fulfillment': // you are A
         // reduce C's debt:
+        // TODO, here and in other places: actually check the signature on the claim and stuff :)
         resolve([
-          { to: debtorNick, msg: messages.confirmLedgerUpdate() },
+          { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
         ]);
         break;
       default:
@@ -125,4 +128,4 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
   });
 };
 
-module.exports = SettlementEngine;
+module.exports =  SettlementEngine;
