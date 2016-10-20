@@ -28,6 +28,7 @@ Agent.prototype._maybeStartChains = function() {
       var msg = messages.pubkeyAnnounce(newPubkeys[i]); // TODO: include amount and currency in this and other msgTypes
       messages.push({ to: peerPair.debtorNick, msg });
     }
+    console.log('maybeStartChains', this._myNick, messages);
     return this._sendMessages(messages);
   });
 };
@@ -71,7 +72,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     return this._maybeStartChains().then(() => {
       return this._sendMessages([{
         toNick: fromNick,
-        msg: messages.confirmLedgerUpdate(fromNick, debt.note),
+        msg: messages.confirmIOU(fromNick, debt.note),
       }]);
     });
     // break;
