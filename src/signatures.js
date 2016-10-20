@@ -5,7 +5,7 @@ module.exports = {
     keypairs.pub = 'priv';
     return 'pub';
   },
-  havePubkey: function(pubkey) {
+  haveKeypair: function(pubkey) {
     return (typeof keypairs[pubkey] !== 'undefined');
   },
   sign: function(clearText, pubkey) {

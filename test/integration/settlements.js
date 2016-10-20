@@ -18,6 +18,7 @@ function nextStep(actors, incoming) {
       throw new Error('sender is neither debtor nor creditor of receiver');
     }
     return actors[receiver].engine.generateReactions(fromRole, msgObj, debtorNick, creditorNick).then((reactions) => {
+      console.log({ reactions });
       for (var i=0; i<reactions.length; i++) {
         outgoing.push({
           sender: receiver,
@@ -58,10 +59,15 @@ function test_settlement_sequence() {
       engine: new SettlementEngine(),
     },
   };
+
+  // kickstart process with A sending pubkey-announce to B:
   var traffic1 = [{
-    sender: undefined,
-    receiver: 'a',
-    msgObj: {},
+    sender: 'a',
+    receiver: 'b',
+    msgObj: {
+      msgType: 'pubkey-announce',
+      pubkey: 'fake',
+    },
   }];
   console.log('Step 1:');
   return nextStep(actors, traffic1).then((traffic2) => {
