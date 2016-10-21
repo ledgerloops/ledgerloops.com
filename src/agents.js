@@ -44,18 +44,18 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     var debt = incomingMsgObj.debt;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
-    this._ledgers[fromNick].addDebt(debt);
+    var neighborChange = this._ledgers[fromNick].addDebt(debt);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.confirmIOU(fromNick, debt.note),
     }]).then(() => {
-      return this._search.setNeighbor(debtorNick, this._ledgers[debtorNick].getNeighborType());
+      return this._search.onNeighborChange(neighborChange);
     });
     // break;
 
   case 'confirm-IOU':
-    this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    return this._search.setNeighbor(creditorNick, this._ledgers[creditorNick].getNeighborType());
+    var neighborChange = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
+    return this._search.onNeighborChange(neighborChange);
     // break;
 
   default: // msgType is not related to ledgers, but to settlements:

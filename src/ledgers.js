@@ -1,3 +1,5 @@
+var neighborChangeConstants = require('./neighbor-change-constants');
+
 function Ledger(peerNick, myNick) {
   this._peerNick = peerNick;
   this._myNick = myNick;
@@ -32,13 +34,44 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
       debtor,
       amount,
     };
+    if (debtor === this._myNick) {
+      return {
+        change: neighborChangeConstants.CREDITOR_CREATED,
+        peerNick: this._peerNick,
+        currency,
+      };
+    } else {
+      return {
+        change: neighborChangeConstants.DEBTOR_CREATED,
+        peerNick: this._peerNick,
+        currency,
+      };
+    }
   } else {
+    var debtorWas = this._debts[currency].debtor;
     if (debtor === this._debts[currency].debtor) {
       this._debts[currency].amount += amount;
     } else {
       this._debts[currency].amount -= amount;
     }
     this._normalizeDebt(currency);
+    if (typeof this._debts[currency] === 'undefined') {
+      return {
+        change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_REMOVED : neighborChangeConstants:CREDITOR_REMOVED),
+        peerNick: this._peerNick,
+        currency,
+      };
+    } else {
+      if (this._debts[currency].debtor === debtorWas) {
+        return null;
+      } else {
+        return {
+          change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_TO_CREDITOR : neighborChangeConstants:CREDITOR_TO_DEBTOR),
+          peerNick: this._peerNick,
+          currency,
+        };
+      }
+    }
   }
 };
 
@@ -65,20 +98,14 @@ Ledger.prototype.createIOU = function(amount, currency) {
     addedDebts: {
       [currency]: amount,
      },
-     confirmedByPeer: false,
   };
-  this.addDebt(debt);
+  this._pendingDebts[debt.note] = debt;
   return debt;
 };
 
 Ledger.prototype.markIOUConfirmed = function(note) {
-  for (var i=0; i<this._history.length; i++) {
-    if (this._history[i].note === note) {
-      this._history[i].confirmedByPeer = true;
-      return true;
-    }
-  }
-  return false;
+  var debt = this._pendingDebts[note];
+  return this.addDebt(debt);
 };
 
 // assume agent is potentially willing to trade any debt against any
@@ -98,19 +125,10 @@ Ledger.prototype.getNeighborType = function() {
       }
     }
   }
-  if (peerIsDebtor) {
-    if (peerIsCreditor) {
-      return 'both';
-    } else {
-      return 'debtor';
-    }
-  } else {
-    if (peerIsCreditor) {
-      return 'creditor';
-    } else {
-      return 'none';
-    }
-  }
+  return {
+    'in': peerIsCreditor,
+    out: peerIsDebtor,
+  };
 };
 
 module.exports = Ledger;
