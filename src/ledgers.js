@@ -81,4 +81,36 @@ Ledger.prototype.markIOUConfirmed = function(note) {
   return false;
 };
 
+// assume agent is potentially willing to trade any debt against any
+// credit, even if the currencies don't match. later, should add option
+// for user to indicate which debt they would trade against which
+// credits, and at which exchange rate, see
+// https://github.com/michielbdejong/opentabs.net/issues/12
+Ledger.prototype.getNeighborType = function() {
+  var peerIsDebtor = false;
+  var peerIsCreditor = false;
+  for (var currency in this._debts) {
+    if (this._debts[currency].amount > 0) {
+      if (this._debts[currency].debtor === this._peerNick) {
+        peerIsDebtor = true;
+      } else {
+        peerIsCreditor = true;
+      }
+    }
+  }
+  if (peerIsDebtor) {
+    if (peerIsCreditor) {
+      return 'both';
+    } else {
+      return 'debtor';
+    }
+  } else {
+    if (peerIsCreditor) {
+      return 'creditor';
+    } else {
+      return 'none';
+    }
+  }
+};
+
 module.exports = Ledger;
