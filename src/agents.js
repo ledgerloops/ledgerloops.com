@@ -14,7 +14,7 @@ function Agent(myNick) {
   this._ledgers = {};
   this._sentIOUs = {};
   messaging.addChannel(myNick, (fromNick, msgStr) => {
-    this._handleMessage(fromNick, JSON.parse(msgStr));
+    return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
 
@@ -55,29 +55,54 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       toNick: fromNick,
       msg: messages.confirmIOU(debt.note),
     }]).then(() => {
-      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange)));
+      console.log('received an IOU message processing neighborChanges and resulting ddcd messages', neighborChanges);
+      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+        var promises = [];
+        for (var i=0; i<results.length; i++) {
+          for (var j=0; j<results[i].length; j++) {
+            console.log('SEARCH MESSAGE', results[i][j]);
+            promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
+          }
+        }
+        return Promise.all(promises);
+      });
     });
     // break;
 
   case 'confirm-IOU':
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(() => {
+    console.log('received a confirm-IOU message processing neighborChanges and resulting ddcd messages', neighborChanges);
+    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+      var promises = [];
+      for (var i=0; i<results.length; i++) {
+        for (var j=0; j<results[i].length; j++) {
+          console.log('SEARCH MESSAGE', results[i][j]);
+          promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
+        }
+      }
+      return Promise.all(promises);
+    }).then(() => {
       // handle callbacks linked to this sentIOU:
       this._sentIOUs[incomingMsgObj.note].resolve();
       delete this._sentIOUs[incomingMsgObj.note];
     });
     // break;
 
+  case 'dynamic-decentralized-cycle-detection':
+    var result = this._search.onStatusMessage(incomingMsgObj.direction, fromNick, incomingMsgObj.currency, incomingMsgObj.value);
+    console.log('ddcd msg result', result);
+    return Promise.resolve();
+    // break;
   default: // msgType is not related to ledgers, but to settlements:
     var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {
       fromRole = 'debtor';
-    } else if (fromNick === creditorNick) { 
+    } else if (fromNick === creditorNick) {
       fromRole = 'creditor';
     } else {
       throw new Error(`fromNick matches neither debtorNick nor creditorNick`);
     }
-    this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
+    return this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
         incomingMsgObj).then(this._sendMessages.bind(this));
     break;
   }
