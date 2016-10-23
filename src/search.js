@@ -13,56 +13,73 @@ function Search(messagesCallback) {
 }
 
 Search.prototype.onNeighborChange = function(neighborChange) {
+  var newNeigbors = {
+    'in': [],
+     out: [],
+  };
   switch (neighborChange.change) {
    case neighborChangeConstants.CREDITOR_CREATED:
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        active: true,
      };
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates(neighborChange, 'in');
      // break;
    case neighborChangeConstants.CREDITOR_REMOVED:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates();
      // break;
    case neighborChangeConstants.DEBTOR_CREATED:
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        active: true,
      };
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates(neighborChange, 'out');
      // break;
    case neighborChangeConstants.DEBTOR_REMOVED:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates();
      // break;
    case neighborChangeConstants.DEBTOR_TO_CREDITOR:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        active: true,
      };
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates(neighborChange, 'in');
      // break;
    case neighborChangeConstants.CREDITOR_TO_DEBTOR:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        active: true,
      };
-     return this._updateState('in').concat(this._updateState('out'));
+     return this._updateStates(neighborChange, 'out');
      // break;
    }
+};
+
+Search.prototype._updateStates = function(newNeighbor, direction) {
+  var oppositeDirection = (direction === 'in' ? 'out' : 'in');
+  var oldOppositeStatus = this._active[oppositeDirection];
+  var messages = this._updateState('in').concat(this._updateState('out'));
+  if (newNeighbor && !this._active[oppositeDirection] && !oldOppositeStatus) {
+    // new neigbor should be notified that this node was already not active on
+    // the opposite side, and still isn't after this status update:
+    messages.push({
+      peerNick: newNeighbor.peerNick,
+      currency: newNeighbor.currency,
+      direction: oppositeDirection,
+      value: false,
+    });
+  }
+  return messages;
 };
 
 // direction 'in' means check in-neighbors
 Search.prototype._updateState = function(direction) {
   for (var i in this._neighbors[direction]) {
     if (this._neighbors[direction][i].active) {
-      console.log('active neighbor found', direction);
       return this._setStatus(direction, true);
     }
   }
-  console.log('no active neighbor found', direction);
-  var res = this._setStatus(direction, false);
-  console.log({ res }, this._neighbors);
-  return res;
+  return this._setStatus(direction, false);
 };
 
 // direction 'in' value false means dead-start
@@ -71,7 +88,6 @@ Search.prototype._setStatus = function(direction, value) {
   if (this._active[direction] !== value) {
     this._active[direction] = value;
     var oppositeDirection = (direction === 'in' ? 'out' : 'in');
-    console.log({ direction, value, oppositeDirection });
     return Object.keys(this._neighbors[oppositeDirection]).map(neighborId => {
       var vals = JSON.parse(neighborId);
       return {
@@ -86,11 +102,8 @@ Search.prototype._setStatus = function(direction, value) {
 };
 
 Search.prototype.onStatusMessage = function(direction, neighborNick, currency, value) {
-  console.log('onStatusMessage', { direction, neighborNick, currency, value}, this._neighbors);
   var neighborId = JSON.stringify([neighborNick, currency]);
-  console.log(neighborId, this._neighbors[direction][neighborId]);
   this._neighbors[direction][neighborId].active = value;
-  console.log('calling _updateState');
   return this._updateState(direction);
 };
 

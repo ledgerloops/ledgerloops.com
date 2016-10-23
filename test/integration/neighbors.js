@@ -12,7 +12,7 @@ DateMock.prototype.toString = function() {
 };
 Agent.__set__('Date', DateMock);
 
-describe('one IOU sent', function() {
+describe('IOUs between Alice and Bob', function() {
   var agents = {
     alice: new Agent('alice'),
     bob: new Agent('bob'),
@@ -141,7 +141,7 @@ describe('one IOU sent', function() {
       ]);
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
       assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: true } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
       assert.deepEqual(agents.bob._search._neighbors['out'], {});
 
       return messaging.flush();
@@ -159,23 +159,23 @@ describe('one IOU sent', function() {
         }, 
       ]);
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: true } });
+      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
       assert.deepEqual(agents.bob._search._neighbors['out'], {});
 
 
       return messaging.flush();
     }).then(() => {
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: true } });
+      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
       assert.deepEqual(agents.bob._search._neighbors['out'], {});
 
       agents.alice.sendIOU('bob', 0.01, 'USD');
       return messaging.flush();
     }).then(() => {
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
+      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
       assert.deepEqual(agents.bob._search._neighbors['out'], {});
 

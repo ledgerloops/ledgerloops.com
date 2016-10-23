@@ -55,12 +55,10 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       toNick: fromNick,
       msg: messages.confirmIOU(debt.note),
     }]).then(() => {
-      console.log('received an IOU message processing neighborChanges and resulting ddcd messages', neighborChanges);
       return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
         var promises = [];
         for (var i=0; i<results.length; i++) {
           for (var j=0; j<results[i].length; j++) {
-            console.log('SEARCH MESSAGE', results[i][j]);
             promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
           }
         }
@@ -71,12 +69,10 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   case 'confirm-IOU':
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    console.log('received a confirm-IOU message processing neighborChanges and resulting ddcd messages', neighborChanges);
     return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
       var promises = [];
       for (var i=0; i<results.length; i++) {
         for (var j=0; j<results[i].length; j++) {
-          console.log('SEARCH MESSAGE', results[i][j]);
           promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
         }
       }
@@ -90,7 +86,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   case 'dynamic-decentralized-cycle-detection':
     var result = this._search.onStatusMessage(incomingMsgObj.direction, fromNick, incomingMsgObj.currency, incomingMsgObj.value);
-    console.log('ddcd msg result', result);
     return Promise.resolve();
     // break;
   default: // msgType is not related to ledgers, but to settlements:

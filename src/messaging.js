@@ -24,7 +24,8 @@ module.exports = {
   },
   send: function(fromNick, toNick, msg) {
     queue.push({ fromNick, toNick, msg });
-    console.log(`Message queued`, { fromNick, toNick, msg });
+    console.log(`Message queued from ${fromNick} to ${toNick}:`);
+    console.log(JSON.parse(msg));
     return Promise.resolve();
   },
   flush,  
