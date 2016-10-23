@@ -5,25 +5,16 @@
 // within one simulation process:
 var channels = {};
 var queue = [];
-var iteration;
 
 function flush() {
   console.log(`Flushing ${queue.length} messages`);
-  iteration = queue;
+  var iteration = queue;
   queue = [];
-  return flushIteration();
-}
-
-function flushIteration() {
-  var nextMsg = iteration.shift();
-  if(nextMsg) {
-    console.log(`Message from ${nextMsg.fromNick} to ${nextMsg.toNick}: ${nextMsg.msg}`);
-    return channels[nextMsg.toNick](nextMsg.fromNick, nextMsg.msg).then(() => {
-      return flushIteration();
-    });
-  } else {
-    return Promise.resolve();
-  }
+  return Promise.all(iteration.map(queuedMsg => {
+    return channels[queuedMsg.toNick](queuedMsg.fromNick, queuedMsg.msg);
+  })).then(() => {
+    return iteration;
+  });
 }
 
 module.exports = {
