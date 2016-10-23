@@ -4,6 +4,7 @@ function Ledger(peerNick, myNick) {
   this._peerNick = peerNick;
   this._myNick = myNick;
   this._debts = {};
+  this._pendingDebts = {};
   this._history = [];
 }
 
@@ -86,9 +87,11 @@ Ledger.prototype.toObj = function() {
 
 Ledger.prototype.addDebt = function(debt) {
   this._addToHistory(debt);
+  var neighborChanges = [];
   for (var currency in debt.addedDebts) {
-    this._addToDebts(this._myNick, debt.addedDebts[currency], currency);
+    neighborChanges.push(this._addToDebts(debt.debtor, debt.addedDebts[currency], currency));
   }
+  return neighborChanges;
 };
 
 Ledger.prototype.createIOU = function(amount, currency) {

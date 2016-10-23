@@ -8,25 +8,25 @@ function Search(messagesCallback) {
 
 Search.prototype.onNeighborChange = function(neighborChange) {
   switch (neighborChange.change) {
-   case neighborChangeEvents.CREDITOR_CREATED:
-     this._inNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
+   case neighborChangeConstants.CREDITOR_CREATED:
+     this._inNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
      break;
-   case neighborChangeEvents.CREDITOR_REMOVED:
-     delete this._inNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
+   case neighborChangeConstants.CREDITOR_REMOVED:
+     delete this._inNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      break;
-   case neighborChangeEvents.DEBTOR_CREATED:
-     this._outNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
+   case neighborChangeConstants.DEBTOR_CREATED:
+     this._outNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
      break;
-   case neighborChangeEvents.DEBTOR_REMOVED:
-     delete this._outNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
+   case neighborChangeConstants.DEBTOR_REMOVED:
+     delete this._outNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      break;
-   case neighborChangeEvents.DEBTOR_TO_CREDITOR:
-     delete this._inNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     this._inNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
+   case neighborChangeConstants.DEBTOR_TO_CREDITOR:
+     delete this._outNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
+     this._inNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
      break;
-   case neighborChangeEvents.CREDITOR_TO_DEBTOR:
-     delete this._inNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     this._outNeighbor[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
+   case neighborChangeConstants.CREDITOR_TO_DEBTOR:
+     delete this._inNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
+     this._outNeighbors[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {};
      // break;
    }
 };

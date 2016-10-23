@@ -12,6 +12,7 @@ function Agent(myNick) {
   this._search = new Search(this._sendMessages.bind(this));
   this._myNick = myNick;
   this._ledgers = {};
+  this._sentIOUs = {};
   messaging.addChannel(myNick, (fromNick, msgStr) => {
     this._handleMessage(fromNick, JSON.parse(msgStr));
   });
@@ -26,18 +27,22 @@ Agent.prototype._ensurePeer = function(peerNick) {
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
-  return messaging.send(this._myNick, creditorNick, messages.IOU(debt));
+  messaging.send(this._myNick, creditorNick, messages.IOU(debt));
+  return new Promise((resolve, reject) => {
+    this._sentIOUs[debt.note] = { resolve, reject };
+  });
 };
 
 Agent.prototype._sendMessages = function(reactions) {
-  console.log(reactions);
+  var promises = [];
   for (var i=0; i<reactions.length; i++) {
-    messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg);
+    promises.push(messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg));
   }
+  return Promise.all(promises);
 };
 
 Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
-  var neighborChange;
+  var neighborChanges;
   switch(incomingMsgObj.msgType) {
 
   case 'IOU':
@@ -45,18 +50,22 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     var debt = incomingMsgObj.debt;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
-    neighborChange = this._ledgers[fromNick].addDebt(debt);
+    neighborChanges = this._ledgers[fromNick].addDebt(debt);
     return this._sendMessages([{
       toNick: fromNick,
-      msg: messages.confirmIOU(fromNick, debt.note),
+      msg: messages.confirmIOU(debt.note),
     }]).then(() => {
-      return this._search.onNeighborChange(neighborChange);
+      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange)));
     });
     // break;
 
   case 'confirm-IOU':
-    neighborChange = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    return this._search.onNeighborChange(neighborChange);
+    neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
+    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(() => {
+      // handle callbacks linked to this sentIOU:
+      this._sentIOUs[incomingMsgObj.note].resolve();
+      delete this._sentIOUs[incomingMsgObj.note];
+    });
     // break;
 
   default: // msgType is not related to ledgers, but to settlements:
