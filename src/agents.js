@@ -37,6 +37,7 @@ Agent.prototype._sendMessages = function(reactions) {
 };
 
 Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
+  var neighborChange;
   switch(incomingMsgObj.msgType) {
 
   case 'IOU':
@@ -44,7 +45,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     var debt = incomingMsgObj.debt;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
-    var neighborChange = this._ledgers[fromNick].addDebt(debt);
+    neighborChange = this._ledgers[fromNick].addDebt(debt);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.confirmIOU(fromNick, debt.note),
@@ -54,7 +55,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'confirm-IOU':
-    var neighborChange = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
+    neighborChange = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
     return this._search.onNeighborChange(neighborChange);
     // break;
 

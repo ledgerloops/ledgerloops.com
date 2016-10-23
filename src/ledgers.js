@@ -57,7 +57,7 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
     this._normalizeDebt(currency);
     if (typeof this._debts[currency] === 'undefined') {
       return {
-        change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_REMOVED : neighborChangeConstants:CREDITOR_REMOVED),
+        change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_REMOVED : neighborChangeConstants.CREDITOR_REMOVED),
         peerNick: this._peerNick,
         currency,
       };
@@ -66,7 +66,7 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
         return null;
       } else {
         return {
-          change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_TO_CREDITOR : neighborChangeConstants:CREDITOR_TO_DEBTOR),
+          change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_TO_CREDITOR : neighborChangeConstants.CREDITOR_TO_DEBTOR),
           peerNick: this._peerNick,
           currency,
         };
