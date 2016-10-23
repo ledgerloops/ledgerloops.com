@@ -361,6 +361,17 @@ describe('Cycle Detection', function() {
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
       ]);
+
+      // FIXME: not access private vars here:
+      assert.deepEqual(agents.fred._search._active, { 'in': false, out: false });
+      assert.deepEqual(agents.edward._search._active, { 'in': false, out: false });
+      assert.deepEqual(agents.charlie._search._active, { 'in': false, out: false });
+      assert.deepEqual(agents.daphne._search._active, { 'in': false, out: false });
+      // assert.deepEqual(agents.fred._search._active, { 'in': true, out: false });
+      // assert.deepEqual(agents.edward._search._active, { 'in': false, out: false });
+      // assert.deepEqual(agents.charlie._search._active, { 'in': false, out: true });
+      // assert.deepEqual(agents.daphne._search._active, { 'in': true, out: false });
+
       agents.charlie.sendIOU('daphne', 0.01, 'USD');
       // F -> E -> C
       //     ^    /
