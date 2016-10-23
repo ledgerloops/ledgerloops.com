@@ -104,6 +104,7 @@ Search.prototype._setStatus = function(direction, value) {
 Search.prototype.onStatusMessage = function(direction, neighborNick, currency, value) {
   var neighborId = JSON.stringify([neighborNick, currency]);
   this._neighbors[direction][neighborId].active = value;
+  console.log('onStatusMessage', { direction, neighborNick, currency, value });
   return this._updateState(direction);
 };
 

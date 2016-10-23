@@ -188,3 +188,246 @@ describe('IOUs between Alice and Bob', function() {
     });
   });
 });
+
+describe('Cycle Detection', function() {
+  // avoiding names alice and bob which are already used in the first test
+  // and would cause the two asynchronous tests to interfere with each other
+  var agents = {
+    charlie: new Agent('charlie'),
+    daphne: new Agent('daphne'),
+    edward: new Agent('edward'),
+    fred: new Agent('fred'),
+    geraldine: new Agent('geraldine'),
+  };
+  it('agents on a cycle should stay active, others not', function() {
+    agents.fred.sendIOU('edward', 0.01, 'USD');
+    agents.edward.sendIOU('charlie', 0.01, 'USD');
+    agents.daphne.sendIOU('edward', 0.01, 'USD');
+    // F -> E -> C
+    //     ^
+    //    /
+    //   D
+    return messaging.flush().then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'fred',
+          msg: stringify({
+            msgType: 'IOU',
+            debt: {
+              debtor: 'fred',
+              note: 'IOU sent from fred to edward on the now time',
+              addedDebts: {
+                USD: 0.01,
+              },
+            },
+          }),
+          toNick: 'edward'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            msgType: 'IOU',
+            debt: {
+              debtor: 'edward',
+              note: 'IOU sent from edward to charlie on the now time',
+              addedDebts: {
+                USD: 0.01,
+              },
+            },
+          }),
+          toNick: 'charlie'
+        }, 
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+            msgType: 'IOU',
+            debt: {
+              debtor: 'daphne',
+              note: 'IOU sent from daphne to edward on the now time',
+              addedDebts: {
+                USD: 0.01,
+              },
+            },
+          }),
+          toNick: 'edward'
+        }, 
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from fred to edward on the now time',
+          }),
+          toNick: 'fred'
+        }, 
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from edward to charlie on the now time',
+          }),
+          toNick: 'edward'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from daphne to edward on the now time',
+          }),
+          toNick: 'daphne'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'fred'
+        }, 
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'daphne'
+        }, 
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'fred',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'out',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: true,
+          }),
+          toNick: 'fred'
+        }, 
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: true,
+          }),
+          toNick: 'daphne'
+        }, 
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'out',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        }, 
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+      agents.charlie.sendIOU('daphne', 0.01, 'USD');
+      // F -> E -> C
+      //     ^    /
+      //    /    /
+      //   D  <--
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            msgType: 'IOU',
+            debt: {
+              debtor: 'charlie',
+              note: 'IOU sent from charlie to daphne on the now time',
+              addedDebts: {
+                USD: 0.01,
+              },
+            },
+          }),
+          toNick: 'daphne',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from charlie to daphne on the now time',
+          }),
+          toNick: 'charlie'
+        }, 
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'out',
+             currency: 'USD',
+             value: true,
+          }),
+          toNick: 'edward'
+        }, 
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             direction: 'in',
+             currency: 'USD',
+             value: true,
+          }),
+          toNick: 'edward'
+        }, 
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+    });
+  });
+});
