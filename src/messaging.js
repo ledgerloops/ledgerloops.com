@@ -11,10 +11,18 @@ var queue = [];
 function flush() {
   debug.log(`Flushing ${queue.length} messages`);
   var iteration = queue;
+  var cursor = 0;
   queue = [];
-  return Promise.all(iteration.map(queuedMsg => {
-    return channels[queuedMsg.toNick](queuedMsg.fromNick, queuedMsg.msg);
-  })).then(() => {
+  function handleNextMessages() {
+    if (cursor === iteration.length) {
+      return Promise.resolve();
+    }
+    return channels[iteration[cursor].toNick](iteration[cursor].fromNick, iteration[cursor].msg).then(() => {
+      cursor++;
+    });
+  }
+ 
+  return handleNextMessages().then(() => {
     return iteration;
   });
 }

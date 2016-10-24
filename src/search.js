@@ -91,6 +91,7 @@ Search.prototype._haveAwakeNeighbors = function(direction) {
 };
   
 Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState) {
+  debug.log('handleNeighborStateChange', { neighborDirection, newNeighborState });
   if (newNeighborState === 'awake') {
     if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
       if (!this._awake) {
@@ -156,7 +157,7 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
   } else if (typeof this._neighbors.out[neighborId] !== 'undefined') {
     neighborDirection = 'out';
   } else {
-    console.error(`${neighborNick} is not a neighbor for currency ${currency}!`);
+    debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return [];
   }
   debug.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
@@ -170,7 +171,7 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     this._neighbors[neighborDirection][neighborId].awake = true;
     return this._handleNeighborStateChange(neighborDirection, 'awake');
   }
-  console.error(`${neighborDirection}-neighbor ${neighborNick} already had its awake bit set to ${value}!`);
+  debug.log(`${neighborDirection}-neighbor ${neighborNick} already had its awake bit set to ${value}!`);
   return [];
 };
 

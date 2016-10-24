@@ -3,10 +3,12 @@ var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
 
-debug.setLevel(true);
+debug.setLevel(false);
 
 describe('Messaging channel', function() {
-  var callback = sinon.spy();
+  var callback = sinon.spy(function() {
+    return Promise.resolve();
+  });
   messaging.addChannel('joop', callback);
   describe('when JSON message is sent and messaging is flushed', function() {
     messaging.send('michiel', 'joop', '{"hi": "there" }');

@@ -11,7 +11,7 @@ var stringify = require('../../src/stringify'); // TODO: do this via rewire as w
 // Should use multiple instances of the messaging simulator, see
 // https://github.com/michielbdejong/opentabs.net/issues/26
 
-debug.setLevel(true);
+debug.setLevel(false);
 
 var DateMock = function() {
 };
@@ -370,10 +370,12 @@ describe('Cycle Detection', function() {
         },
       ]);
 
+      debug.setLevel(true);
+
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
-        // Fred responding to Edward's confirm-IOU:
+        // Fred responding to Edward's confirm-IOU, before seeing Edward's GO_TO_SLEEP msg:
         {
           fromNick: 'fred',
           msg: stringify({

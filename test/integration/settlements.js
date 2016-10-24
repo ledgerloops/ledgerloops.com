@@ -1,8 +1,11 @@
 var rewire = require('rewire');
 var SettlementEngine = rewire('../../src/settlement-engine');
+var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
 var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
+
+debug.setLevel(false);
 
 var shouldHaveKeypairs; // TODO: use sinon for this
 function MockSignatures() {};
@@ -11,18 +14,18 @@ MockSignatures.prototype.generateKeypair = function() {
   return 'pub';
 };
 MockSignatures.prototype.haveKeypair = function(pubkey) {
-  console.log('it is checking keypair', pubkey);
+  debug.log('it is checking keypair', pubkey);
   return (shouldHaveKeypairs.indexOf(pubkey) !== -1);
 };
 MockSignatures.prototype.proofOfOwnership = function(pubkey) {
   return 'proof';
 };
 MockSignatures.prototype.sign = function(cleartext, pubkey) {
-  console.log(`signing "${cleartext}" with "${pubkey}"`);
+  debug.log(`signing "${cleartext}" with "${pubkey}"`);
   return 'signature';
 };
 SettlementEngine.__set__('Signatures', MockSignatures);
-console.log('signatures stub set');
+debug.log('signatures stub set');
 
 describe('SettlementEngine.generateReactions', function() {
   var engine = new SettlementEngine();
@@ -215,11 +218,11 @@ function nextStep(actors, incoming) {
     } else if (typeof sender === 'undefined') {
       fromRole = 'kickstarter';
     } else {
-      console.log(sender, receiver, msgObj);
+      debug.log(sender, receiver, msgObj);
       throw new Error('sender is neither debtor nor creditor of receiver');
     }
     return actors[receiver].engine.generateReactions(fromRole, msgObj, debtorNick, creditorNick).then((reactions) => {
-      console.log({ reactions });
+      debug.log({ reactions });
       for (var i=0; i<reactions.length; i++) {
         outgoing.push({
           sender: receiver,
@@ -233,9 +236,9 @@ function nextStep(actors, incoming) {
   for (var i=0; i<incoming.length; i++) {
     promises.push(reactTo(incoming[i].sender, incoming[i].receiver, incoming[i].msgObj));
   }
-  // console.log('promises gather, now executing:');
+  // debug.log('promises gather, now executing:');
   return Promise.all(promises).then((results) => {
-    // console.log('All promises executed', results);
+    // debug.log('All promises executed', results);
     return outgoing;
   }, (err) => {
     console.error('Something went wrong', err);
@@ -271,7 +274,7 @@ describe('Settlement process', function() {
     },
   }];
   it('should find a settlement', function() {
-    console.log('Step 1:');
+    debug.log('Step 1:');
     // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
     // But we know that B is going to react to this traffic, so it's OK here:
     shouldHaveKeypairs = [];
@@ -287,7 +290,7 @@ describe('Settlement process', function() {
           sender: 'b',
         }
       ]);
-      console.log('Step 2:');
+      debug.log('Step 2:');
       shouldHaveKeypairs = []; // c is the only one reacting now
       return nextStep(actors, traffic2);
     }).then((traffic3) => {
@@ -302,7 +305,7 @@ describe('Settlement process', function() {
           sender: 'c',
         }
       ]);
-      console.log('Step 3:');
+      debug.log('Step 3:');
       shouldHaveKeypairs = ['fake']; // a is the only one reacting now
       return nextStep(actors, traffic3);
     }).then((traffic4) => {
@@ -323,7 +326,7 @@ describe('Settlement process', function() {
           sender: 'a',
         }
       ]);
-      console.log('Step 4:');
+      debug.log('Step 4:');
       shouldHaveKeypairs = []; // c is the only one reacting now
       return nextStep(actors, traffic4);
     }).then((traffic5) => {
@@ -352,7 +355,7 @@ describe('Settlement process', function() {
           sender: 'c',
         }
       ]);
-      console.log('Step 5:');
+      debug.log('Step 5:');
       shouldHaveKeypairs = ['pub']; // a is now responding only to confirm-legder-update; setting this for b
       return nextStep(actors, traffic5);
     }).then((traffic6) => {
@@ -382,7 +385,7 @@ describe('Settlement process', function() {
           sender: 'b',
         }
       ]);
-      console.log('Step 6:');
+      debug.log('Step 6:');
       shouldHaveKeypairs = ['fake']; // c is now responding only to confirm-legder-update; setting this for a
       return nextStep(actors, traffic6);
     }).then((traffic7) => {
@@ -397,7 +400,7 @@ describe('Settlement process', function() {
         },
       ]);
       shouldHaveKeypairs = ['pub']; // setting this for b
-      console.log('Step 7:');
+      debug.log('Step 7:');
       return nextStep(actors, traffic7);
     }).then((traffic8) => {
       assert.equal(traffic8.length, 0);
