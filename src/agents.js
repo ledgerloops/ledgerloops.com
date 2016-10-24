@@ -13,11 +13,8 @@ function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
-  this._probeTimer = setInterval(() => {
-    var activeNeighbors = this._search.getActiveNeighbors();
-    console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
-    this._probeEngine.maybeSendProbes(activeNeighbors);
-  }, PROBE_INTERVAL);
+  this._probeTimer = setInterval(() => this._probeTimerHandler, PROBE_INTERVAL);
+  console.log('probe timer created', myNick);
   this._myNick = myNick;
   this._ledgers = {};
   this._sentIOUs = {};
@@ -25,6 +22,18 @@ function Agent(myNick) {
     return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
+
+Agent.prototype._probeTimerHandler = function() {
+  console.log('probe timer fired', this._myNick);
+  var activeNeighbors = this._search.getActiveNeighbors();
+  console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
+  return this._probeEngine.maybeSendProbes(activeNeighbors).then(msgObjects => {
+    return Promise.all(msgObjects.map(msgObj => {
+      console.log('probe message generated:', this._myNick, msgObj);
+      messaging.send(this._myNick, msgObj.peerNick, messages.probe(msgObj));
+    }));
+  });
+};
 
 Agent.prototype._ensurePeer = function(peerNick) {
   if (typeof this._ledgers[peerNick] === 'undefined') {
@@ -105,7 +114,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'probe':
-    return this._probeEngine.incomingProbe(fromNick, incomingMsgObj).then((forwardedProbe, cycleFound) => {
+    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then((forwardedProbe, cycleFound) => {
       if (cycleFound) {
         return this._settlementEngine.initiateNegotiaion(cycleFound.debtorNick).then(this._sendMessages.bind(this));
       } else {

@@ -45,6 +45,7 @@ module.exports = {
   //////////////////////////
 
   probe: function(obj) {
+    console.log('creating probe msg from', obj);
     return stringify({
       protocolVersion,
       msgType: 'probe',

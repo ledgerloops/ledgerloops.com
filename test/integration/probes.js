@@ -20,52 +20,82 @@ DateMock.prototype.toString = function() {
 };
 Agent.__set__('Date', DateMock);
 
+CryptoMock = {
+  randomBytes: function() {
+    return {
+      toString: function() {
+        return 'some-random-hash';
+      }
+    };
+  },
+};
+Agent.__set__('crypto', CryptoMock);
+console.log('crypto mock installed');
+
 describe('Once a cycle has been found', function() {
   var clock;
+  var agents;
   beforeEach(function () {
-    clock = sinon.useFakeTimers();
-  });
-  afterEach(function() {
-    clock.restore();
-  });
-  
-  it('should send a probe token', function() {
-    var agents = {
+    agents = {
       alice: new Agent('alice'),
       bob: new Agent('bob'),
       charlie: new Agent('charlie'),
     };
-    agents.alice.sendIOU('bob', 0.01, 'USD');
-    agents.bob.sendIOU('charlie', 0.01, 'USD');
-    agents.charlie.sendIOU('alice', 0.01, 'USD');
+    // FIXME: not access private vars like this:
+    agents.alice._ensurePeer('bob');
+    agents.alice._ensurePeer('charlie');
+    agents.bob._ensurePeer('alice');
+    agents.bob._ensurePeer('charlie');
+    agents.charlie._ensurePeer('alice');
+    agents.charlie._ensurePeer('bob');
 
-    return messaging.flush().then(messagesSent => {
+    agents.alice._search._neighbors = {
+      'in': {
+        '["charlie","USD"]': { awake: true },
+       },
+       out: {
+        '["bob","USD"]': { awake: true },
+       },
+    };
+
+    agents.bob._search._neighbors = {
+      'in': {
+        '["alice","USD"]': { awake: true },
+       },
+       out: {
+        '["charlie","USD"]': { awake: true },
+       },
+    };
+
+    agents.charlie._search._neighbors = {
+      'in': {
+        '["bob","USD"]': { awake: true },
+       },
+       out: {
+        '["alice","USD"]': { awake: true },
+       },
+    };
+  });
+  afterEach(function() {
+  });
+  
+  it('should send a probe token', function() {
+    // FIXME: get this working with sinon.useFakeTimers
+    return agents.alice._probeTimerHandler().then(() => {
       return messaging.flush();
     }).then(messagesSent => {
-      return messaging.flush();
-    }).then(messagesSent => {
-      return messaging.flush();
-    }).then(messagesSent => {
-      return messaging.flush();
-    }).then(messagesSent => {
-      return messaging.flush();
-    }).then(messagesSent => {
-      return messaging.flush();
-    }).then(messagesSent => {
-      clock.tick(1010);
-      console.log(agents.alice._probeEngine._probes);
-      console.log(agents.bob._probeEngine._probes);
-      console.log(agents.charlie._probeEngine._probes);
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          console.log(agents.alice._probeEngine._probes);
-          console.log(agents.bob._probeEngine._probes);
-          console.log(agents.charlie._probeEngine._probes);
-          console.log('resolving');
-          resolve();
-        }, 500);
-        clock.tick(1600);
-      });
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'some-random-token',
+            pathToken: 'some-random-token',
+          }),
+          toNick: 'bob',
+        }
+      ]);
     });
   });
 });
