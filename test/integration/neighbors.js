@@ -5,6 +5,12 @@ var assert = require('assert');
 var sinon = require('sinon');
 var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
 
+
+// FIXME: these tests only work because messages are flushed in the same synchronous code
+// that creates them. Otherwise, messages from one test would end up at the other test.
+// Should use multiple instances of the messaging simulator, see
+// https://github.com/michielbdejong/opentabs.net/issues/26
+
 var DateMock = function() {
 };
 DateMock.prototype.toString = function() {
@@ -19,6 +25,11 @@ describe('IOUs between Alice and Bob', function() {
   };
   it('should update search neighbors', function() {
     agents.alice.sendIOU('bob', 0.01, 'USD');
+    // Alice  -------->    Bob
+    //        sends IOU
+    // debtor   --->     creditor
+    //          owes
+    // [in] [out]      [in]    [out]
     return messaging.flush().then(messagesSent => {
       assert.deepEqual(messagesSent, [
         {
@@ -37,11 +48,17 @@ describe('IOUs between Alice and Bob', function() {
         }, 
       ]);
 
+
+      // Bob already created Alice as an awake in-neighbor, but did not
+      // wake himself, and immediately put her to sleep,
+      // because he has no out-neighbors
+      // He sends his new in-neighbor Alice a message to tell her. That way, Alice knows that her new out-tree is very small.
+
       // TODO: not access private vars here
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
       assert.deepEqual(agents.alice._search._neighbors['out'], {});
-      assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], { '["alice","USD"]': { active: true } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors['out'], {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -58,7 +75,6 @@ describe('IOUs between Alice and Bob', function() {
           fromNick: 'bob',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: false,
           }),
@@ -66,11 +82,18 @@ describe('IOUs between Alice and Bob', function() {
         }, 
       ]);
 
+      // After the first message, Alice also created Bob as an awake out-neighbor, but did not
+      // wake herself, and immediately puts him to sleep,
+      //  because she has no in-neighbors.
+      // She sends her new neighbor Bob a message to tell him. That way, Bob knows that his new in-tree is very small.
+      // The second message, which indicates that Bob has no out-neighbors, is ingored, because she had already marked Bob
+      // as a sleeping out-neighbor. The GO_TO_SLEEP messages will cross each other, and Bob will also ignore hers.
+
       // TODO: not access private vars here
-      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { active: false } });
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
-      assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], { '["alice","USD"]': { active: true } });
+      assert.deepEqual(agents.alice._search._neighbors['in'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -79,7 +102,6 @@ describe('IOUs between Alice and Bob', function() {
           fromNick: 'alice',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'out',
              currency: 'USD',
              value: false,
           }),
@@ -88,10 +110,10 @@ describe('IOUs between Alice and Bob', function() {
       ]);
 
       // TODO: not access private vars here
-      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { active: false } });
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
-      assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], { '["alice","USD"]': { active: false } });
+      assert.deepEqual(agents.alice._search._neighbors['in'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       agents.bob.sendIOU('alice', 0.02, 'USD');
       return messaging.flush();
@@ -112,10 +134,11 @@ describe('IOUs between Alice and Bob', function() {
           toNick: 'alice'
         }, 
       ]);
-      assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], { '["alice","USD"]': { active: false } });
+      // Alice has switched Bob to be debtor, but Bob still has Alice as debtor too:
+      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
+      assert.deepEqual(agents.bob._search._neighbors['out'], {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -132,17 +155,17 @@ describe('IOUs between Alice and Bob', function() {
           fromNick: 'alice',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: false,
           }),
           toNick: 'bob'
         }, 
       ]);
-      assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: true } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      // Now both Alice and Bob have updated the debt direction between them:
+      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
+      assert.deepEqual(agents.bob._search._neighbors['in'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, { '["alice","USD"]': { awake: false } });
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -151,40 +174,74 @@ describe('IOUs between Alice and Bob', function() {
           fromNick: 'bob',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'out',
              currency: 'USD',
              value: false,
           }),
           toNick: 'alice'
         }, 
       ]);
-      assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
-
+      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
+      assert.deepEqual(agents.bob._search._neighbors['in'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, { '["alice","USD"]': { awake: false } });
 
       return messaging.flush();
-    }).then(() => {
-      assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
-      assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { active: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, []);
+      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
+      assert.deepEqual(agents.bob._search._neighbors['in'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, { '["alice","USD"]': { awake: false } });
 
       agents.alice.sendIOU('bob', 0.01, 'USD');
       return messaging.flush();
-    }).then(() => {
-      assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], { '["bob","USD"]': { active: false } });
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            msgType: 'IOU',
+            debt: {
+              debtor: 'alice',
+              note: 'IOU sent from alice to bob on the now time',
+              addedDebts: {
+                USD: 0.01,
+              },
+            },
+          }),
+          toNick: 'bob'
+        }, 
+      ]);
+      // Bob has removed Alice as a neighbor, but Alice is still waiting for confirm-IOU
+      assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
-    }).then(() => {
+    }).then(messagesSent => {
+      // Bob assumes Alice will delete him as a neighbor after his confirm-IOU
+      // message which brings their debt to zero, so he doesn't send
+      // a dynamic-decentralized-cycle-detection message anymore:
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from alice to bob on the now time',
+          }),
+          toNick: 'alice'
+        }, 
+      ]);
+      // Now Alice also removed Bob as a neighbor:
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
       assert.deepEqual(agents.alice._search._neighbors['out'], {});
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
       assert.deepEqual(agents.bob._search._neighbors['out'], {});
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, []);
     });
   });
 });
@@ -284,7 +341,6 @@ describe('Cycle Detection', function() {
           fromNick: 'edward',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: false,
           }),
@@ -294,7 +350,6 @@ describe('Cycle Detection', function() {
           fromNick: 'charlie',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: false,
           }),
@@ -304,7 +359,6 @@ describe('Cycle Detection', function() {
           fromNick: 'edward',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: false,
           }),
@@ -319,7 +373,6 @@ describe('Cycle Detection', function() {
           fromNick: 'fred',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'out',
              currency: 'USD',
              value: false,
           }),
@@ -329,7 +382,6 @@ describe('Cycle Detection', function() {
           fromNick: 'edward',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: true,
           }),
@@ -339,7 +391,6 @@ describe('Cycle Detection', function() {
           fromNick: 'edward',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: true,
           }),
@@ -349,7 +400,6 @@ describe('Cycle Detection', function() {
           fromNick: 'daphne',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'out',
              currency: 'USD',
              value: false,
           }),
@@ -412,7 +462,6 @@ describe('Cycle Detection', function() {
           fromNick: 'daphne',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'out',
              currency: 'USD',
              value: true,
           }),
@@ -427,7 +476,6 @@ describe('Cycle Detection', function() {
           fromNick: 'charlie',
           msg: stringify({
              msgType: 'dynamic-decentralized-cycle-detection',
-             direction: 'in',
              currency: 'USD',
              value: true,
           }),
