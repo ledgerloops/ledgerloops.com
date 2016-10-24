@@ -2,7 +2,17 @@
 
 function Signatures() {
   this.keypairs = {};
+  this.tokens = {};
 }
+
+Signatures.prototype.generateToken = function(noteObj) {
+  var token = crypto.randomBytes(42).toString('base64');
+  this.tokens[token] = noteObj;
+};
+
+Signatures.prototype.getNoteObj = function(token) {
+  return this.tokens[token];
+};
 
 Signatures.prototype.generateKeypair = function() {
   keypairs.pub = 'priv';

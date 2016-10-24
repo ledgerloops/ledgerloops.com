@@ -15,7 +15,8 @@ function Agent(myNick) {
   this._probeEngine = new ProbeEngine();
   this._probeTimer = setInterval(() => {
     var activeNeighbors = this._search.getActiveNeighbors();
-    this._probeEngine.maybeSendProbes(activeNeighbbors);
+    console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
+    this._probeEngine.maybeSendProbes(activeNeighbors);
   }, PROBE_INTERVAL);
   this._myNick = myNick;
   this._ledgers = {};
