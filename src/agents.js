@@ -3,15 +3,19 @@ var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');
 var stringify = require('./stringify');
 var messaging = require('./messaging');
+var debug = require('./debug');
 var messages = require('./messages');
+
+const PROBE_INTERVAL = 1000;
 
 function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
-  this._search = new Search();
+  this._search = new Search(this._sendMessages.bind(this));
   this._myNick = myNick;
   this._ledgers = {};
+  this._sentIOUs = {};
   messaging.addChannel(myNick, (fromNick, msgStr) => {
-    this._handleMessage(fromNick, JSON.parse(msgStr));
+    return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
 
@@ -21,34 +25,25 @@ Agent.prototype._ensurePeer = function(peerNick) {
   }
 };
 
-Agent.prototype._maybeStartChains = function() {
-  return this._search.findNewPeerPairs(this._ledgers).then((newPubkeys) => {
-    var messages = [];
-    for (var i=0; i<newPubkeys.length; i++) {
-      var peerPair = this._search.getPeerPair(newPubkeys[i]);
-      var msg = messages.pubkeyAnnounce(newPubkeys[i]); // TODO: include amount and currency in this and other msgTypes
-      messages.push({ to: peerPair.debtorNick, msg });
-    }
-    console.log('maybeStartChains', this._myNick, messages);
-    return this._sendMessages(messages);
-  });
-};
-
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
   messaging.send(this._myNick, creditorNick, messages.IOU(debt));
-  return this._maybeStartChains();
+  return new Promise((resolve, reject) => {
+    this._sentIOUs[debt.note] = { resolve, reject };
+  });
 };
 
 Agent.prototype._sendMessages = function(reactions) {
-  console.log(reactions);
+  var promises = [];
   for (var i=0; i<reactions.length; i++) {
-    messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg);
+    promises.push(messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg));
   }
+  return Promise.all(promises);
 };
 
 Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
+  var neighborChanges;
   switch(incomingMsgObj.msgType) {
 
   case 'IOU':
@@ -56,45 +51,63 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     var debt = incomingMsgObj.debt;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
-    this._ledgers[fromNick].addDebt(debt);
-    // FIXME: consider the following debt graph:
-    //
-    //  A -> B -> C
-    //        ^   /
-    //         \ v
-    //          D
-    //
-    // B will use A's pubkey to pair A and C, but that never loops back to A.
-    // However, B would now also create a new keypair to pair D and C.
-    // A current sub-efficiency is that as long as A->B->C negotiation is outstanding,
-    // B needs to reserve (part of) B->C for that, and so the D->B->C->D loop can never
-    // fully drain until the search on A's pubkey expires (and currently there is no
-    // mechanism for expiration).
-    return this._maybeStartChains().then(() => {
-      return this._sendMessages([{
-        toNick: fromNick,
-        msg: messages.confirmIOU(fromNick, debt.note),
-      }]);
+    neighborChanges = this._ledgers[fromNick].addDebt(debt);
+    return this._sendMessages([{
+      toNick: fromNick,
+      msg: messages.confirmIOU(debt.note),
+    }]).then(() => {
+      debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
+      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+        var promises = [];
+        for (var i=0; i<results.length; i++) {
+          for (var j=0; j<results[i].length; j++) {
+            promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
+          }
+        }
+        return Promise.all(promises);
+      });
     });
     // break;
 
   case 'confirm-IOU':
-    this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    return this._maybeStartChains();
+    neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
+    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
+    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+      var promises = [];
+      for (var i=0; i<results.length; i++) {
+        for (var j=0; j<results[i].length; j++) {
+          promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
+        }
+      }
+      return Promise.all(promises);
+    }).then(() => {
+      // handle callbacks linked to this sentIOU:
+      this._sentIOUs[incomingMsgObj.note].resolve();
+      delete this._sentIOUs[incomingMsgObj.note];
+    });
     // break;
 
+  case 'dynamic-decentralized-cycle-detection':
+    debug.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
+    var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
+    var promises = [];
+    for (var i=0; i<results.length; i++) {
+      promises.push(messaging.send(this._myNick, results[i].peerNick, messages.ddcd(results[i])));
+    }
+    return Promise.all(promises);
+    // break;
   default: // msgType is not related to ledgers, but to settlements:
     var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {
       fromRole = 'debtor';
-    } else if (fromNick === creditorNick) { 
+    } else if (fromNick === creditorNick) {
       fromRole = 'creditor';
     } else {
       throw new Error(`fromNick matches neither debtorNick nor creditorNick`);
     }
-    this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
+    return this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
         incomingMsgObj).then(this._sendMessages.bind(this));
-    break;
+    // break;
   }
 };
 

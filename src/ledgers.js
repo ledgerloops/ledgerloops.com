@@ -1,7 +1,10 @@
+var neighborChangeConstants = require('./neighbor-change-constants');
+
 function Ledger(peerNick, myNick) {
   this._peerNick = peerNick;
   this._myNick = myNick;
   this._debts = {};
+  this._pendingDebts = {};
   this._history = [];
 }
 
@@ -32,13 +35,44 @@ Ledger.prototype._addToDebts = function(debtor, amount, currency) {
       debtor,
       amount,
     };
+    if (debtor === this._myNick) {
+      return {
+        change: neighborChangeConstants.CREDITOR_CREATED,
+        peerNick: this._peerNick,
+        currency,
+      };
+    } else {
+      return {
+        change: neighborChangeConstants.DEBTOR_CREATED,
+        peerNick: this._peerNick,
+        currency,
+      };
+    }
   } else {
+    var debtorWas = this._debts[currency].debtor;
     if (debtor === this._debts[currency].debtor) {
       this._debts[currency].amount += amount;
     } else {
       this._debts[currency].amount -= amount;
     }
     this._normalizeDebt(currency);
+    if (typeof this._debts[currency] === 'undefined') {
+      return {
+        change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_REMOVED : neighborChangeConstants.CREDITOR_REMOVED),
+        peerNick: this._peerNick,
+        currency,
+      };
+    } else {
+      if (this._debts[currency].debtor === debtorWas) {
+        return null;
+      } else {
+        return {
+          change: (debtorWas === this._peerNick ? neighborChangeConstants.DEBTOR_TO_CREDITOR : neighborChangeConstants.CREDITOR_TO_DEBTOR),
+          peerNick: this._peerNick,
+          currency,
+        };
+      }
+    }
   }
 };
 
@@ -53,9 +87,11 @@ Ledger.prototype.toObj = function() {
 
 Ledger.prototype.addDebt = function(debt) {
   this._addToHistory(debt);
+  var neighborChanges = [];
   for (var currency in debt.addedDebts) {
-    this._addToDebts(this._myNick, debt.addedDebts[currency], currency);
+    neighborChanges.push(this._addToDebts(debt.debtor, debt.addedDebts[currency], currency));
   }
+  return neighborChanges;
 };
 
 Ledger.prototype.createIOU = function(amount, currency) {
@@ -65,20 +101,37 @@ Ledger.prototype.createIOU = function(amount, currency) {
     addedDebts: {
       [currency]: amount,
      },
-     confirmedByPeer: false,
   };
-  this.addDebt(debt);
+  this._pendingDebts[debt.note] = debt;
   return debt;
 };
 
 Ledger.prototype.markIOUConfirmed = function(note) {
-  for (var i=0; i<this._history.length; i++) {
-    if (this._history[i].note === note) {
-      this._history[i].confirmedByPeer = true;
-      return true;
+  var debt = this._pendingDebts[note];
+  return this.addDebt(debt);
+};
+
+// assume agent is potentially willing to trade any debt against any
+// credit, even if the currencies don't match. later, should add option
+// for user to indicate which debt they would trade against which
+// credits, and at which exchange rate, see
+// https://github.com/michielbdejong/opentabs.net/issues/12
+Ledger.prototype.getNeighborType = function() {
+  var peerIsDebtor = false;
+  var peerIsCreditor = false;
+  for (var currency in this._debts) {
+    if (this._debts[currency].amount > 0) {
+      if (this._debts[currency].debtor === this._peerNick) {
+        peerIsDebtor = true;
+      } else {
+        peerIsCreditor = true;
+      }
     }
   }
-  return false;
+  return {
+    'in': peerIsCreditor,
+    out: peerIsDebtor,
+  };
 };
 
 module.exports = Ledger;

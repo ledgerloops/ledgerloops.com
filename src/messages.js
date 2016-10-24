@@ -13,6 +13,16 @@ module.exports = {
       note,
     });
   },
+  ddcd: function(obj) {
+    return stringify({
+      msgType: 'dynamic-decentralized-cycle-detection',
+      direction: obj.direction,
+      currency: obj.currency,
+      value: obj.value,
+    });
+  },
+ 
+
 // * [pubkey-announce] A to C: My pubkey is ${A1}.
   pubkeyAnnounce: function(pubkey) {
     return stringify({
