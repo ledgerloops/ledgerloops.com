@@ -45,7 +45,7 @@ describe('IOUs between Alice and Bob', function() {
             },
           }),
           toNick: 'bob'
-        }, 
+        },
       ]);
 
 
@@ -70,7 +70,7 @@ describe('IOUs between Alice and Bob', function() {
             note: 'IOU sent from alice to bob on the now time',
           }),
           toNick: 'alice'
-        }, 
+        },
         {
           fromNick: 'bob',
           msg: stringify({
@@ -79,7 +79,7 @@ describe('IOUs between Alice and Bob', function() {
              value: false,
           }),
           toNick: 'alice'
-        }, 
+        },
       ]);
 
       // After the first message, Alice also created Bob as an awake out-neighbor, but did not
@@ -106,7 +106,7 @@ describe('IOUs between Alice and Bob', function() {
              value: false,
           }),
           toNick: 'bob'
-        }, 
+        },
       ]);
 
       // TODO: not access private vars here
@@ -132,7 +132,7 @@ describe('IOUs between Alice and Bob', function() {
             },
           }),
           toNick: 'alice'
-        }, 
+        },
       ]);
       // Alice has switched Bob to be debtor, but Bob still has Alice as debtor too:
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
@@ -150,7 +150,7 @@ describe('IOUs between Alice and Bob', function() {
             note: 'IOU sent from bob to alice on the now time',
           }),
           toNick: 'bob'
-        }, 
+        },
         {
           fromNick: 'alice',
           msg: stringify({
@@ -159,7 +159,7 @@ describe('IOUs between Alice and Bob', function() {
              value: false,
           }),
           toNick: 'bob'
-        }, 
+        },
       ]);
       // Now both Alice and Bob have updated the debt direction between them:
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
@@ -178,7 +178,7 @@ describe('IOUs between Alice and Bob', function() {
              value: false,
           }),
           toNick: 'alice'
-        }, 
+        },
       ]);
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
       assert.deepEqual(agents.alice._search._neighbors.out, {});
@@ -210,7 +210,7 @@ describe('IOUs between Alice and Bob', function() {
             },
           }),
           toNick: 'bob'
-        }, 
+        },
       ]);
       // Bob has removed Alice as a neighbor, but Alice is still waiting for confirm-IOU
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
@@ -231,7 +231,7 @@ describe('IOUs between Alice and Bob', function() {
             note: 'IOU sent from alice to bob on the now time',
           }),
           toNick: 'alice'
-        }, 
+        },
       ]);
       // Now Alice also removed Bob as a neighbor:
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
@@ -279,7 +279,7 @@ describe('Cycle Detection', function() {
             },
           }),
           toNick: 'edward'
-        }, 
+        },
         {
           fromNick: 'edward',
           msg: stringify({
@@ -293,7 +293,7 @@ describe('Cycle Detection', function() {
             },
           }),
           toNick: 'charlie'
-        }, 
+        },
         {
           fromNick: 'daphne',
           msg: stringify({
@@ -307,7 +307,7 @@ describe('Cycle Detection', function() {
             },
           }),
           toNick: 'edward'
-        }, 
+        },
       ]);
 
       return messaging.flush();
@@ -320,7 +320,7 @@ describe('Cycle Detection', function() {
             note: 'IOU sent from fred to edward on the now time',
           }),
           toNick: 'fred'
-        }, 
+        },
         {
           fromNick: 'charlie',
           msg: stringify({
@@ -328,7 +328,7 @@ describe('Cycle Detection', function() {
             note: 'IOU sent from edward to charlie on the now time',
           }),
           toNick: 'edward'
-        }, 
+        },
         {
           fromNick: 'edward',
           msg: stringify({
@@ -336,7 +336,8 @@ describe('Cycle Detection', function() {
             note: 'IOU sent from daphne to edward on the now time',
           }),
           toNick: 'daphne'
-        }, 
+        },
+        // Generated in response to first IOU, when Edward is still dead-end:
         {
           fromNick: 'edward',
           msg: stringify({
@@ -345,7 +346,7 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'fred'
-        }, 
+        },
         {
           fromNick: 'charlie',
           msg: stringify({
@@ -354,7 +355,8 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'edward'
-        }, 
+        },
+        // Generated before Edward got a confirm-IOU from Charlie, so for the moment he's still a dead-end:
         {
           fromNick: 'edward',
           msg: stringify({
@@ -363,12 +365,13 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'daphne'
-        }, 
+        },
       ]);
 
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
+        // Fred responding to Edward's confirm-IOU:
         {
           fromNick: 'fred',
           msg: stringify({
@@ -377,7 +380,8 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'edward'
-        }, 
+        },
+        // Edward waking up Fred because of Charlie's confirm-IOU:
         {
           fromNick: 'edward',
           msg: stringify({
@@ -386,7 +390,8 @@ describe('Cycle Detection', function() {
              value: true,
           }),
           toNick: 'fred'
-        }, 
+        },
+        // Edward waking up Daphne because of Charlie's confirm-IOU:
         {
           fromNick: 'edward',
           msg: stringify({
@@ -395,7 +400,8 @@ describe('Cycle Detection', function() {
              value: true,
           }),
           toNick: 'daphne'
-        }, 
+        },
+        // Daphne responding to Edward's confirm-IOU:
         {
           fromNick: 'daphne',
           msg: stringify({
@@ -404,7 +410,27 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'edward'
-        }, 
+        },
+        // Daphne and Fred will not generate new messages in response to Edward's GO_TO_SLEEPs which followed his confirm-IOUs
+        // However, Edward should send 'false alarm' to Fred and Daphne, because of Charlie's GO_TO_SLEEP which followed his confirm-IOU:
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'fred'
+        },
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'daphne'
+        },
       ]);
 
       return messaging.flush();
@@ -413,14 +439,10 @@ describe('Cycle Detection', function() {
       ]);
 
       // FIXME: not access private vars here:
-      assert.deepEqual(agents.fred._search._active, { 'in': false, out: false });
-      assert.deepEqual(agents.edward._search._active, { 'in': false, out: false });
-      assert.deepEqual(agents.charlie._search._active, { 'in': false, out: false });
-      assert.deepEqual(agents.daphne._search._active, { 'in': false, out: false });
-      // assert.deepEqual(agents.fred._search._active, { 'in': true, out: false });
-      // assert.deepEqual(agents.edward._search._active, { 'in': false, out: false });
-      // assert.deepEqual(agents.charlie._search._active, { 'in': false, out: true });
-      // assert.deepEqual(agents.daphne._search._active, { 'in': true, out: false });
+      assert.equal(agents.charlie._search._awake, false);
+      assert.equal(agents.daphne._search._awake, false);
+      assert.equal(agents.edward._search._awake, false);
+      assert.equal(agents.fred._search._awake, false);
 
       agents.charlie.sendIOU('daphne', 0.01, 'USD');
       // F -> E -> C
@@ -457,7 +479,7 @@ describe('Cycle Detection', function() {
             note: 'IOU sent from charlie to daphne on the now time',
           }),
           toNick: 'charlie'
-        }, 
+        },
         {
           fromNick: 'daphne',
           msg: stringify({
@@ -466,7 +488,7 @@ describe('Cycle Detection', function() {
              value: true,
           }),
           toNick: 'edward'
-        }, 
+        },
       ]);
 
       return messaging.flush();
@@ -480,7 +502,7 @@ describe('Cycle Detection', function() {
              value: true,
           }),
           toNick: 'edward'
-        }, 
+        },
       ]);
 
       return messaging.flush();
