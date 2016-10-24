@@ -1,5 +1,6 @@
 // using var instead of const here because of https://www.npmjs.com/package/rewire#limitations
 var messages = require('./messages');
+var debug = require('./debug');
 var Signatures = require('./signatures');
 var stringify = require('./stringify');
 
@@ -59,12 +60,12 @@ function SettlementEngine() {
 }
 
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
-  console.log('generateReactions', fromRole, msgObj, debtorNick, creditorNick);
+  debug.log('generateReactions', fromRole, msgObj, debtorNick, creditorNick);
   return new Promise((resolve, reject) => {
     if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
       case 'satisfy-condition':
-        console.log('satisfy-condition from debtor', msgObj);
+        debug.log('satisfy-condition from debtor', msgObj);
         if (this.signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
           var proof = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
@@ -100,9 +101,9 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         ]);
         break;
       case 'conditional-promise':
-        console.log('conditional-promise from creditor');
+        debug.log('conditional-promise from creditor');
         if (this.signatures.haveKeypair(msgObj.pubkey)) { // you are A
-          console.log('pubkey is mine');
+          debug.log('pubkey is mine');
           // create embeddable promise
           var embeddablePromise = messages.embeddablePromise(msgObj.pubkey, msgObj.pubkey2);
           var signature = this.signatures.sign(embeddablePromise, msgObj.pubkey);

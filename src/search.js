@@ -1,4 +1,5 @@
 var neighborChangeConstants = require('./neighbor-change-constants');
+var debug = require('./debug');
 
 const OPPOSITE  = {
   'in': 'out',
@@ -22,11 +23,13 @@ function Search(messagesCallback) {
 // [in] [out]      [in]    [out]
 
 Search.prototype.onNeighborChange = function(neighborChange) {
-  console.log('incoming neighbor change', neighborChange);
+  debug.log('incoming neighbor change', neighborChange);
   var newNeigbors = {
     'in': [],
      out: [],
   };
+  var responses;
+
   switch (neighborChange.change) {
    case neighborChangeConstants.CREDITOR_CREATED:
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
@@ -54,7 +57,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
 
    case neighborChangeConstants.DEBTOR_TO_CREDITOR:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     var responses = this._handleNeighborStateChange('in', 'deleted');
+     responses = this._handleNeighborStateChange('in', 'deleted');
 
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: true,
@@ -64,8 +67,8 @@ Search.prototype.onNeighborChange = function(neighborChange) {
 
    case neighborChangeConstants.CREDITOR_TO_DEBTOR:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     var responses = this._handleNeighborStateChange('out', 'deleted');
-     console.log('responses to creditor deletion (becomes a debtor)', responses);
+     responses = this._handleNeighborStateChange('out', 'deleted');
+     debug.log('responses to creditor deletion (becomes a debtor)', responses);
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: true,
      };
@@ -92,39 +95,39 @@ Search.prototype._handleNeighborStateChange = function(neighborDirection, newNei
     if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
       if (!this._awake) {
         // Wake up, guys!
-        console.log('waking up!');
+        debug.log('waking up!');
         this._awake = true;
-        console.log(`Waking up ${OPPOSITE[neighborDirection]}-neighbors:`);
+        debug.log(`Waking up ${OPPOSITE[neighborDirection]}-neighbors:`);
         return this._updateNeighbors(OPPOSITE[neighborDirection], WAKE_UP);
       } else {
         // Were already awake, no change:
-        console.log('was already awake!');
+        debug.log('was already awake!');
         return [];
       }
     } else {
       // dead-end notification:
-      console.log('staying asleep, I\'m a dead-end!', this._neighbors);
-      console.log(`Putting to sleep ${neighborDirection}-neighbors:`);
+      debug.log('staying asleep, I\'m a dead-end!', this._neighbors);
+      debug.log(`Putting to sleep ${neighborDirection}-neighbors:`);
       return this._updateNeighbors(neighborDirection, GO_TO_SLEEP);
     }
   }
   if (newNeighborState === 'asleep' && !this._haveAwakeNeighbors(neighborDirection)) {
     // last awake neighbor in that direction went to sleep
-    console.log(`Last ${neighborDirection}-neighbor just went to sleep! Going to sleep myself too`);
+    debug.log(`Last ${neighborDirection}-neighbor just went to sleep! Going to sleep myself too`);
     this._awake = false;
-    console.log(`And telling my ${OPPOSITE[neighborDirection]}-neighbors to go to sleep too:`);
+    debug.log(`And telling my ${OPPOSITE[neighborDirection]}-neighbors to go to sleep too:`);
     return this._updateNeighbors(OPPOSITE[neighborDirection], GO_TO_SLEEP);
   }
-  console.log({ neighborDirection, newNeighborState }, this._haveNeighbors(neighborDirection), this._awake);
+  debug.log({ neighborDirection, newNeighborState }, this._haveNeighbors(neighborDirection), this._awake);
   if (newNeighborState === 'deleted' && !this._haveNeighbors(neighborDirection) && this._awake) {
     // last neighbor in that direction deleted while we were awake
-    console.log(`Last ${neighborDirection}-neighbor was deleted while we were awake! Sleeping...`);
+    debug.log(`Last ${neighborDirection}-neighbor was deleted while we were awake! Sleeping...`);
     this._awake = false;
-    console.log(`And telling my {OPPOSITE[$neighborDirection]}-neighbors to go to sleep too:`);
+    debug.log(`And telling my {OPPOSITE[$neighborDirection]}-neighbors to go to sleep too:`);
     return this._updateNeighbors(OPPOSITE[neighborDirection], GO_TO_SLEEP);
   }
   // no messages resulting from neighbor state change:
-  console.log(`no messages resulting from neighbor state change`);
+  debug.log(`no messages resulting from neighbor state change`);
   return [];
 };
 
@@ -141,7 +144,7 @@ Search.prototype._updateNeighbors = function(messageDirection, value) {
       });
     }
   }
-  console.log('messages from _updateNeighbors', { messageDirection, value, messages });
+  debug.log('messages from _updateNeighbors', { messageDirection, value, messages });
   return messages;
 };
 
@@ -156,14 +159,14 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     console.error(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return [];
   }
-  console.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
+  debug.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
   if (this._neighbors[neighborDirection][neighborId].awake && value === GO_TO_SLEEP) {
-    console.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to sleep`);
+    debug.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to sleep`);
     this._neighbors[neighborDirection][neighborId].awake = false;
     return this._handleNeighborStateChange(neighborDirection, 'asleep');
   }
   if (!this._neighbors[neighborDirection][neighborId].awake && value === WAKE_UP) {
-    console.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to awake`);
+    debug.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to awake`);
     this._neighbors[neighborDirection][neighborId].awake = true;
     return this._handleNeighborStateChange(neighborDirection, 'awake');
   }

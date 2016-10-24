@@ -3,6 +3,7 @@ var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');
 var stringify = require('./stringify');
 var messaging = require('./messaging');
+var debug = require('./debug');
 var messages = require('./messages');
 
 const PROBE_INTERVAL = 1000;
@@ -55,7 +56,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       toNick: fromNick,
       msg: messages.confirmIOU(debt.note),
     }]).then(() => {
-      console.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
+      debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
       return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
         var promises = [];
         for (var i=0; i<results.length; i++) {
@@ -70,7 +71,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   case 'confirm-IOU':
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
-    console.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
+    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
     return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
       var promises = [];
       for (var i=0; i<results.length; i++) {
@@ -87,7 +88,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'dynamic-decentralized-cycle-detection':
-    console.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
+    debug.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
     var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
     var promises = [];
     for (var i=0; i<results.length; i++) {
@@ -106,7 +107,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     }
     return this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
         incomingMsgObj).then(this._sendMessages.bind(this));
-    break;
+    // break;
   }
 };
 

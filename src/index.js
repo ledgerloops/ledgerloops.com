@@ -1,3 +1,4 @@
+var debug = require('./debug');
 var Agent = require('./agents');
 
 var agents = {
@@ -33,5 +34,5 @@ agents.geraldine.sendIOU('alice', 0.01, 'USD');
 // See console output for a log of the messages each agent sends in the process.
 
 setTimeout(() => {
-  console.log('Note that agent._maybeStartChains is still broken, but this method will change with https://github.com/michielbdejong/opentabs.net/issues/17, so no use fixing the current version');
+  debug.log('Note that agent._maybeStartChains is still broken, but this method will change with https://github.com/michielbdejong/opentabs.net/issues/17, so no use fixing the current version');
 }, 1000);
