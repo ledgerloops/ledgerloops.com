@@ -1,4 +1,5 @@
 var Ledger = require('./ledgers');
+var ProbeEngine = require('./probe-engine');
 var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');
 var stringify = require('./stringify');
@@ -11,6 +12,11 @@ const PROBE_INTERVAL = 1000;
 function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
   this._search = new Search(this._sendMessages.bind(this));
+  this._probeEngine = new ProbeEngine();
+  this._probeTimer = setInterval(() => {
+    var activeNeighbors = this._search.getActiveNeighbors();
+    this._probeEngine.maybeSendProbes(activeNeighbbors);
+  }, PROBE_INTERVAL);
   this._myNick = myNick;
   this._ledgers = {};
   this._sentIOUs = {};
@@ -96,6 +102,17 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     }
     return Promise.all(promises);
     // break;
+
+  case 'probe':
+    return this._probeEngine.incomingProbe(fromNick, incomingMsgObj).then((forwardedProbe, cycleFound) => {
+      if (cycleFound) {
+        return this._settlementEngine.initiateNegotiaion(cycleFound.debtorNick).then(this._sendMessages.bind(this));
+      } else {
+        return messaging.send(this._myNick, forwardedProbe.peerNick, messages.probe(forwardedProbe));
+      }
+    });
+    // break;
+
   default: // msgType is not related to ledgers, but to settlements:
     var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {

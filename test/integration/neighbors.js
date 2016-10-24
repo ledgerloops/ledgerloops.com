@@ -37,6 +37,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'alice',
@@ -68,6 +69,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from alice to bob on the now time',
           }),
@@ -76,9 +78,10 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'alice'
         },
@@ -103,9 +106,10 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'bob'
         },
@@ -124,6 +128,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'bob',
@@ -148,6 +153,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from bob to alice on the now time',
           }),
@@ -156,9 +162,10 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'bob'
         },
@@ -175,9 +182,10 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'alice'
         },
@@ -202,6 +210,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'alice',
@@ -229,6 +238,7 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from alice to bob on the now time',
           }),
@@ -271,6 +281,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'fred',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'fred',
@@ -285,6 +296,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'edward',
@@ -299,6 +311,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'daphne',
@@ -318,6 +331,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from fred to edward on the now time',
           }),
@@ -327,6 +341,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
              msgType: 'dynamic-decentralized-cycle-detection',
              currency: 'USD',
              value: false,
@@ -337,6 +352,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from edward to charlie on the now time',
           }),
@@ -345,9 +361,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'edward'
         },
@@ -355,6 +372,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from daphne to edward on the now time',
           }),
@@ -364,6 +382,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
              msgType: 'dynamic-decentralized-cycle-detection',
              currency: 'USD',
              value: false,
@@ -384,9 +403,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'fred',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'edward'
         },
@@ -394,9 +414,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: true,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: true,
           }),
           toNick: 'fred'
         },
@@ -404,9 +425,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: true,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: true,
           }),
           toNick: 'daphne'
         },
@@ -415,18 +437,20 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'fred'
         },
         {
           fromNick: 'edward',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'daphne'
         },
@@ -434,9 +458,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'edward'
         },
@@ -448,18 +473,20 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'fred',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'edward'
         },
         {
           fromNick: 'daphne',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: false,
           }),
           toNick: 'edward'
         },
@@ -483,6 +510,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
             debt: {
               debtor: 'charlie',
@@ -502,6 +530,7 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
             msgType: 'confirm-IOU',
             note: 'IOU sent from charlie to daphne on the now time',
           }),
@@ -510,9 +539,10 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: true,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: true,
           }),
           toNick: 'edward'
         },
@@ -524,18 +554,20 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: true,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: true,
           }),
           toNick: 'edward'
         },
         {
           fromNick: 'edward',
           msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: true,
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'dynamic-decentralized-cycle-detection',
+            currency: 'USD',
+            value: true,
           }),
           toNick: 'charlie'
         },
