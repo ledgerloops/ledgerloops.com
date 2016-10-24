@@ -323,22 +323,6 @@ describe('Cycle Detection', function() {
           }),
           toNick: 'fred'
         },
-        {
-          fromNick: 'charlie',
-          msg: stringify({
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from edward to charlie on the now time',
-          }),
-          toNick: 'edward'
-        },
-        {
-          fromNick: 'edward',
-          msg: stringify({
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from daphne to edward on the now time',
-          }),
-          toNick: 'daphne'
-        },
         // Generated in response to first IOU, when Edward is still dead-end:
         {
           fromNick: 'edward',
@@ -349,6 +333,15 @@ describe('Cycle Detection', function() {
           }),
           toNick: 'fred'
         },
+
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from edward to charlie on the now time',
+          }),
+          toNick: 'edward'
+        },
         {
           fromNick: 'charlie',
           msg: stringify({
@@ -357,6 +350,15 @@ describe('Cycle Detection', function() {
              value: false,
           }),
           toNick: 'edward'
+        },
+
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            msgType: 'confirm-IOU',
+            note: 'IOU sent from daphne to edward on the now time',
+          }),
+          toNick: 'daphne'
         },
         // Generated before Edward got a confirm-IOU from Charlie, so for the moment he's still a dead-end:
         {
@@ -370,7 +372,10 @@ describe('Cycle Detection', function() {
         },
       ]);
 
-      debug.setLevel(true);
+      // this only works when running tests from just this file, in npm test, other tests will set it back
+      // to false, FIXME: and even then it somehow doesn't seem to work unless you set it to true at the top:
+      // debug.setLevel(true);
+      // debug.log('START DEBUGGING HERE!');
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -405,16 +410,6 @@ describe('Cycle Detection', function() {
           }),
           toNick: 'daphne'
         },
-        // Daphne responding to Edward's confirm-IOU:
-        {
-          fromNick: 'daphne',
-          msg: stringify({
-             msgType: 'dynamic-decentralized-cycle-detection',
-             currency: 'USD',
-             value: false,
-          }),
-          toNick: 'edward'
-        },
         // Daphne and Fred will not generate new messages in response to Edward's GO_TO_SLEEPs which followed his confirm-IOUs
         // However, Edward should send 'false alarm' to Fred and Daphne, because of Charlie's GO_TO_SLEEP which followed his confirm-IOU:
         {
@@ -435,11 +430,39 @@ describe('Cycle Detection', function() {
           }),
           toNick: 'daphne'
         },
+        // Daphne responding to Edward's confirm-IOU:
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        },
       ]);
 
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'fred',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        },
+        {
+          fromNick: 'daphne',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: false,
+          }),
+          toNick: 'edward'
+        },
       ]);
 
       // FIXME: not access private vars here:
@@ -507,12 +530,57 @@ describe('Cycle Detection', function() {
           }),
           toNick: 'edward'
         },
+        {
+          fromNick: 'edward',
+          msg: stringify({
+             msgType: 'dynamic-decentralized-cycle-detection',
+             currency: 'USD',
+             value: true,
+          }),
+          toNick: 'charlie'
+        },
+      ]);
+      // Now, the network goes quiet...:
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
       ]);
 
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
       ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+
+      // But this cycle has been detected:
+      //
+      // F -> E -> C
+      //     ^    /
+      //    /    /
+      //   D  <--
+
+      // FIXME: not access private vars here:
+      // not in the cycle:
+      assert.equal(agents.fred._search._awake, false);
+      // in the cycle:
+      assert.equal(agents.charlie._search._awake, true);
+      assert.equal(agents.daphne._search._awake, true);
+      assert.equal(agents.edward._search._awake, true);
     });
   });
 });

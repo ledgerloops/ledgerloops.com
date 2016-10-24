@@ -9,7 +9,6 @@ var channels = {};
 var queue = [];
 
 function flush() {
-  debug.log(`Flushing ${queue.length} messages`);
   var iteration = queue;
   var cursor = 0;
   queue = [];
@@ -17,11 +16,18 @@ function flush() {
     if (cursor === iteration.length) {
       return Promise.resolve();
     }
+    debug.log('flushing message', cursor);
     return channels[iteration[cursor].toNick](iteration[cursor].fromNick, iteration[cursor].msg).then(() => {
+      debug.log('done flushing message', cursor);
+      debug.log(`Queue now has ${queue.length} messages, iteration has ${iteration.length}.`);
       cursor++;
+      return handleNextMessages();
     });
   }
  
+  debug.log(`Flushing ${iteration.length} messages:`);
+  debug.log(iteration);
+
   return handleNextMessages().then(() => {
     return iteration;
   });

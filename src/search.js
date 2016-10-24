@@ -158,7 +158,7 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     neighborDirection = 'out';
   } else {
     debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
-    return [];
+    return Promise.resolve([]);
   }
   debug.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
   if (this._neighbors[neighborDirection][neighborId].awake && value === GO_TO_SLEEP) {
@@ -172,7 +172,7 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     return this._handleNeighborStateChange(neighborDirection, 'awake');
   }
   debug.log(`${neighborDirection}-neighbor ${neighborNick} already had its awake bit set to ${value}!`);
-  return [];
+  return Promise.resolve([]);
 };
 
 module.exports = Search;

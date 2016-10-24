@@ -3,7 +3,7 @@ module.exports = {
   setLevel(level) {
     debug = level;
   },
-  log: function() {
+ log: function() {
     var args = [];
     Object.keys(arguments).map(key => {
       args.push(arguments[key]);
