@@ -80,7 +80,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
 Search.prototype._haveNeighbors = function(direction) {
   return (Object.keys(this._neighbors[direction]).length > 0);
 };
-  
+
 Search.prototype._haveAwakeNeighbors = function(direction) {
   for (var neighborId in this._neighbors[direction]) {
     if (this._neighbors[direction][neighborId].awake) {
@@ -89,7 +89,7 @@ Search.prototype._haveAwakeNeighbors = function(direction) {
   }
   return false;
 };
-  
+
 Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState) {
   debug.log('handleNeighborStateChange', { neighborDirection, newNeighborState });
   if (newNeighborState === 'awake') {

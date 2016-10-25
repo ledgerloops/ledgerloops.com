@@ -27,6 +27,9 @@ Signatures.__set__('generateToken', function() {
 });
 
 describe('IOUs between Alice and Bob', function() {
+  afterEach(function() {
+    messaging.discardQueue();
+  });
   var agents = {
     alice: new Agent('alice'),
     bob: new Agent('bob'),
@@ -259,8 +262,9 @@ describe('IOUs between Alice and Bob', function() {
 });
 
 describe('Cycle Detection', function() {
-  // avoiding names alice and bob which are already used in the first test
-  // and would cause the two asynchronous tests to interfere with each other
+  afterEach(function() {
+    messaging.discardQueue();
+  });
   var agents = {
     charlie: new Agent('charlie'),
     daphne: new Agent('daphne'),
