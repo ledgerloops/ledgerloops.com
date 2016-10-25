@@ -31,7 +31,7 @@ Agent.prototype._probeTimerHandler = function() {
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(msgObjects => {
     return Promise.all(msgObjects.map(msgObj => {
       console.log('probe message generated:', this._myNick, msgObj);
-      messaging.send(this._myNick, msgObj.peerNick, messages.probe(msgObj));
+      messaging.send(this._myNick, msgObj.outNeighborNick, messages.probe(msgObj));
     }));
   });
 };
@@ -122,6 +122,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       } else {
         return Promise.all(obj.forwardMessages.map(probeMsgObj => {
           console.log('forwarding', probeMsgObj);
+          // FIXME: make probeMsgObj and other similar msgObj types more similar
+          // (e.g. always call name its fields { toNick: ..., msgObj: ... })
           return messaging.send(this._myNick, probeMsgObj.to, messages.probe(probeMsgObj.msg));
         }));
       }
