@@ -121,9 +121,9 @@ module.exports = {
       pathToken: obj.pathToken,
       embeddablePromise: obj.embeddablePromise,
       pubkey: obj.pubkey,
-      signature1: obj.signature1,
+      signature: obj.signature,
       pubkey2: obj.pubkey2,
-      proofOfOwnership2: obj.proofOfOwnership2,
+      proofOfOwnership: obj.proofOfOwnership,
     });
   },
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to

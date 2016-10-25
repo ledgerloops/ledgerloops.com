@@ -8,7 +8,7 @@ var stringify = require('./stringify');
 //  conditionalPromise: function(pubkey, pubkey2) {
 //  embeddablePromise: function(pubkey, pubkey2) {
 //  satisfyCondition: function(pubkey, pubkey2, embeddablePromise, signature) {
-//  claimFulfillment: function(pubkey, pubkey2, embeddablePromise, signature1, proofOfOwnership2) {
+//  claimFulfillment: function(pubkey, pubkey2, embeddablePromise, signature, proofOfOwnership) {
 //  confirmLedgerUpdate: function(signature) {
 
 // The flow of this engine is as follows:
@@ -77,7 +77,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         console.log('satisfy-condition from debtor', msgObj);
         if (this.signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
-          msgObj.proofOfOwnership2 = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
+          msgObj.proofOfOwnership = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
           resolve([
             { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
             { to: creditorNick, msg: messages.claimFulfillment(msgObj) },
@@ -117,7 +117,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           // FIXME: not sure yet if embeddablePromise should be double-JSON-encoded to make signature deterministic,
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           msgObj.embeddablePromise = JSON.parse(messages.embeddablePromise(msgObj));
-          msgObj.signature = this.signatures.sign(embeddablePromise, msgObj.pubkey);
+          msgObj.signature = this.signatures.sign(msgObj.embeddablePromise, msgObj.pubkey);
           resolve([
             { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
           ]);

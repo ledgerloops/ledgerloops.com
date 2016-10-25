@@ -78,6 +78,7 @@ describe('SettlementEngine.generateReactions', function() {
   it('should react correctly to conditional-promise if not haveKeypair', function() {
     shouldHaveKeypairs = [];
     return engine.generateReactions('creditor', {
+      protocolVersion: 'opentabs-net-0.3',
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
@@ -86,6 +87,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
+          protocolVersion: 'opentabs-net-0.3',
           msgType: 'conditional-promise',
           pubkey: 'asdf',
           pubkey2: 'pub',
@@ -168,9 +170,9 @@ describe('SettlementEngine.generateReactions', function() {
             pubkey2: 'pub',
           },
           pubkey: 'asdf',
-          signature1: 'signature',
+          signature: 'signature',
           pubkey2: 'pub',
-          proofOfOwnership2: 'proof',
+          proofOfOwnership: 'proof',
         })
       });
     });
@@ -187,9 +189,9 @@ describe('SettlementEngine.generateReactions', function() {
         pubkey2: 'pub',
       },
       pubkey: 'asdf',
-      signature1: 'signature',
+      signature: 'signature',
       pubkey2: 'pub',
-      proofOfOwnership2: 'proof',
+      proofOfOwnership: 'proof',
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -400,8 +402,8 @@ describe('Settlement process', function() {
               pubkey: 'fake',
               pubkey2: 'pub',
             },
-            signature1: 'signature',
-            proofOfOwnership2: 'proof',
+            signature: 'signature',
+            proofOfOwnership: 'proof',
           },
           receiver: 'a',
           sender: 'b',
