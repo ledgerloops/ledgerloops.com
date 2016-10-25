@@ -15,7 +15,7 @@ describe('Messages', function() {
         confirmLedgerUpdate: 'confirm-ledger-update',
      }; 
      for (func in msgTypes) {
-       var msgObj = JSON.parse(messages[func]());
+       var msgObj = JSON.parse(messages[func]({}));
        assert.equal(msgObj.msgType, msgTypes[func]);
      }
     });

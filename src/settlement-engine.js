@@ -59,31 +59,33 @@ function SettlementEngine() {
   this.signatures = new Signatures();
 }
 
-SettlementEngine.prototype.initiateNegotiation = function(debtorNick) {
-  var pubkey = this.signatures.generateKeypair();
+SettlementEngine.prototype.initiateNegotiation = function(obj) {
+  obj.pubkey = this.signatures.generateKeypair();
+  console.log('initiateNeg', obj);
+  // want to send this message to debtor ( = in-neighbor)
   return Promise.resolve([
-    { toNick: debtorNick, msg: messages.pubkeyAnnounce(pubkey) },
+    { toNick: obj.inNeighborNick, msg: messages.pubkeyAnnounce(obj) },
   ]);
 };
 
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
-  debug.log('generateReactions', fromRole, msgObj, debtorNick, creditorNick);
+  console.log('generateReactions', {fromRole, msgObj, debtorNick, creditorNick}, msgObj);
   return new Promise((resolve, reject) => {
     if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
       case 'satisfy-condition':
-        debug.log('satisfy-condition from debtor', msgObj);
+        console.log('satisfy-condition from debtor', msgObj);
         if (this.signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
-          var proof = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
+          msgObj.proofOfOwnership2 = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
-            { to: creditorNick, msg: messages.claimFulfillment(msgObj.pubkey, msgObj.pubkey2, msgObj.embeddablePromise, msgObj.signature, proof) },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
+            { to: creditorNick, msg: messages.claimFulfillment(msgObj) },
           ]);
         } else { // you are B
           // reduce A's debt on ledger
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
+            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
             { to: creditorNick, msg: stringify(msgObj) },
           ]);
         }
@@ -92,17 +94,17 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         // reduce C's debt:
         // TODO, here and in other places: actually check the signature on the claim and stuff :)
         resolve([
-          { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj.pubkey) },
+          { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
         ]);
         break;
       default:
-        reject(`unknown msgType to debtor: ${msgObj.msgType}`);
+        reject(new Error(`unknown msgType to debtor: ${msgObj.msgType}`));
       }
     } else if (fromRole === 'creditor') {
       switch(msgObj.msgType) {
       case 'pubkey-announce': // you are C
-        pubkey = this.signatures.generateKeypair();
-        var condProm = messages.conditionalPromise(msgObj.pubkey, pubkey);
+        msgObj.pubkey2 = this.signatures.generateKeypair();
+        var condProm = messages.conditionalPromise(msgObj);
         resolve([
           { to: debtorNick, msg: condProm },
         ]);
@@ -112,17 +114,16 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         if (this.signatures.haveKeypair(msgObj.pubkey)) { // you are A
           debug.log('pubkey is mine');
           // create embeddable promise
-          var embeddablePromise = messages.embeddablePromise(msgObj.pubkey, msgObj.pubkey2);
-          var signature = this.signatures.sign(embeddablePromise, msgObj.pubkey);
           // FIXME: not sure yet if embeddablePromise should be double-JSON-encoded to make signature deterministic,
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
-          var msg2 = messages.satisfyCondition(msgObj.pubkey, msgObj.pubkey2, JSON.parse(embeddablePromise), signature);
+          msgObj.embeddablePromise = JSON.parse(messages.embeddablePromise(msgObj));
+          msgObj.signature = this.signatures.sign(embeddablePromise, msgObj.pubkey);
           resolve([
-            { to: creditorNick, msg: msg2 },
-           ]);
+            { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
+          ]);
         } else { // you are B
           resolve([
-            { to: debtorNick, msg: stringify(msgObj) },
+            { to: debtorNick, msg: messages.conditionalPromise(msgObj) },
           ]);
         }
         break;
@@ -131,7 +132,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         resolve([]);
         break;
       default:
-        reject(`unknown msgType to creditor: ${msgObj.msgType}`);
+        reject(new Error(`unknown msgType to creditor: ${msgObj.msgType}`));
       }
     }
   });

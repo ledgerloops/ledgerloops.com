@@ -11,18 +11,20 @@ module.exports = {
    // Ledger related: //
   /////////////////////
 
-  IOU: function(debt) {
+  IOU: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'IOU',
-      debt,
+      debtor: obj.debtor,
+      note: obj.note,
+      addedDebts: obj.addedDebts, // object { [currency]: amount }
     });
   },
-  confirmIOU: function(note) {
+  confirmIOU: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'confirm-IOU',
-      note,
+      note: obj.note,
     });
   },
 
@@ -59,44 +61,51 @@ module.exports = {
   ///////////////////////////////
 
 // * [pubkey-announce] A to C: My pubkey is ${A1}.
-  pubkeyAnnounce: function(pubkey) {
+  pubkeyAnnounce: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'pubkey-announce',
-      pubkey,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      pubkey: obj.pubkey,
     });
   },
 // * [conditional-promise] C to B: If ${A1} promises to give 0.01USD to ${C2},
 //                                 I will substract it from your debt.
-  conditionalPromise: function(pubkey, pubkey2) {
+  conditionalPromise: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'conditional-promise',
-      pubkey,
-      pubkey2,
+      pubkey: obj.pubkey,
+      pubkey2: obj.pubkey2,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
     });
   },
 // * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
-  embeddablePromise: function(pubkey, pubkey2) {
+  embeddablePromise: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'embeddable-promise',
-      pubkey,
-      pubkey2,
+      // no tree/path token since this message will not be sent/routed
+      pubkey: obj.pubkey,
+      pubkey2: obj.pubkey2,
     });
   },
 // * [satisfy-condition] A to B: Here is a signed promise for 0.01USD from ${A1}
 //                               to ${C2}, satisfying your condition:
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Please distract it from my debt as promised.
-  satisfyCondition: function(pubkey, pubkey2, embeddablePromise, signature) {
+  satisfyCondition: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'satisfy-condition',
-      pubkey,
-      pubkey2,
-      embeddablePromise,
-      signature,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      pubkey: obj.pubkey,
+      pubkey2: obj.pubkey2,
+      embeddablePromise: obj.embeddablePromise,
+      signature: obj.signature,
     });
   },
 // * [claim-fulfillment] C to A: Here is a signed promise for 0.01USD from ${A1}
@@ -104,24 +113,28 @@ module.exports = {
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Let's settle it against my debt.
 //                               ${proofOfOwningC2}
-  claimFulfillment: function(pubkey, pubkey2, embeddablePromise, signature1, proofOfOwnership2) {
+  claimFulfillment: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'claim-fulfillment',
-      embeddablePromise,
-      pubkey,
-      signature1,
-      pubkey2,
-      proofOfOwnership2,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      embeddablePromise: obj.embeddablePromise,
+      pubkey: obj.pubkey,
+      signature1: obj.signature1,
+      pubkey2: obj.pubkey2,
+      proofOfOwnership2: obj.proofOfOwnership2,
     });
   },
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to
 //                                   chain ${A1} in the ledger entry.
-  confirmLedgerUpdate: function(pubkey) {
+  confirmLedgerUpdate: function(obj) {
     return stringify({
       protocolVersion,
       msgType: 'confirm-ledger-update',
-      pubkey,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      pubkey: obj.pubkey,
     });
   },
 };
