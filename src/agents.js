@@ -1,4 +1,5 @@
 var Ledger = require('./ledgers');
+var tokens = require('./tokens'); // to make rewire work in probes integration test
 var ProbeEngine = require('./probe-engine');
 var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');

@@ -1,4 +1,6 @@
 var rewire = require('rewire');
+var probeEngine = rewire('../../src/probe-engine');
+
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
 var debug = require('../../src/debug');
@@ -29,8 +31,17 @@ CryptoMock = {
     };
   },
 };
-Agent.__set__('crypto', CryptoMock);
-console.log('crypto mock installed');
+probeEngine.__set__('tokens', {
+  generateToken: function() { return 'asdf';  },
+});
+
+Agent.__set__('tokens', {
+  generateToken: function() { return 'asdf';  },
+});
+
+console.log('tokens mock installed');
+
+
 
 describe('Once a cycle has been found', function() {
   var clock;
@@ -42,12 +53,18 @@ describe('Once a cycle has been found', function() {
       charlie: new Agent('charlie'),
     };
     // FIXME: not access private vars like this:
-    agents.alice._ensurePeer('bob');
-    agents.alice._ensurePeer('charlie');
-    agents.bob._ensurePeer('alice');
-    agents.bob._ensurePeer('charlie');
-    agents.charlie._ensurePeer('alice');
-    agents.charlie._ensurePeer('bob');
+    var tokenCounterAlice = 0;
+    agents.alice._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-alice-${tokenCounterAlice++}`;  },
+    };
+    var tokenCounterBob = 0;
+    agents.bob._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-bob-${tokenCounterBob++}`;  },
+    };
+    var tokenCounterCharlie = 0;
+    agents.charlie._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
+    };
 
     agents.alice._search._neighbors = {
       'in': {
@@ -90,8 +107,8 @@ describe('Once a cycle has been found', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'probe',
-            treeToken: 'some-random-token',
-            pathToken: 'some-random-token',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-1',
           }),
           toNick: 'bob',
         }

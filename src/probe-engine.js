@@ -1,12 +1,13 @@
-var Signatures = require('./signatures');
+var tokens = require('./tokens');
 
 function ProbeEngine() {
   this._probes = {};
+  this._tokensModule = tokens; // FIXME: because having problems with rewire
 }
 
 ProbeEngine.prototype._createProbeObj = function(inNeighbor, outNeighbor) {
-  var treeToken = Signatures.generateToken();
-  var pathToken = Signatures.generateToken();
+  var treeToken = this._tokensModule.generateToken();
+  var pathToken = this._tokensModule.generateToken();
   this._probes[treeToken] = {
     pathToken,
     inNeighbor,

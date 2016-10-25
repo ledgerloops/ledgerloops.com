@@ -1,4 +1,5 @@
 var rewire = require('rewire');
+var Signatures = rewire('../../src/signatures');
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
 var debug = require('../../src/debug');
@@ -19,6 +20,11 @@ DateMock.prototype.toString = function() {
   return 'the now time';
 };
 Agent.__set__('Date', DateMock);
+
+Signatures.__set__('generateToken', function() {
+// return crypto.randomBytes(42).toString('base64');
+  return 'some-random-tokenz';
+});
 
 describe('IOUs between Alice and Bob', function() {
   var agents = {

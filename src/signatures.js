@@ -26,9 +26,4 @@ Signatures.prototype.sign = function(clearText, pubkey) {
   return 'signature';
 };
 
-Signatures.generateToken = function() {
-  // return crypto.randomBytes(42).toString('base64');
-  return 'some-random-token';
-};
-
 module.exports = Signatures;
