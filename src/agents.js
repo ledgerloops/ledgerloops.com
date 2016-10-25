@@ -115,16 +115,20 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'probe':
-    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then((forwardedProbe, cycleFound) => {
-      if (cycleFound) {
-        return this._settlementEngine.initiateNegotiaion(cycleFound.debtorNick).then(this._sendMessages.bind(this));
+    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then(obj => {
+      console.log('incoming probe handled', { obj }, this._myNick);
+      if (obj.cycleFound) {
+        return this._settlementEngine.initiateNegotiation(obj.cycleFound.peerNick, obj.cycleFound.currency).then(this._sendMessages.bind(this));
       } else {
-        return messaging.send(this._myNick, forwardedProbe.peerNick, messages.probe(forwardedProbe));
+        return Promise.all(obj.forwardMessages.map(probeMsgObj => {
+          console.log('forwarding', probeMsgObj);
+          return messaging.send(this._myNick, probeMsgObj.to, messages.probe(probeMsgObj.msg));
+        }));
       }
     });
     // break;
 
-  default: // msgType is not related to ledgers, but to settlements:
+  default: // msgType is not related to ledgers, ddcd, or probes, but to settlements:
     var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {
       fromRole = 'debtor';

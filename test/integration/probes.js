@@ -13,7 +13,7 @@ var stringify = require('../../src/stringify'); // TODO: do this via rewire as w
 // Should use multiple instances of the messaging simulator, see
 // https://github.com/michielbdejong/opentabs.net/issues/26
 
-debug.setLevel(false);
+debug.setLevel(true);
 
 var DateMock = function() {
 };
@@ -96,7 +96,7 @@ describe('Once a cycle has been found', function() {
   afterEach(function() {
   });
   
-  it('should send a probe token', function() {
+  it('should send a probe token round', function() {
     // FIXME: get this working with sinon.useFakeTimers
     return agents.alice._probeTimerHandler().then(() => {
       return messaging.flush();
@@ -111,8 +111,40 @@ describe('Once a cycle has been found', function() {
             pathToken: 'token-from-alice-1',
           }),
           toNick: 'bob',
-        }
+        },
       ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-1',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-1',
+          }),
+          toNick: 'alice',
+        },
+      ]);
+
+      console.log(messaging.getQueue());
     });
   });
 });
