@@ -1,25 +1,12 @@
-var crypto = require('crypto');
-console.log('crypto required');
+var Signatures = require('./signatures');
 
 function ProbeEngine() {
   this._probes = {};
-  this.tokens = {};
 }
 
-ProbeEngine.prototype.generateToken = function(noteObj) {
-  var token = crypto.randomBytes(42).toString('base64');
-  this.tokens[token] = noteObj;
-  return token;
-};
-
-ProbeEngine.prototype.getNoteObj = function(token) {
-  return this.tokens[token];
-};
-
-
 ProbeEngine.prototype._createProbeObj = function(inNeighbor, outNeighbor) {
-  var treeToken = this.generateToken({ inNeighbor, outNeighbor, type: 'tree' });
-  var pathToken = this.generateToken({ inNeighbor, outNeighbor, type: 'path' }); // FIXME: deal with multiple paths on one tree
+  var treeToken = Signatures.generateToken();
+  var pathToken = Signatures.generateToken();
   this._probes[treeToken] = {
     pathToken,
     inNeighbor,
