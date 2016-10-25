@@ -40,10 +40,11 @@ module.exports = {
   },
   send: function(fromNick, toNick, msg) {
     queue.push({ fromNick, toNick, msg });
-    debug.log(`Message queued from ${fromNick} to ${toNick}:`);
-    debug.log(msg);
+    console.log(`Message queued from ${fromNick} to ${toNick}:`);
+    console.log(msg);
     debug.log(JSON.parse(msg));
     return Promise.resolve();
   },
-  flush,  
+  flush,
+  getQueue: function() { return queue; },
 };

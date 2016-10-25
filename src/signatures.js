@@ -5,7 +5,7 @@ function Signatures() {
 }
 
 Signatures.prototype.generateKeypair = function() {
-  keypairs.pub = 'priv';
+  this.keypairs.pub = 'priv';
   return 'pub';
 };
 

@@ -1,4 +1,6 @@
 var Ledger = require('./ledgers');
+var tokens = require('./tokens'); // to make rewire work in probes integration test
+var ProbeEngine = require('./probe-engine');
 var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');
 var stringify = require('./stringify');
@@ -11,6 +13,9 @@ const PROBE_INTERVAL = 1000;
 function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
   this._search = new Search(this._sendMessages.bind(this));
+  this._probeEngine = new ProbeEngine();
+  this._probeTimer = setInterval(() => this._probeTimerHandler, PROBE_INTERVAL);
+  console.log('probe timer created', myNick);
   this._myNick = myNick;
   this._ledgers = {};
   this._sentIOUs = {};
@@ -18,6 +23,18 @@ function Agent(myNick) {
     return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
+
+Agent.prototype._probeTimerHandler = function() {
+  console.log('probe timer fired', this._myNick);
+  var activeNeighbors = this._search.getActiveNeighbors();
+  console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
+  return this._probeEngine.maybeSendProbes(activeNeighbors).then(msgObjects => {
+    return Promise.all(msgObjects.map(msgObj => {
+      console.log('probe message generated:', this._myNick, msgObj);
+      messaging.send(this._myNick, msgObj.outNeighborNick, messages.probe(msgObj));
+    }));
+  });
+};
 
 Agent.prototype._ensurePeer = function(peerNick) {
   if (typeof this._ledgers[peerNick] === 'undefined') {
@@ -96,7 +113,24 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     }
     return Promise.all(promises);
     // break;
-  default: // msgType is not related to ledgers, but to settlements:
+
+  case 'probe':
+    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then(obj => {
+      console.log('incoming probe handled', { obj }, this._myNick);
+      if (obj.cycleFound) {
+        return this._settlementEngine.initiateNegotiation(obj.cycleFound.peerNick, obj.cycleFound.currency).then(this._sendMessages.bind(this));
+      } else {
+        return Promise.all(obj.forwardMessages.map(probeMsgObj => {
+          console.log('forwarding', probeMsgObj);
+          // FIXME: make probeMsgObj and other similar msgObj types more similar
+          // (e.g. always call name its fields { toNick: ..., msgObj: ... })
+          return messaging.send(this._myNick, probeMsgObj.to, messages.probe(probeMsgObj.msg));
+        }));
+      }
+    });
+    // break;
+
+  default: // msgType is not related to ledgers, ddcd, or probes, but to settlements:
     var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
     if (fromNick === debtorNick) {
       fromRole = 'debtor';

@@ -175,4 +175,22 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
   return Promise.resolve([]);
 };
 
+Search.prototype.getActiveNeighbors = function() {
+  console.log('getting active neighbors from', this._neighbors);
+  var ret = {};
+  ['in', 'out'].map(direction => {
+    ret[direction] = [];
+    for (var neighborId in this._neighbors[direction]) {
+      if (this._neighbors[direction][neighborId].awake) {
+        var vals = JSON.parse(neighborId);
+        ret[direction].push({
+          peerNick: vals[0],
+          currency: vals[1],
+        });
+      }
+    }
+   });
+  return ret;
+};
+
 module.exports = Search;

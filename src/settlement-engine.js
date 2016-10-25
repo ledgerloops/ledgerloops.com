@@ -59,6 +59,13 @@ function SettlementEngine() {
   this.signatures = new Signatures();
 }
 
+SettlementEngine.prototype.initiateNegotiation = function(debtorNick) {
+  var pubkey = this.signatures.generateKeypair();
+  return Promise.resolve([
+    { toNick: debtorNick, msg: messages.pubkeyAnnounce(pubkey) },
+  ]);
+};
+
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
   debug.log('generateReactions', fromRole, msgObj, debtorNick, creditorNick);
   return new Promise((resolve, reject) => {
