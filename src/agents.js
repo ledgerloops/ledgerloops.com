@@ -45,6 +45,7 @@ Agent.prototype._ensurePeer = function(peerNick) {
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
+  console.log('debt object', debt);
   messaging.send(this._myNick, creditorNick, messages.IOU(debt));
   return new Promise((resolve, reject) => {
     this._sentIOUs[debt.note] = { resolve, reject };
@@ -65,13 +66,13 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   case 'IOU':
     // for simplicity, always accept the IOU.
-    var debt = incomingMsgObj.debt;
+    var debt = incomingMsgObj;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
     return this._sendMessages([{
       toNick: fromNick,
-      msg: messages.confirmIOU(debt.note),
+      msg: messages.confirmIOU(debt),
     }]).then(() => {
       debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
       return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
@@ -118,7 +119,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then(obj => {
       console.log('incoming probe handled', { obj }, this._myNick);
       if (obj.cycleFound) {
-        return this._settlementEngine.initiateNegotiation(obj.cycleFound.peerNick, obj.cycleFound.currency).then(this._sendMessages.bind(this));
+        return this._settlementEngine.initiateNegotiation(obj.cycleFound).then(this._sendMessages.bind(this));
       } else {
         return Promise.all(obj.forwardMessages.map(probeMsgObj => {
           console.log('forwarding', probeMsgObj);
@@ -131,7 +132,10 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   default: // msgType is not related to ledgers, ddcd, or probes, but to settlements:
-    var [ debtorNick, creditorNick ] = this._search.getPeerPair(incomingMsgObj.pubkey);
+    var peerPair = this._probeEngine.getPeerPair(incomingMsgObj);
+    console.log(peerPair);
+    var debtorNick = peerPair.inNeighborNick;
+    var creditorNick = peerPair.outNeighborNick;
     if (fromNick === debtorNick) {
       fromRole = 'debtor';
     } else if (fromNick === creditorNick) {
@@ -139,8 +143,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     } else {
       throw new Error(`fromNick matches neither debtorNick nor creditorNick`);
     }
-    return this._settlementEngine.generateReactions(fromRole, debtorNick, creditorNick,
-        incomingMsgObj).then(this._sendMessages.bind(this));
+    return this._settlementEngine.generateReactions(fromRole, incomingMsgObj,
+        debtorNick, creditorNick).then(this._sendMessages.bind(this));
     // break;
   }
 };

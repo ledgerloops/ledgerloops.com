@@ -45,12 +45,10 @@ describe('IOUs between Alice and Bob', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'alice',
-              note: 'IOU sent from alice to bob on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'alice',
+            note: 'IOU sent from alice to bob on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'bob'
@@ -136,12 +134,10 @@ describe('IOUs between Alice and Bob', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'bob',
-              note: 'IOU sent from bob to alice on the now time',
-              addedDebts: {
-                USD: 0.02,
-              },
+            debtor: 'bob',
+            note: 'IOU sent from bob to alice on the now time',
+            addedDebts: {
+              USD: 0.02,
             },
           }),
           toNick: 'alice'
@@ -218,12 +214,10 @@ describe('IOUs between Alice and Bob', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'alice',
-              note: 'IOU sent from alice to bob on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'alice',
+            note: 'IOU sent from alice to bob on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'bob'
@@ -289,12 +283,10 @@ describe('Cycle Detection', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'fred',
-              note: 'IOU sent from fred to edward on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'fred',
+            note: 'IOU sent from fred to edward on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'edward'
@@ -304,12 +296,10 @@ describe('Cycle Detection', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'edward',
-              note: 'IOU sent from edward to charlie on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'edward',
+            note: 'IOU sent from edward to charlie on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'charlie'
@@ -319,12 +309,10 @@ describe('Cycle Detection', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'daphne',
-              note: 'IOU sent from daphne to edward on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'daphne',
+            note: 'IOU sent from daphne to edward on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'edward'
@@ -518,12 +506,10 @@ describe('Cycle Detection', function() {
           msg: stringify({
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'IOU',
-            debt: {
-              debtor: 'charlie',
-              note: 'IOU sent from charlie to daphne on the now time',
-              addedDebts: {
-                USD: 0.01,
-              },
+            debtor: 'charlie',
+            note: 'IOU sent from charlie to daphne on the now time',
+            addedDebts: {
+              USD: 0.01,
             },
           }),
           toNick: 'daphne',

@@ -5,17 +5,14 @@ function ProbeEngine() {
   this._tokensModule = tokens; // FIXME: because having problems with rewire
 }
 
-ProbeEngine.prototype.getOtherPeer = function(inNeighbor, treeToken, pathToken) {
-  if (typeof this._probes[treeToken] === 'undefined') {
+ProbeEngine.prototype.getPeerPair = function(obj) {
+  if (typeof this._probes[obj.treeToken] === 'undefined') {
     return null;
   }
-  if (typeof this._probes[treeToken][pathToken] === 'undefined') {
+  if (typeof this._probes[obj.treeToken][obj.pathToken] === 'undefined') {
     return null;
   }
-  if (this._probes[treeToken][pathToken].inNeighbor !== inNeighbor) {
-    return null;
-  }
-  return this._probes[treeToken][pathToken].outNeighbor;
+  return this._probes[obj.treeToken][obj.pathToken];
 };
 
 ProbeEngine.prototype._getProbeStatus = function(inNeighbor, treeToken, pathToken) {
@@ -73,7 +70,10 @@ ProbeEngine.prototype._reportLoop = function(treeToken, pathToken, forwardMessag
   return Promise.resolve({
     forwardMessages,
     cycleFound: {
-      peerNick: this._probes[treeToken][pathToken].outNeighborNick,
+      treeToken,
+      pathToken,
+      inNeighborNick: this._probes[treeToken][pathToken].inNeighborNick,
+      outNeighborNick: this._probes[treeToken][pathToken].outNeighborNick,
       currency: this._probes[treeToken][pathToken].currency,
     },
   });
@@ -118,6 +118,7 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
       });
     });
   case 'my-probe-not-backtracked':
+    this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].inNeighborNick = fromNick;
     return this._reportLoop(incomingMsgObj.treeToken, incomingMsgObj.pathToken);
   case 'my-P-shaped-loop-same-path':
     return generateNewPathToken().then(newPathToken => { // for old in-neighbor

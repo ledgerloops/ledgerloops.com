@@ -144,7 +144,21 @@ describe('Once a cycle has been found', function() {
         },
       ]);
 
-      console.log(messaging.getQueue());
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'pubkey-announce',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-1',
+            pubkey: 'pub',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
     });
   });
 });
