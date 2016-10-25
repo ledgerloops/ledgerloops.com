@@ -258,3 +258,207 @@ describe('If cycle is broken', function() {
     });
   });
 });
+
+
+describe('If two cycles exist', function() {
+  var clock;
+  var agents;
+  beforeEach(function () {
+    agents = {
+      alice: new Agent('alice'),
+      bob: new Agent('bob'),
+      charlie: new Agent('charlie'),
+      daphne: new Agent('daphne'),
+      edward: new Agent('edward'),
+    };
+    // FIXME: not access private vars like this:
+    var tokenCounterAlice = 0;
+    agents.alice._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-alice-${tokenCounterAlice++}`;  },
+    };
+    var tokenCounterBob = 0;
+    agents.bob._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-bob-${tokenCounterBob++}`;  },
+    };
+    var tokenCounterCharlie = 0;
+    agents.charlie._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
+    };
+    var tokenCounterDaphne = 0;
+    agents.daphne._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-daphne-${tokenCounterDaphne++}`;  },
+    };
+    var tokenCounterEdward = 0;
+    agents.edward._probeEngine._tokensModule = {
+      generateToken: function() { return `token-from-edward-${tokenCounterEdward++}`;  },
+    };
+    // cycle is broken between Bob and Charlie:
+    agents.alice._search._neighbors = {
+      'in': {
+        '["charlie","USD"]': { awake: true },
+       },
+       out: {
+        '["edward","USD"]': { awake: true },
+        '["bob","USD"]': { awake: true },
+       },
+    };
+
+    agents.bob._search._neighbors = {
+      'in': {
+        '["alice","USD"]': { awake: true },
+       },
+       out: {
+        '["edward","USD"]': { awake: true },
+        '["charlie","USD"]': { awake: true },
+        '["daphne","USD"]': { awake: true },
+       },
+    };
+
+    agents.charlie._search._neighbors = {
+      'in': {
+        '["bob","USD"]': { awake: true },
+       },
+       out: {
+        '["edward","USD"]': { awake: true },
+        '["alice","USD"]': { awake: true },
+       },
+    };
+    agents.daphne._search._neighbors = {
+      'in': {
+        '["bob","USD"]': { awake: true },
+       },
+       out: {
+        '["edward","USD"]': { awake: true },
+        '["alice","USD"]': { awake: true },
+       },
+    };
+    agents.edward._search._neighbors = {
+      'in': {
+        '["alice","USD"]': { awake: true },
+        '["bob","USD"]': { awake: true },
+        '["charlie","USD"]': { awake: true },
+        '["daphne","USD"]': { awake: true },
+       },
+       out: {
+       },
+    };
+
+  });
+  afterEach(function() {
+  });
+  
+  it('should send a probe token round one of the cycles', function() {
+    // FIXME: get this working with sinon.useFakeTimers
+    return agents.alice._probeTimerHandler().then(() => {
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-1',
+          }),
+          toNick: 'edward',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-edward-0',
+          }),
+          toNick: 'alice',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-2',
+          }),
+          toNick: 'bob',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-alice-2',
+          }),
+          toNick: 'edward',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-edward-1',
+          }),
+          toNick: 'bob',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-bob-0',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-bob-0',
+          }),
+          toNick: 'alice',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+      ]);
+    });
+  });
+});
