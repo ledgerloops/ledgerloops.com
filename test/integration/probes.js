@@ -3,6 +3,7 @@ var probeEngine = rewire('../../src/probe-engine');
 
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
+var protocolVersion = require('../../src/messages').protocolVersion;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
@@ -106,7 +107,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -122,7 +123,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -138,7 +139,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -154,7 +155,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -230,7 +231,7 @@ describe('If cycle is broken', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -246,7 +247,7 @@ describe('If cycle is broken', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -361,7 +362,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -377,7 +378,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
@@ -393,7 +394,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-2',
@@ -409,7 +410,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-2',
@@ -425,7 +426,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-2',
@@ -441,7 +442,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-bob-0',
@@ -457,7 +458,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-bob-0',
@@ -473,7 +474,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-bob-0',
@@ -489,7 +490,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-charlie-0',
@@ -505,7 +506,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-charlie-0',
