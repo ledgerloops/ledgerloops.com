@@ -1,162 +1,174 @@
 var tokens = require('./tokens');
+var ProbeTree = require('./probe-tree');
 
 function ProbeEngine() {
-  this._probes = {};
+  this._probeTrees = {};
   this._tokensModule = tokens; // FIXME: because having problems with rewire
 }
 
 ProbeEngine.prototype.getPeerPair = function(obj) {
-  if (typeof this._probes[obj.treeToken] === 'undefined') {
+  if (typeof this._probeTrees[obj.treeToken] === 'undefined') {
     return null;
   }
-  if (typeof this._probes[obj.treeToken][obj.pathToken] === 'undefined') {
-    return null;
-  }
-  return this._probes[obj.treeToken][obj.pathToken];
+  return this._probeTrees[obj.treeToken].getPeerPair(obj.pathToken);
 };
 
-ProbeEngine.prototype._getProbeStatus = function(inNeighbor, treeToken, pathToken) {
-  if (typeof this._probes[treeToken] === 'undefined') {
-    return 'unknown';
-  }
-  if (typeof this._probes[treeToken][pathToken] === 'undefined') {
-    var probeIsMine = true;
-    var backtrack = false;
-    for (var existingToken in this.probes[treeToken]) {
-      if (typeof this._probes[treeToken][existingToken].inNeighbor !== 'undefined') {
-        probeIsMine = false;
-      }
-      if (this._probes[treeToken][existingToken].inNeighbor === inNeighbor) {
-        return 'path-changed'; // this should not normally happen in current algorithm
-      } else if (this._probes[treeToken][existingToken].outNeighbor === inNeighbor) {
-        backtrack = true;
-      }
-    }
-    // this probe's treeToken was seen before, but either it was mine or it came from a different in-neighbor
-    if (probeIsMine) {
-      return (backtrack ? 'my-probe-backtracked' : 'my-probe-not-backtracked');
-    }
-    return (backtrack ? 'backtrack' : 'my-P-shaped-loop');
-  }
-  if (typeof this._probes[treeToken][pathToken].inNeighbor === 'undefined') {
-    return 'my-probe-not-backtracked';
-  }
-  return 'already-routed';
-};
 
 ProbeEngine.prototype._createProbeObj = function(outNeighborNick, currency) {
-  var treeToken = this._tokensModule.generateToken();
-  var pathToken = this._tokensModule.generateToken();
-  // probe create here, so no in-neighbor -vvvvvvvvv
-  return this._store(treeToken, pathToken, undefined, outNeighborNick, currency).then(() => {
-    return { treeToken, pathToken, outNeighborNick, currency };
-  });
 };
 
-ProbeEngine.prototype._store = function(treeToken, pathToken, inNeighborNick, outNeighborNick, currency) {
-  if (typeof this._probes[treeToken] === 'undefined') {
-    this._probes[treeToken] = {};
-  }
-  this._probes[treeToken][pathToken] = {
-    inNeighborNick,
-    outNeighborNick,
-    currency,
-  };
-  return Promise.resolve({ peerNick: outNeighborNick, currency, treeToken, pathToken });
-};
-
-ProbeEngine.prototype._reportLoop = function(treeToken, pathToken, forwardMessages = []) {
-  console.log('reporting loop', this._probes);
-  return Promise.resolve({
-    forwardMessages,
-    cycleFound: {
-      treeToken,
-      pathToken,
-      inNeighborNick: this._probes[treeToken][pathToken].inNeighborNick,
-      outNeighborNick: this._probes[treeToken][pathToken].outNeighborNick,
-      currency: this._probes[treeToken][pathToken].currency,
-    },
-  });
-};
-
-ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
-//  console.log('ProbeEngine.prototype.handleIncomingProbe', { fromNick, incomingMsgObj }, activeNeighbors);
-
-  // FIXME: move these private functions to ProbeEngine.prototype._methodName = function() ...
-  function generateNewToken() {
-    return Promise.reject('not implemented yet');
-  }
-
-  function backtrack(newPathToken = incomingMsgObj.pathToken) {
-    return Promise.reject('not implemented yet');
-  }
-
-  // FIXME: this programming pattern works nicely here, but it's maybe a bit too uncommon.
-  function orIfEmpty(forwardMessages, ifEmptyThen) {
-    if (forwardMessages.length === 0) {
-      return ifEmptyThen();
+ProbeEngine.prototype._isNeighbor = function(direction, nick, currency, neighbors) {
+console.log('ProbeEngine.prototype._isNeighbor', direction, nick, currency, neighbors);
+  for (var i=0; i<neighbors[direction].length; i++) {
+    console.log(i, neighbors[direction][i]);
+    if ((neighbors[direction][i].peerNick === nick) &&
+        (neighbors[direction][i].currency === currency)) {
+      return true;
     }
-    return Promise.resolve({ forwardMessages });
   }
+  return false;
+};
 
-  function fail() {
-    return Promise.reject('not implemented yet');
+ProbeEngine.prototype._haveProbeFor = function(currency) {
+  for (var treeToken in this._probeTrees) {
+    if (this._probeTree.getCurrency() === currency) {
+      return true;
+    }
   }
+  return false;
+};
 
-  var probeStatus = this._getProbeStatus(fromNick, incomingMsgObj.treeToken, incomingMsgObj.pathToken);
-  switch(probeStatus) {
-  case 'unknown': 
-    return this._store(incomingMsgObj.treeToken, incomingMsgObj.pathToken,
-        fromNick, activeNeighbors.out[0].peerNick, // TODO: somehow pick the most promising out-neighbor
-        incomingMsgObj.currency).then(() => {
+function listOutNeighborNicks(currency, neighbors) {
+  console.log('listOutNeighborNicks', neighbors);
+  var ret = [];
+  for (var i=0; i<neighbors.out.length; i++) {
+    if (neighbors.out[i].currency === currency) {
+      ret.push(neighbors.out[i].peerNick);
+    }
+  }
+  return ret;
+}
+
+// TODO: make this method shorter, maybe moving some functionality to ProbeTree class.
+ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
+console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgObj }, activeNeighbors);
+  if (this._isNeighbor('in', fromNick, incomingMsgObj.currency, activeNeighbors)) {
+    console.log('this probe message comes from an in-neighbor');
+    if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') { // unknown treeToken
+      var outNeighborNicks = listOutNeighborNicks(incomingMsgObj.currency, activeNeighbors);
+      console.log('handling incoming probe', { incomingMsgObj, outNeighborNicks });
+      if (outNeighborNicks.length === 0) {
+        // backtrack immediately
+        incomingMsgObj.outNeighborNick = fromNick;
+        return Promise.resolve({
+          forwardMessages: [ incomingMsgObj ],
+          cycleFound: null,
+        });
+      } else {
+        // participate in this probe
+        this._probeTrees[incomingMsgObj.treeToken] = new ProbeTree(incomingMsgObj.treeToken, fromNick,
+          outNeighborNicks, incomingMsgObj.currency);
+        var firstOutNeighborNick = this._probeTrees[incomingMsgObj.treeToken].addPath(incomingMsgObj.pathToken);
+        console.log('participating in new probe tree', outNeighborNicks, incomingMsgObj.currency);
+        return Promise.resolve({
+          forwardMessages: [ this._probeTrees[incomingMsgObj.treeToken].getProbeObj(firstOutNeighborNick) ],
+          cycleFound: null,
+        });
+      }
+    } else { // known treeToken coming from an in-neighbor!
+      if (this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === fromNick) {
+        // already received that same treeToken from that same inNeighbor! What to do?
+        return Promise.reject(new Error('Boom!'));
+      } else if (typeof this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === 'undefined') {
+        // my loop!
+        console.log('My loop!');
+        incomingMsgObj.inNeighborNick = fromNick;
+        this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
+        return Promise.resolve({
+          forwardMessages: [],
+          cycleFound: incomingMsgObj,
+        });
+      } else {
+        // my P-loop!
+        this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
+        return Promise.resolve({
+          forwardMessages: [],
+          cycleFound: incomingMsgObj,
+        });
+      }
+    }
+  } else if (this._isNeighbor('out', fromNick, incomingMsgObj.currency, activeNeighbors)) {
+    console.log('this probe message comes from an out-neighbor');
+    // One of our out-neighbor backtracked (inside addPath, it will be determined if the correct out-neighbor did, or a different one)
+    var newPathToken = this._tokensModule.generateToken();
+    var nextOutNeighborNick = this._probeTrees[incomingMsgObj.treeToken].addPath(newPathToken, incomingMsgObj.pathToken, fromNick);
+    console.log('picked', {nextOutNeighborNick});
+    if (typeof nextOutNeighborNick === 'undefined') {
+      console.log('own tree backtracked, done here.');
       return Promise.resolve({
-        forwardMessages: [ {
-          to: this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].outNeighborNick,
-          msg: incomingMsgObj, // TODO: check what format agent.js expects here
-        } ],
+        forwardMessages: [],
         cycleFound: null,
       });
+    } else if (nextOutNeighborNick === this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick()) { // back to sender
+      console.log('reverse-engineered that as back to sender,', nextOutNeighborNick);
+      // no out-neighbors left, backtracking ourselves too.
+      incomingMsgObj.outNeighborNick = fromNick;
+      // FIXME: the way getInNeighborNick is used here to reverse-engineer what addPath did,
+      // and the way the newPathToken was generated but not used, is all a bit ugly. ProbeEngine and ProbeTree
+      // responsibilities are too entangled here.
+    } else { // next sibling
+      console.log('reverse-engineered that as next sibling,', nextOutNeighborNick);
+      incomingMsgObj.pathToken = newPathToken;
+      incomingMsgObj.outNeighborNick = nextOutNeighborNick;
+    }
+    return Promise.resolve({
+      forwardMessages: [ incomingMsgObj ],
+      cycleFound: null,
     });
-  case 'my-probe-not-backtracked':
-    this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].inNeighborNick = fromNick;
-    return this._reportLoop(incomingMsgObj.treeToken, incomingMsgObj.pathToken);
-  case 'my-P-shaped-loop-same-path':
-    return generateNewPathToken().then(newPathToken => { // for old in-neighbor
-      return backtrack(newPathToken); // for old in-neighbor
-    }).then(forwardMessages => {
-      return this._reportLoop(incomingMsgObj.treeToken, incomingMsgObj.pathToken, forwardMessages); // for new in-neighbor and path
+  } else {
+    console.log('this probe message comes from a comms-only neighbor!');
+    // We got a probe message from someone who is a neighbor in the communication graph, but is neither a creditor
+    // nor a debtor in the debt graph for this currency. Just backtrack it:
+    incomingMsgObj.outNeighborNick = fromNick;
+    return Promise.resolve({
+      forwardMessages: [ incomingMsgObj ],
+      cycleFound: null,
     });
-  case 'my-P-shaped-loop-path-changed':
-    return backtrack().then(forwardMessages => { // for old in-neighbor
-      return this._reportLoop(incomingMsgObj.treeToken, incomingMsgObj.pathToken, forwardMessages); // for new in-neighbor and path
-    });
-  case 'my-probe-backtracked':
-    return generateNewPathToken().then(newPathToken => {
-      return tryNextNeighbor(newPathToken);
-    }).then(forwardMessages => {
-      return orIfEmpty(forwardMessages, fail); // next out-neighbor or fail if none left
-    });
-  case 'backtrack':
-    return generateNewPathToken().then(newPathToken => {
-      return tryNextNeighbor(newPathToken);
-    }).then(forwardMessages => {
-     return orIfEmpty(forwardMessages, backtrack()); // next out-neighbor or backtrack if none left
-    });
-  case 'path-changed':
-     return Promise.reject(new Error('path changed')); // this should not normally occur, I think. for now, throw error
-  case 'already-routed':
-     return Promise.reject(new Error('already routed')); // maybe the original node malfunctioned. for now, throw error
-  default:
-     return Promise.reject(new Error(`unrecognized probe status ${probeStatus}`));
   }
 };
 
 ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
-  if ((neighbors['in'].length === 0) || (neighbors.out.length === 0)) {
-    return Promise.resolve([]);
+  var currenciesIn = {};
+  var currenciesThrough = {};
+  var i;
+  for (i=0; i<neighbors['in'].length; i++) {
+    currenciesIn[neighbors['in'][i].currency] = true;
+  }  
+  for (i=0; i<neighbors.out.length; i++) {
+    if (currenciesIn[neighbors.out[i].currency]) {
+      currenciesThrough[neighbors.out[i].currency] = true;
+    }
   }
-  return this._createProbeObj(neighbors.out[0].peerNick, neighbors.out[0].currency).then(obj => {  // TODO: send to other neighbor pairs too
-    return [ obj ];
+  console.log({ currenciesIn, currenciesThrough });
+
+  var probesToSend = [];
+  for (var currency in currenciesThrough) {
+    if (!this._haveProbeFor(currency)) {
+      var outNeighborNicks = listOutNeighborNicks(currency, neighbors);
+      // start ProbeTree here for this currency (and become its tree root):
+      var treeToken = this._tokensModule.generateToken();
+      var pathToken = this._tokensModule.generateToken();
+      // undefined here indicates no inNeighbor for this tree: vvvv
+      this._probeTrees[treeToken] = new ProbeTree(treeToken, undefined, outNeighborNicks, currency);
+      var firstOutNeighborNick = this._probeTrees[treeToken].addPath(pathToken);
+      console.log('new probe tree created', outNeighborNicks, currency);
+      probesToSend.push(this._probeTrees[treeToken].getProbeObj(firstOutNeighborNick));
+    }
+  }
+console.log({probesToSend });
+  return Promise.resolve({
+    forwardMessages: probesToSend,
+    cycleFound: null,
   });
 };
 

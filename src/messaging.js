@@ -24,7 +24,7 @@ function flush() {
       return handleNextMessages();
     });
   }
- 
+
   debug.log(`Flushing ${iteration.length} messages:`);
   debug.log(iteration);
 
@@ -47,4 +47,5 @@ module.exports = {
   },
   flush,
   getQueue: function() { return queue; },
+  discardQueue: function() { queue = []; },
 };
