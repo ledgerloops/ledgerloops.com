@@ -110,6 +110,7 @@ describe('Once a cycle has been found', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'bob',
         },
@@ -125,6 +126,7 @@ describe('Once a cycle has been found', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'charlie',
         },
@@ -140,6 +142,7 @@ describe('Once a cycle has been found', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'alice',
         },
@@ -231,6 +234,7 @@ describe('If cycle is broken', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'bob',
         },
@@ -245,7 +249,8 @@ describe('If cycle is broken', function() {
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-bob-0',
+            pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'alice',
         },
@@ -360,6 +365,7 @@ describe('If two cycles exist', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'edward',
         },
@@ -374,7 +380,8 @@ describe('If two cycles exist', function() {
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-edward-0',
+            pathToken: 'token-from-alice-1',
+            currency: 'USD',
           }),
           toNick: 'alice',
         },
@@ -390,6 +397,7 @@ describe('If two cycles exist', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-2',
+            currency: 'USD',
           }),
           toNick: 'bob',
         },
@@ -405,6 +413,7 @@ describe('If two cycles exist', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-2',
+            currency: 'USD',
           }),
           toNick: 'edward',
         },
@@ -419,7 +428,8 @@ describe('If two cycles exist', function() {
             protocolVersion: 'opentabs-net-0.3',
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-edward-1',
+            pathToken: 'token-from-alice-2',
+            currency: 'USD',
           }),
           toNick: 'bob',
         },
@@ -435,6 +445,7 @@ describe('If two cycles exist', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-bob-0',
+            currency: 'USD',
           }),
           toNick: 'charlie',
         },
@@ -450,6 +461,39 @@ describe('If two cycles exist', function() {
             msgType: 'probe',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-bob-0',
+            currency: 'USD',
+          }),
+          toNick: 'edward',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'edward',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-bob-0',
+            currency: 'USD',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
           }),
           toNick: 'alice',
         },
@@ -458,6 +502,17 @@ describe('If two cycles exist', function() {
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion: 'opentabs-net-0.3',
+            msgType: 'pubkey-announce',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            pubkey: 'pub',
+          }),
+          toNick: 'charlie',
+        },
       ]);
     });
   });

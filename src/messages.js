@@ -53,6 +53,7 @@ module.exports = {
       msgType: 'probe',
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
+      currency: obj.currency,
     });
   },
 

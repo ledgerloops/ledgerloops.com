@@ -17,9 +17,16 @@ ProbeEngine.prototype.getPeerPair = function(obj) {
 ProbeEngine.prototype._createProbeObj = function(outNeighborNick, currency) {
 };
 
-ProbeEngine.prototype._validInNeighbor = function(fromNick, incomingMsgObj, activeNeighbors) {
-  console.log('_validInNeighbor', { fromNick, incomingMsgObj, activeNeighbors });
-  return true;
+ProbeEngine.prototype._isNeighbor = function(direction, nick, currency, neighbors) {
+console.log('ProbeEngine.prototype._isNeighbor', direction, nick, currency, neighbors);
+  for (var i=0; i<neighbors[direction].length; i++) {
+    console.log(i, neighbors[direction][i]);
+    if ((neighbors[direction][i].peerNick === nick) &&
+        (neighbors[direction][i].currency === currency)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 ProbeEngine.prototype._haveProbeFor = function(currency) {
@@ -42,15 +49,92 @@ function listOutNeighborNicks(currency, neighbors) {
   return ret;
 }
 
+// TODO: make this method shorter, maybe moving some functionality to ProbeTree class.
 ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
-  if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') {
-    var outNeighborNicks = listOutNeighborNicks(incomingMsgObj.currency, activeNeighbors);
-    if (this._validInNeighbor(fromNick, incomingMsgObj, activeNeighbors)) {
-      this._probeTrees[incomingMsgObj.treeToken] = new ProbeTree(incomingMsgObj.treeToken, fromNick,
+console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgObj }, activeNeighbors);
+  if (this._isNeighbor('in', fromNick, incomingMsgObj.currency, activeNeighbors)) {
+    console.log('this probe message comes from an in-neighbor');
+    if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') { // unknown treeToken
+      var outNeighborNicks = listOutNeighborNicks(incomingMsgObj.currency, activeNeighbors);
+      console.log('handling incoming probe', { incomingMsgObj, outNeighborNicks });
+      if (outNeighborNicks.length === 0) {
+        // backtrack immediately
+        incomingMsgObj.outNeighborNick = fromNick;
+        return Promise.resolve({
+          forwardMessages: [ incomingMsgObj ],
+          cycleFound: null,
+        });
+      } else {
+        // participate in this probe
+        this._probeTrees[incomingMsgObj.treeToken] = new ProbeTree(incomingMsgObj.treeToken, fromNick,
           outNeighborNicks, incomingMsgObj.currency);
+        var firstOutNeighborNick = this._probeTrees[incomingMsgObj.treeToken].addPath(incomingMsgObj.pathToken);
+        console.log('participating in new probe tree', outNeighborNicks, incomingMsgObj.currency);
+        return Promise.resolve({
+          forwardMessages: [ this._probeTrees[incomingMsgObj.treeToken].getProbeObj(firstOutNeighborNick) ],
+          cycleFound: null,
+        });
+      }
+    } else { // known treeToken coming from an in-neighbor!
+      if (this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === fromNick) {
+        // already received that same treeToken from that same inNeighbor! What to do?
+        return Promise.reject(new Error('Boom!'));
+      } else if (typeof this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === 'undefined') {
+        // my loop!
+        console.log('My loop!');
+        incomingMsgObj.inNeighborNick = fromNick;
+        this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
+        return Promise.resolve({
+          forwardMessages: [],
+          cycleFound: incomingMsgObj,
+        });
+      } else {
+        // my P-loop!
+        this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
+        return Promise.resolve({
+          forwardMessages: [],
+          cycleFound: incomingMsgObj,
+        });
+      }
     }
+  } else if (this._isNeighbor('out', fromNick, incomingMsgObj.currency, activeNeighbors)) {
+    console.log('this probe message comes from an out-neighbor');
+    // One of our out-neighbor backtracked (inside addPath, it will be determined if the correct out-neighbor did, or a different one)
+    var newPathToken = this._tokensModule.generateToken();
+    var nextOutNeighborNick = this._probeTrees[incomingMsgObj.treeToken].addPath(newPathToken, incomingMsgObj.pathToken, fromNick);
+    console.log('picked', {nextOutNeighborNick});
+    if (typeof nextOutNeighborNick === 'undefined') {
+      console.log('own tree backtracked, done here.');
+      return Promise.resolve({
+        forwardMessages: [],
+        cycleFound: null,
+      });
+    } else if (nextOutNeighborNick === this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick()) { // back to sender
+      console.log('reverse-engineered that as back to sender,', nextOutNeighborNick);
+      // no out-neighbors left, backtracking ourselves too.
+      incomingMsgObj.outNeighborNick = fromNick;
+      // FIXME: the way getInNeighborNick is used here to reverse-engineer what addPath did,
+      // and the way the newPathToken was generated but not used, is all a bit ugly. ProbeEngine and ProbeTree
+      // responsibilities are too entangled here.
+    } else { // next sibling
+      console.log('reverse-engineered that as next sibling,', nextOutNeighborNick);
+      incomingMsgObj.pathToken = newPathToken;
+      incomingMsgObj.outNeighborNick = nextOutNeighborNick;
+    }
+    return Promise.resolve({
+      forwardMessages: [ incomingMsgObj ],
+      cycleFound: null,
+    });
+  } else {
+    console.log('this probe message comes from a comms-only neighbor!');
+    // We got a probe message from someone who is a neighbor in the communication graph, but is neither a creditor
+    // nor a debtor in the debt graph for this currency. Just backtrack it:
+    incomingMsgObj.outNeighborNick = fromNick;
+    return Promise.resolve({
+      forwardMessages: [ incomingMsgObj ],
+      cycleFound: null,
+    });
   }
-  return this._probeTrees[incomingMsgObj.treeToken].handleIncomingProbe(fromNick, incomingMsgObj);
 };
 
 ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
@@ -77,11 +161,11 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
       // undefined here indicates no inNeighbor for this tree: vvvv
       this._probeTrees[treeToken] = new ProbeTree(treeToken, undefined, outNeighborNicks, currency);
       var firstOutNeighborNick = this._probeTrees[treeToken].addPath(pathToken);
-      console.log('probe tree created', outNeighborNicks, currency);
+      console.log('new probe tree created', outNeighborNicks, currency);
       probesToSend.push(this._probeTrees[treeToken].getProbeObj(firstOutNeighborNick));
     }
   }
-
+console.log({probesToSend });
   return Promise.resolve({
     forwardMessages: probesToSend,
     cycleFound: null,
