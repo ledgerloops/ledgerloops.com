@@ -100,21 +100,13 @@ ProbeEngine.prototype._tryNextNeighborOrParent = function(treeToken, pathToken, 
   };
   for (var i=0; i< activeNeighbors.out.length; i++) {
     if (!outNeighborsTried[activeNeighbors.out[i].peerNick]) {
-      return [
-        {
-           to: activeNeighbors.out[i].peerNick,
-           msg: backtrackMsgObj,
-        }
-      ];
+      backtrackMsgObj.outNeighborNick = activeNeighbors.out[i].peerNick;
+      return [ backtrackMsgObj ];
     }
   }
   if (inNeighborNick) {
-    return [
-      {
-         to: inNeighborNick,
-         msg: backtrackMsgObj,
-      }
-    ];
+    backtrackMsgObj.outNeighborNick = inNeighborNick;
+    return [ backtrackMsgObj ];
    }
    return []; // treeToken was mine and failed, it will die out.
 };
@@ -131,14 +123,12 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
   }
   switch(probeStatus) {
   case 'unknown':
+    incomingMsgObj.outNeighborNick = activeNeighbors.out[0].peerNick;
     return this._store(incomingMsgObj.treeToken, incomingMsgObj.pathToken,
-        fromNick, activeNeighbors.out[0].peerNick, // TODO: somehow pick the most promising out-neighbor first
+        fromNick, incomingMsgObj.outNeighborNick, // TODO: somehow pick the most promising out-neighbor first
         incomingMsgObj.currency).then(() => {
       return Promise.resolve({
-        forwardMessages: [ {
-          to: this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].outNeighborNick,
-          msg: incomingMsgObj,
-        } ],
+        forwardMessages: [ incomingMsgObj ],
         cycleFound: null,
       });
     });
@@ -153,12 +143,8 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
         pathToken: newPathToken,
         currency: incomingMsgObj.currency,
       };
-      return [
-        {
-          to: this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].inNeighborNick,
-          msg: backtrackMsgObj,
-        },
-      ];
+      backtrackMsgObj.outNeighborNick = this._probes[incomingMsgObj.treeToken][incomingMsgObj.pathToken].inNeighborNick;
+      return [ backtrackMsgObj ];
     }).then(forwardMessages => {
       return this._reportLoop(incomingMsgObj.treeToken, incomingMsgObj.pathToken, forwardMessages); // for new in-neighbor and path
     });
@@ -185,7 +171,10 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
     return Promise.resolve([]);
   }
   return this._createProbeObj(neighbors.out[0].peerNick, neighbors.out[0].currency).then(obj => {  // TODO: send to other neighbor pairs too
-    return [ obj ];
+    return {
+      forwardMessages: [ obj ],
+      cycleFound: null,
+    };
   });
 };
 

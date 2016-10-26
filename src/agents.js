@@ -24,15 +24,25 @@ function Agent(myNick) {
   });
 }
 
+Agent.prototype._handleProbeEngineOutput = function (output) {
+  if (output.cycleFound) {
+    return this._settlementEngine.initiateNegotiation(output.cycleFound).then(this._sendMessages.bind(this));
+  } else {
+    return Promise.all(output.forwardMessages.map(probeMsgObj => {
+      console.log('sending probe', probeMsgObj);
+      // FIXME: make probeMsgObj and other similar msgObj types more similar
+      // (e.g. always call name its fields { toNick: ..., msgObj: ... })
+      return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
+    }));
+  }
+};
+
 Agent.prototype._probeTimerHandler = function() {
   console.log('probe timer fired', this._myNick);
   var activeNeighbors = this._search.getActiveNeighbors();
   console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
-  return this._probeEngine.maybeSendProbes(activeNeighbors).then(msgObjects => {
-    return Promise.all(msgObjects.map(msgObj => {
-      console.log('probe message generated:', this._myNick, msgObj);
-      messaging.send(this._myNick, msgObj.outNeighborNick, messages.probe(msgObj));
-    }));
+  return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
+    return this._handleProbeEngineOutput(output);
   });
 };
 
@@ -116,18 +126,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'probe':
-    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then(obj => {
-      console.log('incoming probe handled', { obj }, this._myNick);
-      if (obj.cycleFound) {
-        return this._settlementEngine.initiateNegotiation(obj.cycleFound).then(this._sendMessages.bind(this));
-      } else {
-        return Promise.all(obj.forwardMessages.map(probeMsgObj => {
-          console.log('forwarding', probeMsgObj);
-          // FIXME: make probeMsgObj and other similar msgObj types more similar
-          // (e.g. always call name its fields { toNick: ..., msgObj: ... })
-          return messaging.send(this._myNick, probeMsgObj.to, messages.probe(probeMsgObj.msg));
-        }));
-      }
+    return this._probeEngine.handleIncomingProbe(fromNick, incomingMsgObj, this._search.getActiveNeighbors()).then(output => {
+      return this._handleProbeEngineOutput(output);
     });
     // break;
 
