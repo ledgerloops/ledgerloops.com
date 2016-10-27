@@ -60,6 +60,7 @@ ProbeTree.prototype.addPath = function(newPathToken, backtrackedPathToken, backt
 };
 
 ProbeTree.prototype.getPeerPair = function(pathToken) {
+  console.log('getting peer pair', pathToken, this._pathTokens);
   if (this._backtracked === pathToken) {
     return {
       inNeighborNick: this._inNeighborNick,

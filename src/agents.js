@@ -9,6 +9,24 @@ var debug = require('./debug');
 var messages = require('./messages');
 
 const PROBE_INTERVAL = 1000;
+const SETTLEMENT_AMOUNT = { // lower values make it more likely a loop is found, but require more small ledger loops to settle a big amount
+// To hide information about the exact amounts of your current debts and credits,
+// values that obey f(x) = coin * 10^magnitude, for a in [1,2,5], and magnitude integer (positive, zero, or negative) are encouraged, so:
+//
+// coin=1 coin=2 coin=5
+// ....,  ....., .....,
+// 0.001, 0.002, 0.005, magnitude = -3
+//  0.01,  0.02,  0.05, magnitude = -2
+//   0.1,   0.2,   0.5, magnitude = -1
+//     1,     2,     5, magnitude = 0
+//    10,    20,    50, magnitude = 1
+//   100,   200,   500, magnitude = 2
+//  1000,  2000,  5000, magnitude = 3
+// ....,  ....., .....,
+//
+
+  USD: 0.05,
+};
 
 function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
@@ -24,17 +42,35 @@ function Agent(myNick) {
   });
 }
 
+Agent.prototype._handleCycle = function(cycleObj) {
+  if (cycleObj === null) {
+    return Promise.resolve();
+  }
+  console.log('Cycle found', cycleObj);
+  console.log(this._ledgers);
+  var myDebtAtOutNeighbor = this._ledgers[cycleObj.outNeighborNick].getMyDebtAmount(cycleObj.currency);
+  if (myDebtAtOutNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
+    return Promise.resolve();
+  }
+
+  var myCreditAtInNeighbor = this._ledgers[cycleObj.inNeighborNick].getMyCreditAmount(cycleObj.currency);
+  if (myCreditAtInNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
+    return Promise.resolve();
+  }
+  console.log({ myCreditAtInNeighbor, myDebtAtOutNeighbor, SETTLEMENT_AMOUNT });
+  cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency];
+  return this._settlementEngine.initiateNegotiation(cycleObj).then(this._sendMessages.bind(this));
+};
+
 Agent.prototype._handleProbeEngineOutput = function (output) {
-  if (output.cycleFound) {
-    return this._settlementEngine.initiateNegotiation(output.cycleFound).then(this._sendMessages.bind(this));
-  } else {
+  return this._handleCycle(output.cycleFound).then(() => {
     return Promise.all(output.forwardMessages.map(probeMsgObj => {
       console.log('sending probe', probeMsgObj);
       // FIXME: make probeMsgObj and other similar msgObj types more similar
       // (e.g. always call name its fields { toNick: ..., msgObj: ... })
-      return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
+    return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
     }));
-  }
+  });
 };
 
 Agent.prototype._probeTimerHandler = function() {

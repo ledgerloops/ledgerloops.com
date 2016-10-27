@@ -35,6 +35,8 @@ describe('SettlementEngine.generateReactions', function() {
     return engine.generateReactions('creditor', {
       msgType: 'pubkey-announce',
       pubkey: 'asdf',
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -44,6 +46,8 @@ describe('SettlementEngine.generateReactions', function() {
           msgType: 'conditional-promise',
           pubkey: 'asdf',
           pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -55,6 +59,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -69,8 +75,12 @@ describe('SettlementEngine.generateReactions', function() {
             msgType: 'embeddable-promise',
             pubkey: 'asdf',
             pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
           },
           signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -83,6 +93,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -92,6 +104,8 @@ describe('SettlementEngine.generateReactions', function() {
           msgType: 'conditional-promise',
           pubkey: 'asdf',
           pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -107,8 +121,12 @@ describe('SettlementEngine.generateReactions', function() {
         msgType: 'embeddable-promise',
         pubkey: 'asdf',
         pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
       },
       signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 2);
       assert.deepEqual(reactions[0], {
@@ -117,11 +135,14 @@ describe('SettlementEngine.generateReactions', function() {
           protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
       assert.deepEqual(reactions[1], {
         to: 'myCreditor',
         msg: stringify({
+          protocolVersion,
           msgType: 'satisfy-condition',
           pubkey: 'asdf',
           pubkey2: 'pub',
@@ -129,8 +150,12 @@ describe('SettlementEngine.generateReactions', function() {
             msgType: 'embeddable-promise',
             pubkey: 'asdf',
             pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
           },
           signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -147,8 +172,12 @@ describe('SettlementEngine.generateReactions', function() {
         msgType: 'embeddable-promise',
         pubkey: 'asdf',
         pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
       },
       signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 2);
       assert.deepEqual(reactions[0], {
@@ -157,6 +186,8 @@ describe('SettlementEngine.generateReactions', function() {
           protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
       assert.deepEqual(reactions[1], {
@@ -169,11 +200,15 @@ describe('SettlementEngine.generateReactions', function() {
             msgType: 'embeddable-promise',
             pubkey: 'asdf',
             pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
           },
           pubkey: 'asdf',
           signature: 'signature',
           pubkey2: 'pub',
           proofOfOwnership: 'proof',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -188,11 +223,15 @@ describe('SettlementEngine.generateReactions', function() {
         msgType: 'embeddable-promise',
         pubkey: 'asdf',
         pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
       },
       pubkey: 'asdf',
       signature: 'signature',
       pubkey2: 'pub',
       proofOfOwnership: 'proof',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -201,6 +240,8 @@ describe('SettlementEngine.generateReactions', function() {
           protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
         })
       });
     });
@@ -212,6 +253,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'confirm-ledger-update',
       protocolVersion,
       pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 0);
     });
@@ -286,6 +329,8 @@ describe('Settlement process', function() {
       msgType: 'pubkey-announce',
       protocolVersion,
       pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
     },
   }];
   it('should find a settlement', function() {
@@ -301,6 +346,8 @@ describe('Settlement process', function() {
             protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'c',
           sender: 'b',
@@ -317,6 +364,8 @@ describe('Settlement process', function() {
             protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'a',
           sender: 'c',
@@ -338,8 +387,12 @@ describe('Settlement process', function() {
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
             },
             signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'c',
           sender: 'a',
@@ -355,6 +408,8 @@ describe('Settlement process', function() {
             msgType: 'confirm-ledger-update',
             protocolVersion,
             pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'a',
           sender: 'c',
@@ -370,8 +425,12 @@ describe('Settlement process', function() {
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
             },
             signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'b',
           sender: 'c',
@@ -387,6 +446,8 @@ describe('Settlement process', function() {
             msgType: 'confirm-ledger-update',
             protocolVersion,
            pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'c',
           sender: 'b',
@@ -402,9 +463,13 @@ describe('Settlement process', function() {
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
             },
             signature: 'signature',
             proofOfOwnership: 'proof',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'a',
           sender: 'b',
@@ -420,6 +485,8 @@ describe('Settlement process', function() {
             msgType: 'confirm-ledger-update',
             protocolVersion,
            pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
           },
           receiver: 'b',
           sender: 'a',

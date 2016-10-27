@@ -70,6 +70,8 @@ module.exports = {
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
       pubkey: obj.pubkey,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 // * [conditional-promise] C to B: If ${A1} promises to give 0.01USD to ${C2},
@@ -82,6 +84,8 @@ module.exports = {
       pubkey2: obj.pubkey2,
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 // * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
@@ -92,6 +96,8 @@ module.exports = {
       // no tree/path token since this message will not be sent/routed
       pubkey: obj.pubkey,
       pubkey2: obj.pubkey2,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 // * [satisfy-condition] A to B: Here is a signed promise for 0.01USD from ${A1}
@@ -108,6 +114,8 @@ module.exports = {
       pubkey2: obj.pubkey2,
       embeddablePromise: obj.embeddablePromise,
       signature: obj.signature,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 // * [claim-fulfillment] C to A: Here is a signed promise for 0.01USD from ${A1}
@@ -126,17 +134,22 @@ module.exports = {
       signature: obj.signature,
       pubkey2: obj.pubkey2,
       proofOfOwnership: obj.proofOfOwnership,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to
 //                                   chain ${A1} in the ledger entry.
   confirmLedgerUpdate: function(obj) {
+console.log('creating confirmLedgerUpdate from', obj);
     return stringify({
       protocolVersion,
       msgType: 'confirm-ledger-update',
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
       pubkey: obj.pubkey,
+      currency: obj.currency,
+      amount: obj.amount,
     });
   },
 };

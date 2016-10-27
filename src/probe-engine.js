@@ -83,6 +83,8 @@ console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgO
         // my loop!
         console.log('My loop!');
         incomingMsgObj.inNeighborNick = fromNick;
+        console.log(incomingMsgObj, this._probeTrees);
+        incomingMsgObj.outNeighborNick = this.getPeerPair(incomingMsgObj).outNeighborNick;
         this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
         return Promise.resolve({
           forwardMessages: [],
@@ -91,6 +93,7 @@ console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgO
       } else {
         // my P-loop!
         this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
+        incomingMsgObj.outNeighborNick = this.getPeerPair(incomingMsgObj).outNeighborNick;
         return Promise.resolve({
           forwardMessages: [],
           cycleFound: incomingMsgObj,
