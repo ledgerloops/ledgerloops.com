@@ -48,7 +48,6 @@ module.exports = {
   //////////////////////////
 
   probe: function(obj) {
-    console.log('creating probe msg from', obj);
     return stringify({
       protocolVersion,
       msgType: 'probe',
@@ -167,7 +166,6 @@ module.exports = {
 // * [confirm-ledger-update] B to A: OK, ledger updated, added a reference to
 //                                   chain ${A1} in the ledger entry.
   confirmLedgerUpdate: function(obj) {
-console.log('creating confirmLedgerUpdate from', obj);
     return stringify({
       protocolVersion,
       msgType: 'confirm-ledger-update',

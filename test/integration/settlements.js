@@ -9,7 +9,7 @@ var stringify = require('canonical-json');
 debug.setLevel(false);
 
 var shouldHaveKeypairs; // TODO: use sinon for this
-function MockSignatures() {};
+function MockSignatures() {}
 
 MockSignatures.prototype.generateKeypair = function() {
   return 'pub';

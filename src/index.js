@@ -1,5 +1,6 @@
 var debug = require('./debug');
 var Agent = require('./agents');
+var messaging = require('./messaging');
 
 var agents = {
   alice: new Agent('alice'),
@@ -19,14 +20,21 @@ var agents = {
 // out-of-scope, but could be provided by plugins in later versions of this
 // library).
 
-agents.alice.sendIOU('bob', 0.01, 'USD');
+debug.setLevel(true);
+
+agents.alice.sendIOU('bob', 0.1, 'USD');
 // alice will notify bob, and both will update their peer ledger.
-agents.bob.sendIOU('charlie', 0.01, 'USD');
-agents.charlie.sendIOU('daphne', 0.01, 'USD');
-agents.daphne.sendIOU('edward', 0.01, 'USD');
-agents.edward.sendIOU('fred', 0.01, 'USD');
-agents.fred.sendIOU('geraldine', 0.01, 'USD');
-agents.geraldine.sendIOU('alice', 0.01, 'USD');
+agents.bob.sendIOU('charlie', 0.1, 'USD');
+agents.charlie.sendIOU('daphne', 0.1, 'USD');
+agents.daphne.sendIOU('edward', 0.1, 'USD');
+agents.edward.sendIOU('fred', 0.1, 'USD');
+agents.fred.sendIOU('geraldine', 0.1, 'USD');
+setTimeout(() => {
+  agents.geraldine.sendIOU('alice', 0.1, 'USD');
+}, 10000);
+setInterval(() => {
+  messaging.flush();
+}, 500);
 // at this point, geraldine will notify alice, and alice can use her credit with geraldine to settle her debt with bob.
 // note that alice does not know about the existence of charlie, daphne, edward, and fred.
 // each agent only knows, only interacts with, and only trusts their own direct debtors and creditors.

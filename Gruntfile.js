@@ -7,7 +7,7 @@ module.exports = function(grunt) {
       options: {
         'esversion': 6
       },
-      src: 'src/*.js',
+      files: ['Gruntfiles.js', 'src/*.js', 'test/*/*.js'],
     },
     mochaTest: {
       test: {

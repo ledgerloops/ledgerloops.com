@@ -67,9 +67,9 @@ describe('IOUs between Alice and Bob', function() {
 
       // TODO: not access private vars here
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -149,9 +149,9 @@ describe('IOUs between Alice and Bob', function() {
       ]);
       // Alice has switched Bob to be debtor, but Bob still has Alice as debtor too:
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -251,9 +251,9 @@ describe('IOUs between Alice and Bob', function() {
       ]);
       // Now Alice also removed Bob as a neighbor:
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -389,11 +389,6 @@ describe('Cycle Detection', function() {
           toNick: 'daphne'
         },
       ]);
-
-      // this only works when running tests from just this file, in npm test, other tests will set it back
-      // to false, FIXME: and even then it somehow doesn't seem to work unless you set it to true at the top:
-      // debug.setLevel(true);
-      // debug.log('START DEBUGGING HERE!');
 
       return messaging.flush();
     }).then(messagesSent => {
