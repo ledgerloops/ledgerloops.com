@@ -30,7 +30,7 @@ function Agent(myNick) {
   this._settlementEngine = new SettlementEngine();
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
-  this._probeTimer = setInterval(() => this._probeTimerHandler, PROBE_INTERVAL);
+  this._probeTimer = setInterval(() => { this._probeTimerHandler(); }, PROBE_INTERVAL);
   this._myNick = myNick;
   this._ledgers = {};
   this._sentIOUs = {};
@@ -67,6 +67,7 @@ Agent.prototype._handleProbeEngineOutput = function (output) {
 Agent.prototype._probeTimerHandler = function() {
   var activeNeighbors = this._search.getActiveNeighbors();
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
+    debug.log(`${this._myNick} initiates probes:`, output);
     return this._handleProbeEngineOutput(output);
   });
 };
