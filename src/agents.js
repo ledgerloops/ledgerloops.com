@@ -1,9 +1,7 @@
 var Ledger = require('./ledgers');
-var tokens = require('./tokens'); // to make rewire work in probes integration test
 var ProbeEngine = require('./probe-engine');
 var SettlementEngine = require('./settlement-engine');
 var Search = require('./search');
-var stringify = require('canonical-json');
 var messaging = require('./messaging');
 var debug = require('./debug');
 var messages = require('./messages');
@@ -61,8 +59,6 @@ Agent.prototype._handleCycle = function(cycleObj) {
 Agent.prototype._handleProbeEngineOutput = function (output) {
   return this._handleCycle(output.cycleFound).then(() => {
     return Promise.all(output.forwardMessages.map(probeMsgObj => {
-      // FIXME: make probeMsgObj and other similar msgObj types more similar
-      // (e.g. always call name its fields { toNick: ..., msgObj: ... })
     return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
     }));
   });
@@ -159,7 +155,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     });
     // break;
 
-  default: // msgType is not related to ledgers, ddcd, or probes, but to settlements:
+  default: // msgType is related to settlements:
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;

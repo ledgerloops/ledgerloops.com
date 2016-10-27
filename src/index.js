@@ -19,6 +19,8 @@ var agents = {
 // out-of-scope, but could be provided by plugins in later versions of this
 // library).
 
+debug.setLevel(true);
+
 agents.alice.sendIOU('bob', 0.01, 'USD');
 // alice will notify bob, and both will update their peer ledger.
 agents.bob.sendIOU('charlie', 0.01, 'USD');
