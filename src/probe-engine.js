@@ -154,7 +154,6 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
 };
 
 ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
-  debug.log(neighbors);
   var currenciesIn = {};
   var currenciesThrough = {};
   var i;
