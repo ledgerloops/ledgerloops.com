@@ -1,5 +1,6 @@
 var rewire = require('rewire');
 var SettlementEngine = rewire('../../src/settlement-engine');
+var protocolVersion = require('../../src/messages').protocolVersion;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
@@ -39,7 +40,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'conditional-promise',
           pubkey: 'asdf',
           pubkey2: 'pub',
@@ -59,12 +60,12 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myCreditor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'satisfy-condition',
           pubkey: 'asdf',
           pubkey2: 'pub',
           embeddablePromise: {
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'embeddable-promise',
             pubkey: 'asdf',
             pubkey2: 'pub',
@@ -78,7 +79,7 @@ describe('SettlementEngine.generateReactions', function() {
   it('should react correctly to conditional-promise if not haveKeypair', function() {
     shouldHaveKeypairs = [];
     return engine.generateReactions('creditor', {
-      protocolVersion: 'opentabs-net-0.3',
+      protocolVersion,
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
@@ -87,7 +88,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'conditional-promise',
           pubkey: 'asdf',
           pubkey2: 'pub',
@@ -113,7 +114,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
         })
@@ -142,7 +143,7 @@ describe('SettlementEngine.generateReactions', function() {
       pubkey: 'asdf',
       pubkey2: 'pub',
       embeddablePromise: {
-        protocolVersion: 'opentabs-net-0.3',
+        protocolVersion,
         msgType: 'embeddable-promise',
         pubkey: 'asdf',
         pubkey2: 'pub',
@@ -153,7 +154,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
         })
@@ -161,10 +162,10 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[1], {
         to: 'myCreditor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'claim-fulfillment',
           embeddablePromise: {
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             msgType: 'embeddable-promise',
             pubkey: 'asdf',
             pubkey2: 'pub',
@@ -183,7 +184,7 @@ describe('SettlementEngine.generateReactions', function() {
     return engine.generateReactions('debtor', {
       msgType: 'claim-fulfillment',
       embeddablePromise: {
-        protocolVersion: 'opentabs-net-0.3',
+        protocolVersion,
         msgType: 'embeddable-promise',
         pubkey: 'asdf',
         pubkey2: 'pub',
@@ -197,7 +198,7 @@ describe('SettlementEngine.generateReactions', function() {
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion: 'opentabs-net-0.3',
+          protocolVersion,
           msgType: 'confirm-ledger-update',
           pubkey: 'asdf',
         })
@@ -209,7 +210,7 @@ describe('SettlementEngine.generateReactions', function() {
     shouldHaveKeypair = false;
     return engine.generateReactions('creditor', {
       msgType: 'confirm-ledger-update',
-      protocolVersion: 'opentabs-net-0.3',
+      protocolVersion,
       pubkey: 'asdf',
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 0);
@@ -283,7 +284,7 @@ describe('Settlement process', function() {
     receiver: 'b',
     msgObj: {
       msgType: 'pubkey-announce',
-      protocolVersion: 'opentabs-net-0.3',
+      protocolVersion,
       pubkey: 'fake',
     },
   }];
@@ -297,7 +298,7 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'conditional-promise',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
           },
@@ -313,7 +314,7 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'conditional-promise',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
           },
@@ -329,12 +330,12 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'satisfy-condition',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
               msgType: 'embeddable-promise',
-              protocolVersion: 'opentabs-net-0.3',
+              protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
             },
@@ -352,7 +353,7 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'confirm-ledger-update',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
           },
           receiver: 'a',
@@ -361,12 +362,12 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'satisfy-condition',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
               msgType: 'embeddable-promise',
-              protocolVersion: 'opentabs-net-0.3',
+              protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
             },
@@ -384,7 +385,7 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'confirm-ledger-update',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
            pubkey: 'fake',
           },
           receiver: 'c',
@@ -393,12 +394,12 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'claim-fulfillment',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
               msgType: 'embeddable-promise',
-              protocolVersion: 'opentabs-net-0.3',
+              protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
             },
@@ -417,7 +418,7 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'confirm-ledger-update',
-            protocolVersion: 'opentabs-net-0.3',
+            protocolVersion,
            pubkey: 'fake',
           },
           receiver: 'b',

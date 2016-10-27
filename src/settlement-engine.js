@@ -57,6 +57,7 @@ var stringify = require('./stringify');
 
 function SettlementEngine() {
   this.signatures = new Signatures();
+  console.log('SettlementEngine created', this);
 }
 
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
