@@ -77,6 +77,12 @@ SettlementEngine.prototype.initiateNegotiation = function(obj) {
   ]);
 };
 
+SettlementEngine.prototype.initiateRejection = function(debtorNick, obj) {
+  return Promise.resolve([
+    { toNick: debtorNick, msg: messages.pleaseReject(obj) },
+  ]);
+};
+
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
   console.log('generateReactions', {fromRole, msgObj, debtorNick, creditorNick}, msgObj);
   return new Promise((resolve, reject) => {

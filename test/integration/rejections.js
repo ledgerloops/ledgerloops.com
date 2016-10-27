@@ -72,8 +72,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 0);
     });
@@ -81,9 +81,8 @@ describe('SettlementEngine.generateReactions', function() {
     var secondMsg = engine.generateReactions('creditor', {
       msgType: 'please-reject',
       pubkey: 'asdf',
-      pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -92,7 +91,6 @@ describe('SettlementEngine.generateReactions', function() {
           protocolVersion,
           msgType: 'reject',
           pubkey: 'asdf',
-          pubkey2: 'pub',
           currency: 'USD',
           amount: 0.05,
         })
@@ -109,8 +107,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 0);
     });
@@ -118,9 +116,8 @@ describe('SettlementEngine.generateReactions', function() {
     var secondMsg = engine.generateReactions('creditor', {
       msgType: 'please-reject',
       pubkey: 'asdf',
-      pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -129,7 +126,6 @@ describe('SettlementEngine.generateReactions', function() {
           protocolVersion,
           msgType: 'reject',
           pubkey: 'asdf',
-          pubkey2: 'pub',
           currency: 'USD',
           amount: 0.05,
         })
@@ -187,8 +183,8 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'conditional-promise',
       pubkey: 'asdf',
       pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      currency: 'USD',
+      amount: 0.05,
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
@@ -437,27 +433,25 @@ describe('Settlement process rejected by B', function() {
             protocolVersion,
             pubkey: 'fake',
             pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+            currency: 'USD',
+            amount: 0.05,
           },
           receiver: 'c',
           sender: 'b',
         },
       ]);
-      traffic2.push( {
-        sender: 'b',
-        receiver: 'c',
-        msgObj: {
-          msgType: 'please-reject',
-          protocolVersion,
-          pubkey: 'fake',
-              currency: 'USD',
-              amount: 0.05,
-        },
+      return actors.b.engine.initiateRejection('c', traffic2[0].msgObj).then(plsRejMsg => {
+        console.log({ plsRejMsg });
+        traffic2.push( {
+          msgObj: JSON.parse(plsRejMsg[0].msg),
+          receiver: plsRejMsg[0].toNick,
+          sender: 'b',
+        });
+      
+        console.log('Step 2:', traffic2);
+        shouldHaveKeypairs = []; // c is the only one reacting now
+        return nextStep(actors, traffic2);
       });
-      debug.log('Step 2:');
-      shouldHaveKeypairs = []; // c is the only one reacting now
-      return nextStep(actors, traffic2);
     }).then((traffic3) => {
       assert.deepEqual(traffic3, [
         {
