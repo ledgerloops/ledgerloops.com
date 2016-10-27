@@ -4,6 +4,8 @@ var debug = require('./debug');
 var Signatures = require('./signatures');
 var stringify = require('canonical-json');
 
+const FORWARDING_TIMEOUT = 50;
+
 //  pubkeyAnnounce: function(pubkey) {
 //  conditionalPromise: function(pubkey, pubkey2) {
 //  embeddablePromise: function(pubkey, pubkey2) {
@@ -56,8 +58,9 @@ var stringify = require('canonical-json');
 //                                          ${signatureFromA1} in the ledger entry.
 
 function SettlementEngine() {
-  this.signatures = new Signatures();
+  this._signatures = new Signatures();
   console.log('SettlementEngine created', this);
+  this._outstandingNegotiations = {};
 }
 
 // required fields in obj:
@@ -65,9 +68,10 @@ function SettlementEngine() {
 // amount
 // currency
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
-  obj.pubkey = this.signatures.generateKeypair();
+  obj.pubkey = this._signatures.generateKeypair();
   console.log('initiateNeg', obj);
   // want to send this message to debtor ( = in-neighbor)
+  this._outstandingNegotiations[obj.pubkey] = obj;
   return Promise.resolve([
     { toNick: obj.inNeighborNick, msg: messages.pubkeyAnnounce(obj) },
   ]);
@@ -80,9 +84,9 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
       switch(msgObj.msgType) {
       case 'satisfy-condition':
         console.log('satisfy-condition from debtor', msgObj);
-        if (this.signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
+        if (this._signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
-          msgObj.proofOfOwnership = this.signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
+          msgObj.proofOfOwnership = this._signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
           resolve([
             { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
             { to: creditorNick, msg: messages.claimFulfillment(msgObj) },
@@ -108,33 +112,72 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
     } else if (fromRole === 'creditor') {
       switch(msgObj.msgType) {
       case 'pubkey-announce': // you are C
-        msgObj.pubkey2 = this.signatures.generateKeypair();
-        var condProm = messages.conditionalPromise(msgObj);
-        resolve([
-          { to: debtorNick, msg: condProm },
-        ]);
+        msgObj.pubkey2 = this._signatures.generateKeypair();
+        this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
+        setTimeout(() => {
+          if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
+            console.log('chain was rejected shortly after it reached me!');
+            resolve([]);
+          } else {
+            this._outstandingNegotiations[msgObj.pubkey] = msgObj;
+            resolve([
+              { to: debtorNick, msg: messages.conditionalPromise(msgObj) },
+            ]);
+          }
+        }, FORWARDING_TIMEOUT);
         break;
       case 'conditional-promise':
         debug.log('conditional-promise from creditor');
-        if (this.signatures.haveKeypair(msgObj.pubkey)) { // you are A
+        if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are A
           debug.log('pubkey is mine');
           // create embeddable promise
           // FIXME: not sure yet if embeddablePromise should be double-JSON-encoded to make signature deterministic,
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           msgObj.embeddablePromise = JSON.parse(messages.embeddablePromise(msgObj));
-          msgObj.signature = this.signatures.sign(msgObj.embeddablePromise, msgObj.pubkey);
+          msgObj.signature = this._signatures.sign(msgObj.embeddablePromise, msgObj.pubkey);
           console.log(msgObj);
-          resolve([
-            { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
-          ]);
+          this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
+          setTimeout(() => {
+            if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
+              console.log('chain was rejected shortly after it reached me!');
+              resolve([]);
+            } else {
+              this._outstandingNegotiations[msgObj.pubkey] = msgObj;
+              resolve([
+                { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
+              ]);
+            }
+          }, FORWARDING_TIMEOUT);
         } else { // you are B
+          this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
+          setTimeout(() => {
+            if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
+              console.log('chain was rejected shortly after it reached me!');
+              resolve([]);
+            } else {
+              this._outstandingNegotiations[msgObj.pubkey] = msgObj;
+              resolve([
+                { to: debtorNick, msg: messages.conditionalPromise(msgObj) },
+              ]);
+            }
+          }, FORWARDING_TIMEOUT);
+        }
+        break;
+      case 'please-reject':
+        if (this._outstandingNegotiations[msgObj.pubkey] === 'can-still-reject') {
+          delete this._outstandingNegotiations[msgObj.pubkey];
           resolve([
-            { to: debtorNick, msg: messages.conditionalPromise(msgObj) },
+            { to: creditorNick, msg: messages.reject(msgObj) },
+          ]);
+        } else {
+          resolve([
+            { to: debtorNick, msg: messages.pleaseReject(msgObj) },
           ]);
         }
         break;
       case 'confirm-ledger-update':
         // TODO: encode ledger update into reactions returned here
+        delete this._outstandingNegotiations[msgObj.pubkey];
         resolve([]);
         break;
       default:

@@ -88,6 +88,34 @@ module.exports = {
       amount: obj.amount,
     });
   },
+// * [please-reject] C to B: Please reject my outstanding conditionalPromise
+//                           with this routingInfo
+  pleaseReject: function(obj) {
+    return stringify({
+      protocolVersion,
+      msgType: 'please-reject',
+      pubkey: obj.pubkey,
+      pubkey2: obj.pubkey2,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      currency: obj.currency,
+      amount: obj.amount,
+    });
+  },
+// * [reject] B to C: Rejecting outstanding conditionalPromise
+//                           with this routingInfo
+  reject: function(obj) {
+    return stringify({
+      protocolVersion,
+      msgType: 'reject',
+      pubkey: obj.pubkey,
+      pubkey2: obj.pubkey2,
+      treeToken: obj.treeToken,
+      pathToken: obj.pathToken,
+      currency: obj.currency,
+      amount: obj.amount,
+    });
+  },
 // * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
   embeddablePromise: function(obj) {
     return stringify({
