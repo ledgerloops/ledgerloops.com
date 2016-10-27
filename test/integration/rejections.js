@@ -9,7 +9,7 @@ var stringify = require('canonical-json');
 debug.setLevel(false);
 
 var shouldHaveKeypairs; // TODO: use sinon for this
-function MockSignatures() {};
+function MockSignatures() {}
 
 MockSignatures.prototype.generateKeypair = function() {
   return 'pub';
@@ -379,7 +379,7 @@ describe('Settlement process rejected by A', function() {
       ]);
       debug.log('Step 2:');
       shouldHaveKeypairs = ['fake']; // a is the only one reacting now
-      actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+      actors.a.engine._outstandingNegotiations.fake = traffic1[0];
       return nextStep(actors, traffic2);
     }).then((traffic3) => {
       assert.deepEqual(traffic3, []);
@@ -418,7 +418,7 @@ describe('Settlement process rejected by B', function() {
           amount: 0.05,
     },
   }];
-  actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+  actors.a.engine._outstandingNegotiations.fake = traffic1[0];
   console.log(actors.a.engine);
   it('should be cancelled', function() {
     debug.log('Step 1:');
@@ -467,7 +467,7 @@ describe('Settlement process rejected by B', function() {
         }
       ]);
       debug.log('Step 3:');
-      actors.b.engine._outstandingNegotiations['fake'] = traffic1[0];
+      actors.b.engine._outstandingNegotiations.fake = traffic1[0];
       console.log(actors.b.engine);
       shouldHaveKeypairs = []; // b is the only one reacting now
       return nextStep(actors, traffic3);
@@ -485,7 +485,7 @@ describe('Settlement process rejected by B', function() {
           sender: 'b',
         }
       ]);
-      actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+      actors.a.engine._outstandingNegotiations.fake = traffic1[0];
       console.log(actors.a.engine);
       shouldHaveKeypairs = ['fake']; // b is the only one reacting now
       debug.log('Step 4:');

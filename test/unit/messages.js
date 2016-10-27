@@ -14,7 +14,7 @@ describe('Messages', function() {
         claimFulfillment: 'claim-fulfillment',
         confirmLedgerUpdate: 'confirm-ledger-update',
      }; 
-     for (func in msgTypes) {
+     for (var func in msgTypes) {
        var msgObj = JSON.parse(messages[func]({}));
        assert.equal(msgObj.msgType, msgTypes[func]);
      }

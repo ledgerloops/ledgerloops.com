@@ -67,9 +67,9 @@ describe('IOUs between Alice and Bob', function() {
 
       // TODO: not access private vars here
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -149,9 +149,9 @@ describe('IOUs between Alice and Bob', function() {
       ]);
       // Alice has switched Bob to be debtor, but Bob still has Alice as debtor too:
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {
@@ -251,9 +251,9 @@ describe('IOUs between Alice and Bob', function() {
       ]);
       // Now Alice also removed Bob as a neighbor:
       assert.deepEqual(agents.alice._search._neighbors['in'], {});
-      assert.deepEqual(agents.alice._search._neighbors['out'], {});
+      assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
-      assert.deepEqual(agents.bob._search._neighbors['out'], {});
+      assert.deepEqual(agents.bob._search._neighbors.out, {});
 
       return messaging.flush();
     }).then(messagesSent => {

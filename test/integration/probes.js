@@ -44,8 +44,8 @@ console.log('tokens mock installed');
 
 //rewire Signatures in SettlementEngine, then rewire SettlementEngine in Agent:
 function MockSignatures() {
-};
-MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey' },
+}
+MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey'; };
 SettlementEngine.__set__('Signatures', MockSignatures);
 Agent.__set__('SettlementEngine', SettlementEngine);
 //var s = new SettlementEngine();
