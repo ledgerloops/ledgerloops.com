@@ -40,7 +40,6 @@ Agent.__set__('tokens', {
   generateToken: function() { return 'asdf';  },
 });
 
-console.log('tokens mock installed');
 
 //rewire Signatures in SettlementEngine, then rewire SettlementEngine in Agent:
 function MockSignatures() {
@@ -48,11 +47,6 @@ function MockSignatures() {
 MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey'; };
 SettlementEngine.__set__('Signatures', MockSignatures);
 Agent.__set__('SettlementEngine', SettlementEngine);
-//var s = new SettlementEngine();
-//s.initiateNegotiation({}).then(obj => console.log(obj));
-//var a = new Agent('a');
-//a._settlementEngine.initiateNegotiation({}).then(obj => console.log(obj));
-//exit();
 
 describe('Once a cycle has been found', function() {
   var clock;

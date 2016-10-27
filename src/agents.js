@@ -33,7 +33,6 @@ function Agent(myNick) {
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
   this._probeTimer = setInterval(() => this._probeTimerHandler, PROBE_INTERVAL);
-  console.log('probe timer created', myNick);
   this._myNick = myNick;
   this._ledgers = {};
   this._sentIOUs = {};
@@ -46,8 +45,6 @@ Agent.prototype._handleCycle = function(cycleObj) {
   if (cycleObj === null) {
     return Promise.resolve();
   }
-  console.log('Cycle found', cycleObj);
-  console.log(this._ledgers);
   var myDebtAtOutNeighbor = this._ledgers[cycleObj.outNeighborNick].getMyDebtAmount(cycleObj.currency);
   if (myDebtAtOutNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
@@ -57,7 +54,6 @@ Agent.prototype._handleCycle = function(cycleObj) {
   if (myCreditAtInNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
   }
-  console.log({ myCreditAtInNeighbor, myDebtAtOutNeighbor, SETTLEMENT_AMOUNT });
   cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency];
   return this._settlementEngine.initiateNegotiation(cycleObj).then(this._sendMessages.bind(this));
 };
@@ -65,7 +61,6 @@ Agent.prototype._handleCycle = function(cycleObj) {
 Agent.prototype._handleProbeEngineOutput = function (output) {
   return this._handleCycle(output.cycleFound).then(() => {
     return Promise.all(output.forwardMessages.map(probeMsgObj => {
-      console.log('sending probe', probeMsgObj);
       // FIXME: make probeMsgObj and other similar msgObj types more similar
       // (e.g. always call name its fields { toNick: ..., msgObj: ... })
     return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
@@ -74,9 +69,7 @@ Agent.prototype._handleProbeEngineOutput = function (output) {
 };
 
 Agent.prototype._probeTimerHandler = function() {
-  console.log('probe timer fired', this._myNick);
   var activeNeighbors = this._search.getActiveNeighbors();
-  console.log(`probe timer for ${this._myNick}, neighbors:`, activeNeighbors);
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
     return this._handleProbeEngineOutput(output);
   });
@@ -91,7 +84,6 @@ Agent.prototype._ensurePeer = function(peerNick) {
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
-  console.log('debt object', debt);
   messaging.send(this._myNick, creditorNick, messages.IOU(debt));
   return new Promise((resolve, reject) => {
     this._sentIOUs[debt.note] = { resolve, reject };
@@ -169,7 +161,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   default: // msgType is not related to ledgers, ddcd, or probes, but to settlements:
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj);
-    console.log(peerPair);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;
     if (fromNick === debtorNick) {

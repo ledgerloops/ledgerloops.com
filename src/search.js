@@ -176,7 +176,6 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
 };
 
 Search.prototype.getActiveNeighbors = function() {
-  console.log('getting active neighbors from', this._neighbors);
   var ret = {};
   ['in', 'out'].map(direction => {
     ret[direction] = [];

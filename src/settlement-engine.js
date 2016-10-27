@@ -59,7 +59,6 @@ const FORWARDING_TIMEOUT = 50;
 
 function SettlementEngine() {
   this._signatures = new Signatures();
-  console.log('SettlementEngine created', this);
   this._outstandingNegotiations = {};
 }
 
@@ -69,7 +68,6 @@ function SettlementEngine() {
 // currency
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
   obj.pubkey = this._signatures.generateKeypair();
-  console.log('initiateNeg', obj);
   // want to send this message to debtor ( = in-neighbor)
   this._outstandingNegotiations[obj.pubkey] = obj;
   return Promise.resolve([
@@ -84,12 +82,10 @@ SettlementEngine.prototype.initiateRejection = function(debtorNick, obj) {
 };
 
 SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtorNick, creditorNick) {
-  console.log('generateReactions', {fromRole, msgObj, debtorNick, creditorNick}, msgObj);
   return new Promise((resolve, reject) => {
     if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
       case 'reject':
-        console.log(this);
         if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'object') {
           delete this._outstandingNegotiations[msgObj.pubkey];
           if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are A
@@ -104,7 +100,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         }
         break;
       case 'satisfy-condition':
-        console.log('satisfy-condition from debtor', msgObj);
         if (this._signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
           // reduce B's debt on ledger
           msgObj.proofOfOwnership = this._signatures.proofOfOwnership(msgObj.embeddablePromise.pubkey2);
@@ -137,7 +132,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
         setTimeout(() => {
           if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
-            console.log('chain was rejected shortly after it reached me!');
             resolve([]);
           } else {
             this._outstandingNegotiations[msgObj.pubkey] = msgObj;
@@ -156,11 +150,9 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           msgObj.embeddablePromise = JSON.parse(messages.embeddablePromise(msgObj));
           msgObj.signature = this._signatures.sign(msgObj.embeddablePromise, msgObj.pubkey);
-          console.log(msgObj);
           this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
           setTimeout(() => {
             if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
-              console.log('chain was rejected shortly after it reached me!');
               resolve([]);
             } else {
               this._outstandingNegotiations[msgObj.pubkey] = msgObj;
@@ -173,7 +165,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
           setTimeout(() => {
             if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
-              console.log('chain was rejected shortly after it reached me!');
               resolve([]);
             } else {
               this._outstandingNegotiations[msgObj.pubkey] = msgObj;

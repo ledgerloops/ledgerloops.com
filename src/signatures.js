@@ -36,7 +36,6 @@ Signatures.prototype.sign = function(clearText, publicKeyBase64) {
   var privateKey = keypairs[publicKeyBase64].privateKey;
   var publicKey = keypairs[publicKeyBase64].publicKey;
   return eccrypto.sign(privateKey, msg).then(sig => {
-    console.log("Signature in DER format:", sig);
     return sig.toString();
   });
 };
@@ -46,10 +45,8 @@ Signatures.prototype.verify = function(clearText, publicKeyBase64, sig) {
   // Always hash you message to sign! 
   var msg = crypto.createHash('sha256').update(clearText).digest();
   return eccrypto.verify(publicKey, msg, sig).then(function() {
-    console.log("Signature is OK");
     return true;
   }).catch(function() {
-    console.log("Signature is BAD");
     return false;
   });
 };
