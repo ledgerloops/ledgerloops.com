@@ -1,6 +1,6 @@
 var rewire = require('rewire');
-var probeEngine = rewire('../../src/probe-engine');
-
+var ProbeEngine = rewire('../../src/probe-engine');
+var SettlementEngine = rewire('../../src/settlement-engine');
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
 var protocolVersion = require('../../src/messages').protocolVersion;
@@ -32,7 +32,7 @@ CryptoMock = {
     };
   },
 };
-probeEngine.__set__('tokens', {
+ProbeEngine.__set__('tokens', {
   generateToken: function() { return 'asdf';  },
 });
 
@@ -42,7 +42,17 @@ Agent.__set__('tokens', {
 
 console.log('tokens mock installed');
 
-
+//rewire Signatures in SettlementEngine, then rewire SettlementEngine in Agent:
+function MockSignatures() {
+};
+MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey' },
+SettlementEngine.__set__('Signatures', MockSignatures);
+Agent.__set__('SettlementEngine', SettlementEngine);
+//var s = new SettlementEngine();
+//s.initiateNegotiation({}).then(obj => console.log(obj));
+//var a = new Agent('a');
+//a._settlementEngine.initiateNegotiation({}).then(obj => console.log(obj));
+//exit();
 
 describe('Once a cycle has been found', function() {
   var clock;
@@ -159,7 +169,7 @@ describe('Once a cycle has been found', function() {
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
-            pubkey: 'pub',
+            pubkey: 'mocked-pubkey',
           }),
           toNick: 'charlie',
         },
@@ -510,7 +520,7 @@ describe('If two cycles exist', function() {
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-charlie-0',
-            pubkey: 'pub',
+            pubkey: 'mocked-pubkey',
           }),
           toNick: 'charlie',
         },
