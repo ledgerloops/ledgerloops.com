@@ -67,7 +67,7 @@ Agent.prototype._handleProbeEngineOutput = function (output) {
 Agent.prototype._probeTimerHandler = function() {
   var activeNeighbors = this._search.getActiveNeighbors();
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
-    debug.log(`${this._myNick} initiates probes:`, output);
+    debug.log(`${this._myNick} initiates probes:`, activeNeighbors, this._ledgers, this._search, output);
     return this._handleProbeEngineOutput(output);
   });
 };
