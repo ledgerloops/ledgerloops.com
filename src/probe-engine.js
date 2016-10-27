@@ -52,6 +52,8 @@ function listOutNeighborNicks(currency, neighbors) {
 // TODO: make this method shorter, maybe moving some functionality to ProbeTree class.
 ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
 console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgObj }, activeNeighbors);
+  // FIXME: what's the nice way to declare variables that are used locally in two places in the same function?
+  var peerPair;
   if (this._isNeighbor('in', fromNick, incomingMsgObj.currency, activeNeighbors)) {
     console.log('this probe message comes from an in-neighbor');
     if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') { // unknown treeToken
@@ -77,14 +79,31 @@ console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgO
       }
     } else { // known treeToken coming from an in-neighbor!
       if (this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === fromNick) {
-        // already received that same treeToken from that same inNeighbor! What to do?
-        return Promise.reject(new Error('Boom!'));
+        // already received that same treeToken from that same inNeighbor! See if we can make it go round again
+        peerPair = this.getPeerPair(incomingMsgObj);
+        if (!peerPair) { // pathToken changed, we're trying to make it go round the loop once more:
+          incomingMsgObj.outNeighborNick = this._probeTrees[incomingMsgObj.treeToken].guessOutNeighbor(incomingMsgObj.pathToken);
+        } else {
+          incomingMsgObj.outNeighborNick = peerPair.outNeighborNick;
+        }
+        return Promise.resolve({
+          forwardMessages: [ incomingMsgObj ],
+          cycleFound: null,
+        });
       } else if (typeof this._probeTrees[incomingMsgObj.treeToken].getInNeighborNick() === 'undefined') {
         // my loop!
         console.log('My loop!');
         incomingMsgObj.inNeighborNick = fromNick;
         console.log(incomingMsgObj, this._probeTrees);
-        incomingMsgObj.outNeighborNick = this.getPeerPair(incomingMsgObj).outNeighborNick;
+        peerPair = this.getPeerPair(incomingMsgObj);
+        if (!peerPair) { // pathToken changed, make it go round the loop once more:
+          incomingMsgObj.outNeighborNick = this._probeTrees[incomingMsgObj.treeToken].guessOutNeighbor(incomingMsgObj.pathToken);
+          return Promise.resolve({
+            forwardMessages: [ incomingMsgObj ],
+            cycleFound: null,
+          });
+        }
+        incomingMsgObj.outNeighborNick = peerPair.outNeighborNick;
         this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
         return Promise.resolve({
           forwardMessages: [],
@@ -92,8 +111,17 @@ console.log('ProbeEngine.prototype.handleIncomingProbe', {fromNick, incomingMsgO
         });
       } else {
         // my P-loop!
+        // FIXME: quite some repeated code here from last case
+        peerPair = this.getPeerPair(incomingMsgObj);
+        if (!peerPair) { // pathToken changed, make it go round the loop once more:
+          incomingMsgObj.outNeighborNick = this._probeTrees[incomingMsgObj.treeToken].guessOutNeighbor(incomingMsgObj.pathToken);
+          return Promise.resolve({
+            forwardMessages: [ incomingMsgObj ],
+            cycleFound: null,
+          });
+        }
+        incomingMsgObj.outNeighborNick = peerPair.outNeighborNick;
         this._probeTrees[incomingMsgObj.treeToken].setLoopFound(incomingMsgObj.pathToken);
-        incomingMsgObj.outNeighborNick = this.getPeerPair(incomingMsgObj).outNeighborNick;
         return Promise.resolve({
           forwardMessages: [],
           cycleFound: incomingMsgObj,

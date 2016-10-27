@@ -543,6 +543,54 @@ describe('If two cycles exist', function() {
           fromNick: 'alice',
           msg: stringify({
             protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'bob',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'alice',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion,
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-charlie-0',
