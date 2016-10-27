@@ -139,6 +139,143 @@ describe('SettlementEngine.generateReactions', function() {
       return secondMsg;
     });
   });
+  it('should react correctly to pubkey-announce if please-reject comes too late', function() {
+    shouldHaveKeypairs = [];
+    return engine.generateReactions('creditor', {
+      msgType: 'pubkey-announce',
+      pubkey: 'asdf',
+      currency: 'USD',
+      amount: 0.05,
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'conditional-promise',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    }).then(() => {
+      return engine.generateReactions('creditor', {
+        msgType: 'please-reject',
+        pubkey: 'asdf',
+        currency: 'USD',
+        amount: 0.05,
+      }, 'myDebtor', 'myCreditor');
+    }).then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'please-reject',
+          pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    });
+  });
+
+  it('should react correctly to conditional-promise if haveKeypair if please-reject comes too late', function() {
+    shouldHaveKeypairs = ['asdf'];
+    return engine.generateReactions('creditor', {
+      msgType: 'conditional-promise',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myCreditor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'satisfy-condition',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+          embeddablePromise: {
+            protocolVersion,
+            msgType: 'embeddable-promise',
+            pubkey: 'asdf',
+            pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
+          },
+          signature: 'signature',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    }).then(() => {
+      return engine.generateReactions('creditor', {
+        msgType: 'please-reject',
+        pubkey: 'asdf',
+        currency: 'USD',
+        amount: 0.05,
+      }, 'myDebtor', 'myCreditor');
+    }).then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'please-reject',
+          pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    });
+  });
+
+  it('should react correctly to conditional-promise if not haveKeypair if please-reject comes too late', function() {
+    shouldHaveKeypairs = [];
+    return engine.generateReactions('creditor', {
+      protocolVersion,
+      msgType: 'conditional-promise',
+      pubkey: 'asdf',
+      pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
+    }, 'myDebtor', 'myCreditor').then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'conditional-promise',
+          pubkey: 'asdf',
+          pubkey2: 'pub',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    }).then(() => {
+      return engine.generateReactions('creditor', {
+        msgType: 'please-reject',
+        pubkey: 'asdf',
+        currency: 'USD',
+        amount: 0.05,
+      }, 'myDebtor', 'myCreditor');
+    }).then((reactions) => {
+      assert.equal(reactions.length, 1);
+      assert.deepEqual(reactions[0], {
+        to: 'myDebtor',
+        msg: stringify({
+          protocolVersion,
+          msgType: 'please-reject',
+          pubkey: 'asdf',
+          currency: 'USD',
+          amount: 0.05,
+        })
+      });
+    });
+  });
 });
 
 function nextStep(actors, incoming) {
