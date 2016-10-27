@@ -1,9 +1,9 @@
+var debug = require('./debug');
 var tokens = require('./tokens');
 var ProbeTree = require('./probe-tree');
 
 function ProbeEngine() {
   this._probeTrees = {};
-  this._tokensModule = tokens; // FIXME: because having problems with rewire
 }
 
 ProbeEngine.prototype.getPeerPair = function(obj) {
@@ -29,7 +29,7 @@ ProbeEngine.prototype._isNeighbor = function(direction, nick, currency, neighbor
 
 ProbeEngine.prototype._haveProbeFor = function(currency) {
   for (var treeToken in this._probeTrees) {
-    if (this._probeTree.getCurrency() === currency) {
+    if (this._probeTrees[treeToken].getCurrency() === currency) {
       return true;
     }
   }
@@ -121,7 +121,7 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
     }
   } else if (this._isNeighbor('out', fromNick, incomingMsgObj.currency, activeNeighbors)) {
     // One of our out-neighbor backtracked (inside addPath, it will be determined if the correct out-neighbor did, or a different one)
-    var newPathToken = this._tokensModule.generateToken();
+    var newPathToken = tokens.generateToken();
     var nextOutNeighborNick = this._probeTrees[incomingMsgObj.treeToken].addPath(newPathToken, incomingMsgObj.pathToken, fromNick);
     if (typeof nextOutNeighborNick === 'undefined') {
       return Promise.resolve({
@@ -154,6 +154,7 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
 };
 
 ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
+  debug.log(neighbors);
   var currenciesIn = {};
   var currenciesThrough = {};
   var i;
@@ -171,8 +172,8 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
     if (!this._haveProbeFor(currency)) {
       var outNeighborNicks = listOutNeighborNicks(currency, neighbors);
       // start ProbeTree here for this currency (and become its tree root):
-      var treeToken = this._tokensModule.generateToken();
-      var pathToken = this._tokensModule.generateToken();
+      var treeToken = tokens.generateToken();
+      var pathToken = tokens.generateToken();
       // undefined here indicates no inNeighbor for this tree: vvvv
       this._probeTrees[treeToken] = new ProbeTree(treeToken, undefined, outNeighborNicks, currency);
       var firstOutNeighborNick = this._probeTrees[treeToken].addPath(pathToken);

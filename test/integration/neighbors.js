@@ -390,11 +390,6 @@ describe('Cycle Detection', function() {
         },
       ]);
 
-      // this only works when running tests from just this file, in npm test, other tests will set it back
-      // to false, FIXME: and even then it somehow doesn't seem to work unless you set it to true at the top:
-      // debug.setLevel(true);
-      // debug.log('START DEBUGGING HERE!');
-
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [

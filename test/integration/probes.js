@@ -1,4 +1,5 @@
 var rewire = require('rewire');
+var tokens = rewire('../../src/tokens');
 var ProbeEngine = rewire('../../src/probe-engine');
 var SettlementEngine = rewire('../../src/settlement-engine');
 var Agent = rewire('../../src/agents');
@@ -9,12 +10,7 @@ var assert = require('assert');
 var sinon = require('sinon');
 var stringify = require('canonical-json');
 
-// FIXME: these tests only work because messages are flushed in the same synchronous code
-// that creates them. Otherwise, messages from one test would end up at the other test.
-// Should use multiple instances of the messaging simulator, see
-// https://github.com/michielbdejong/opentabs.net/issues/26
-
-debug.setLevel(true);
+debug.setLevel(false);
 
 var DateMock = function() {
 };
@@ -23,23 +19,20 @@ DateMock.prototype.toString = function() {
 };
 Agent.__set__('Date', DateMock);
 
-CryptoMock = {
-  randomBytes: function() {
-    return {
-      toString: function() {
-        return 'some-random-hash';
-      }
-    };
-  },
+function CryptoMock() {
+  this.counter = 0;
+}
+CryptoMock.prototype.randomBytes = function() {
+  return {
+    toString: () => {
+      return `token-${this.counter++}`;
+    },
+  };
 };
-ProbeEngine.__set__('tokens', {
-  generateToken: function() { return 'asdf';  },
-});
-
-Agent.__set__('tokens', {
-  generateToken: function() { return 'asdf';  },
-});
-
+var cryptoMock = new CryptoMock();
+tokens.__set__('crypto', cryptoMock);
+ProbeEngine.__set__('tokens', tokens);
+Agent.__set__('ProbeEngine', ProbeEngine);
 
 //rewire Signatures in SettlementEngine, then rewire SettlementEngine in Agent:
 function MockSignatures() {
@@ -52,25 +45,13 @@ describe('Once a cycle has been found', function() {
   var clock;
   var agents;
   beforeEach(function () {
+    cryptoMock.counter = 0;
     agents = {
       alice: new Agent('alice'),
       bob: new Agent('bob'),
       charlie: new Agent('charlie'),
     };
     // FIXME: not access private vars like this:
-    var tokenCounterAlice = 0;
-    agents.alice._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-alice-${tokenCounterAlice++}`;  },
-    };
-    var tokenCounterBob = 0;
-    agents.bob._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-bob-${tokenCounterBob++}`;  },
-    };
-    var tokenCounterCharlie = 0;
-    agents.charlie._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
-    };
-
     agents.alice._ledgers = {
       charlie: { getMyCreditAmount: function() { return 0.1; }, },
       bob: { getMyDebtAmount: function() { return 0.1; }, },
@@ -125,8 +106,8 @@ describe('Once a cycle has been found', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'bob',
@@ -141,8 +122,8 @@ describe('Once a cycle has been found', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'charlie',
@@ -157,8 +138,8 @@ describe('Once a cycle has been found', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'alice',
@@ -173,8 +154,8 @@ describe('Once a cycle has been found', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'pubkey-announce',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             pubkey: 'mocked-pubkey',
             currency: 'USD',
             amount: 0.05,
@@ -191,6 +172,7 @@ describe('If cycle is broken', function() {
   var clock;
   var agents;
   beforeEach(function () {
+    cryptoMock.counter = 0;
     agents = {
       alice: new Agent('alice'),
       bob: new Agent('bob'),
@@ -199,15 +181,15 @@ describe('If cycle is broken', function() {
     // FIXME: not access private vars like this:
     var tokenCounterAlice = 0;
     agents.alice._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-alice-${tokenCounterAlice++}`;  },
+      generateToken: function() { return `token--${tokenCounterAlice++}`;  },
     };
     var tokenCounterBob = 0;
     agents.bob._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-bob-${tokenCounterBob++}`;  },
+      generateToken: function() { return `token--${tokenCounterBob++}`;  },
     };
     var tokenCounterCharlie = 0;
     agents.charlie._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
+      generateToken: function() { return `token--${tokenCounterCharlie++}`;  },
     };
     // cycle is broken between Bob and Charlie:
     agents.alice._search._neighbors = {
@@ -251,8 +233,8 @@ describe('If cycle is broken', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'bob',
@@ -267,8 +249,8 @@ describe('If cycle is broken', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'alice',
@@ -288,6 +270,7 @@ describe('If two cycles exist', function() {
   var clock;
   var agents;
   beforeEach(function () {
+    cryptoMock.counter = 0;
     agents = {
       alice: new Agent('alice'),
       bob: new Agent('bob'),
@@ -298,15 +281,15 @@ describe('If two cycles exist', function() {
     // FIXME: not access private vars like this:
     var tokenCounterAlice = 0;
     agents.alice._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-alice-${tokenCounterAlice++}`;  },
+      generateToken: function() { return `token--${tokenCounterAlice++}`;  },
     };
     var tokenCounterBob = 0;
     agents.bob._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-bob-${tokenCounterBob++}`;  },
+      generateToken: function() { return `token--${tokenCounterBob++}`;  },
     };
     var tokenCounterCharlie = 0;
     agents.charlie._probeEngine._tokensModule = {
-      generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
+      generateToken: function() { return `token--${tokenCounterCharlie++}`;  },
     };
     var tokenCounterDaphne = 0;
     agents.daphne._probeEngine._tokensModule = {
@@ -394,8 +377,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'edward',
@@ -410,8 +393,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-1',
+            treeToken: 'token-0',
+            pathToken: 'token-1',
             currency: 'USD',
           }),
           toNick: 'alice',
@@ -426,8 +409,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-2',
+            treeToken: 'token-0',
+            pathToken: 'token-2',
             currency: 'USD',
           }),
           toNick: 'bob',
@@ -442,8 +425,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-2',
+            treeToken: 'token-0',
+            pathToken: 'token-2',
             currency: 'USD',
           }),
           toNick: 'edward',
@@ -458,8 +441,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-alice-2',
+            treeToken: 'token-0',
+            pathToken: 'token-2',
             currency: 'USD',
           }),
           toNick: 'bob',
@@ -474,8 +457,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-bob-0',
+            treeToken: 'token-0',
+            pathToken: 'token-3',
             currency: 'USD',
           }),
           toNick: 'charlie',
@@ -490,8 +473,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-bob-0',
+            treeToken: 'token-0',
+            pathToken: 'token-3',
             currency: 'USD',
           }),
           toNick: 'edward',
@@ -506,8 +489,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-bob-0',
+            treeToken: 'token-0',
+            pathToken: 'token-3',
             currency: 'USD',
           }),
           toNick: 'charlie',
@@ -522,8 +505,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-charlie-0',
+            treeToken: 'token-0',
+            pathToken: 'token-4',
             currency: 'USD',
           }),
           toNick: 'alice',
@@ -538,8 +521,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-charlie-0',
+            treeToken: 'token-0',
+            pathToken: 'token-4',
             currency: 'USD',
           }),
           toNick: 'bob',
@@ -554,8 +537,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-charlie-0',
+            treeToken: 'token-0',
+            pathToken: 'token-4',
             currency: 'USD',
           }),
           toNick: 'charlie',
@@ -570,8 +553,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'probe',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-charlie-0',
+            treeToken: 'token-0',
+            pathToken: 'token-4',
             currency: 'USD',
           }),
           toNick: 'alice',
@@ -586,8 +569,8 @@ describe('If two cycles exist', function() {
           msg: stringify({
             protocolVersion,
             msgType: 'pubkey-announce',
-            treeToken: 'token-from-alice-0',
-            pathToken: 'token-from-charlie-0',
+            treeToken: 'token-0',
+            pathToken: 'token-4',
             pubkey: 'mocked-pubkey',
             currency: 'USD',
             amount: 0.05,
