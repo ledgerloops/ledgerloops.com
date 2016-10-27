@@ -319,7 +319,79 @@ function nextStep(actors, incoming) {
   });
 }
 
-describe('Settlement process', function() {
+describe('Settlement process rejected by A', function() {
+  var actors = {
+    'a': {
+      debtorNick: 'b',
+      creditorNick: 'c',
+      engine: new SettlementEngine(),
+    },
+    'b': {
+      debtorNick: 'c',
+      creditorNick: 'a',
+      engine: new SettlementEngine(),
+    },
+    'c': {
+      debtorNick: 'a',
+      creditorNick: 'b',
+      engine: new SettlementEngine(),
+    },
+  };
+
+  // kickstart process with A sending pubkey-announce to B:
+  var traffic1 = [{
+    sender: 'a',
+    receiver: 'b',
+    msgObj: {
+      msgType: 'pubkey-announce',
+      protocolVersion,
+      pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
+    },
+  },
+  {
+    sender: 'a',
+    receiver: 'b',
+    msgObj: {
+      msgType: 'please-reject',
+      protocolVersion,
+      pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
+    },
+  }];
+  console.log(actors.a.engine);
+  it('should be cancelled', function() {
+    debug.log('Step 1:');
+    // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
+    // But we know that B is going to react to this traffic, so it's OK here:
+    shouldHaveKeypairs = [];
+    return nextStep(actors, traffic1).then((traffic2) => {
+      assert.deepEqual(traffic2, [
+        {
+          msgObj: {
+            msgType: 'reject',
+            protocolVersion,
+            pubkey: 'fake',
+          currency: 'USD',
+          amount: 0.05,
+          },
+          receiver: 'a',
+          sender: 'b',
+        }
+      ]);
+      debug.log('Step 2:');
+      shouldHaveKeypairs = ['fake']; // a is the only one reacting now
+      actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+      return nextStep(actors, traffic2);
+    }).then((traffic3) => {
+      assert.deepEqual(traffic3, []);
+    });
+  });
+});
+
+describe('Settlement process rejected by B', function() {
   var actors = {
     'a': {
       debtorNick: 'b',
@@ -350,7 +422,9 @@ describe('Settlement process', function() {
           amount: 0.05,
     },
   }];
-  it('should find a settlement', function() {
+  actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+  console.log(actors.a.engine);
+  it('should be cancelled', function() {
     debug.log('Step 1:');
     // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
     // But we know that B is going to react to this traffic, so it's OK here:
@@ -368,8 +442,19 @@ describe('Settlement process', function() {
           },
           receiver: 'c',
           sender: 'b',
-        }
+        },
       ]);
+      traffic2.push( {
+        sender: 'b',
+        receiver: 'c',
+        msgObj: {
+          msgType: 'please-reject',
+          protocolVersion,
+          pubkey: 'fake',
+              currency: 'USD',
+              amount: 0.05,
+        },
+      });
       debug.log('Step 2:');
       shouldHaveKeypairs = []; // c is the only one reacting now
       return nextStep(actors, traffic2);
@@ -377,143 +462,42 @@ describe('Settlement process', function() {
       assert.deepEqual(traffic3, [
         {
           msgObj: {
-            msgType: 'conditional-promise',
+            msgType: 'reject',
             protocolVersion,
             pubkey: 'fake',
-            pubkey2: 'pub',
           currency: 'USD',
           amount: 0.05,
           },
-          receiver: 'a',
+          receiver: 'b',
           sender: 'c',
         }
       ]);
       debug.log('Step 3:');
-      shouldHaveKeypairs = ['fake']; // a is the only one reacting now
+      actors.b.engine._outstandingNegotiations['fake'] = traffic1[0];
+      console.log(actors.b.engine);
+      shouldHaveKeypairs = []; // b is the only one reacting now
       return nextStep(actors, traffic3);
     }).then((traffic4) => {
       assert.deepEqual(traffic4, [
         {
           msgObj: {
-            msgType: 'satisfy-condition',
+            msgType: 'reject',
             protocolVersion,
             pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'embeddable-promise',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
           currency: 'USD',
           amount: 0.05,
           },
-          receiver: 'c',
-          sender: 'a',
+          receiver: 'a',
+          sender: 'b',
         }
       ]);
+      actors.a.engine._outstandingNegotiations['fake'] = traffic1[0];
+      console.log(actors.a.engine);
+      shouldHaveKeypairs = ['fake']; // b is the only one reacting now
       debug.log('Step 4:');
-      shouldHaveKeypairs = []; // c is the only one reacting now
       return nextStep(actors, traffic4);
-    }).then((traffic5) => {
-      assert.deepEqual(traffic5, [
-        {
-          msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-            pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          receiver: 'a',
-          sender: 'c',
-        },
-        {
-          msgObj: {
-            msgType: 'satisfy-condition',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'embeddable-promise',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          receiver: 'b',
-          sender: 'c',
-        }
-      ]);
-      debug.log('Step 5:');
-      shouldHaveKeypairs = ['pub']; // a is now responding only to confirm-legder-update; setting this for b
-      return nextStep(actors, traffic5);
-    }).then((traffic6) => {
-      assert.deepEqual(traffic6, [
-        {
-          msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-           pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          receiver: 'c',
-          sender: 'b',
-        },
-        {
-          msgObj: {
-            msgType: 'claim-fulfillment',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'embeddable-promise',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
-            proofOfOwnership: 'proof',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          receiver: 'a',
-          sender: 'b',
-        }
-      ]);
-      debug.log('Step 6:');
-      shouldHaveKeypairs = ['fake']; // c is now responding only to confirm-legder-update; setting this for a
-      return nextStep(actors, traffic6);
-    }).then((traffic7) => {
-      assert.deepEqual(traffic7, [
-        {
-          msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-           pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          receiver: 'b',
-          sender: 'a',
-        },
-      ]);
-      shouldHaveKeypairs = ['pub']; // setting this for b
-      debug.log('Step 7:');
-      return nextStep(actors, traffic7);
-    }).then((traffic8) => {
-      assert.equal(traffic8.length, 0);
+    }).then((traffic4) => {
+      assert.equal(traffic4.length, 0);
     });
   });
 });

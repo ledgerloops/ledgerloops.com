@@ -82,6 +82,21 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
   return new Promise((resolve, reject) => {
     if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
+      case 'reject':
+        console.log(this);
+        if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'object') {
+          delete this._outstandingNegotiations[msgObj.pubkey];
+          if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are A
+            resolve([]);
+          } else {
+            resolve([
+              { to: creditorNick, msg: messages.reject(msgObj) },
+            ]);
+          }
+        } else {
+          reject(new Error('unexpected message received, don\'t know what to do now!'));
+        }
+        break;
       case 'satisfy-condition':
         console.log('satisfy-condition from debtor', msgObj);
         if (this._signatures.haveKeypair(msgObj.embeddablePromise.pubkey2)) { // you are C
