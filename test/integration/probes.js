@@ -77,6 +77,10 @@ describe('Once a cycle has been found', function() {
       generateToken: function() { return `token-from-charlie-${tokenCounterCharlie++}`;  },
     };
 
+    agents.alice._ledgers = {
+      charlie: { getMyCreditAmount: function() { return 0.1; }, },
+      bob: { getMyDebtAmount: function() { return 0.1; }, },
+    };
     agents.alice._search._neighbors = {
       'in': {
         '["charlie","USD"]': { awake: true },
@@ -86,6 +90,10 @@ describe('Once a cycle has been found', function() {
        },
     };
 
+    agents.bob._ledgers = {
+      alice: { getMyCreditAmount: function() { return 0.1; }, },
+      charlie: { getMyDebtAmount: function() { return 0.1; }, },
+    };
     agents.bob._search._neighbors = {
       'in': {
         '["alice","USD"]': { awake: true },
@@ -95,6 +103,10 @@ describe('Once a cycle has been found', function() {
        },
     };
 
+    agents.charlie._ledgers = {
+      bob: { getMyCreditAmount: function() { return 0.1; }, },
+      alice: { getMyDebtAmount: function() { return 0.1; }, },
+    };
     agents.charlie._search._neighbors = {
       'in': {
         '["bob","USD"]': { awake: true },
@@ -170,6 +182,8 @@ describe('Once a cycle has been found', function() {
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-alice-1',
             pubkey: 'mocked-pubkey',
+            currency: 'USD',
+            amount: 0.05,
           }),
           toNick: 'charlie',
         },
@@ -308,10 +322,22 @@ describe('If two cycles exist', function() {
     agents.edward._probeEngine._tokensModule = {
       generateToken: function() { return `token-from-edward-${tokenCounterEdward++}`;  },
     };
-    // cycle is broken between Bob and Charlie:
+
+    //        ---------
+    //   --> C  -->    \
+    //  B <------- A ------> E
+    // / --> D  -->    / /
+    // \      --------- /
+    //  ----------------
+
+    agents.alice._ledgers = {
+      charlie: { getMyCreditAmount: function() { return 0.1; }, },
+      bob: { getMyDebtAmount: function() { return 0.1; }, },
+    };
     agents.alice._search._neighbors = {
       'in': {
         '["charlie","USD"]': { awake: true },
+        '["daphne","USD"]': { awake: true },
        },
        out: {
         '["edward","USD"]': { awake: true },
@@ -517,10 +543,60 @@ describe('If two cycles exist', function() {
           fromNick: 'alice',
           msg: stringify({
             protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'bob',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'bob',
+          msg: stringify({
+            protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'charlie',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'charlie',
+          msg: stringify({
+            protocolVersion,
+            msgType: 'probe',
+            treeToken: 'token-from-alice-0',
+            pathToken: 'token-from-charlie-0',
+            currency: 'USD',
+          }),
+          toNick: 'alice',
+        },
+      ]);
+
+      return messaging.flush();
+    }).then(messagesSent => {
+      assert.deepEqual(messagesSent, [
+        {
+          fromNick: 'alice',
+          msg: stringify({
+            protocolVersion,
             msgType: 'pubkey-announce',
             treeToken: 'token-from-alice-0',
             pathToken: 'token-from-charlie-0',
             pubkey: 'mocked-pubkey',
+            currency: 'USD',
+            amount: 0.05,
           }),
           toNick: 'charlie',
         },

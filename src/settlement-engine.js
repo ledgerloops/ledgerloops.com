@@ -16,7 +16,7 @@ var stringify = require('canonical-json');
 // A owes B owes C owes A 0.01USD.
 //
 // message types, v0.1:
-// * [pubkey-announce] A to debtor C: My pubkey is ${A1}. Let's try to start a chain!
+// * [pubkey-announce] A to debtor C: My pubkey is ${A1}. Let's try to start a chain for 0.01 USD!
 //
 // * [conditional-promise] C to debtor B: Regarding chain ${A1},
 //                                        if ${A1} promises to give 0.01USD to ${C2},
@@ -60,6 +60,10 @@ function SettlementEngine() {
   console.log('SettlementEngine created', this);
 }
 
+// required fields in obj:
+// inNeighborNick
+// amount
+// currency
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
   obj.pubkey = this.signatures.generateKeypair();
   console.log('initiateNeg', obj);
@@ -87,7 +91,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           // reduce A's debt on ledger
           resolve([
             { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
-            { to: creditorNick, msg: stringify(msgObj) },
+            { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
           ]);
         }
         break;
@@ -119,6 +123,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           // or included in parsed form (as it is now), to make the message easier to machine-read later:
           msgObj.embeddablePromise = JSON.parse(messages.embeddablePromise(msgObj));
           msgObj.signature = this.signatures.sign(msgObj.embeddablePromise, msgObj.pubkey);
+          console.log(msgObj);
           resolve([
             { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
           ]);

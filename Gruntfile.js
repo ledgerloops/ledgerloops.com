@@ -4,21 +4,18 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     jshint: {
-      ignore_warning: {
-        options: {
-          'esversion': 6
-        },
-        src: 'src/**',
-        filter: 'isFile'
-      }
+      options: {
+        'esversion': 6
+      },
+      src: 'src/*.js',
     },
     mochaTest: {
       test: {
         options: {
           reporter: 'spec',
-          clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false) 
+          clearRequireCache: false, // Optionally clear the require cache before running tests (defaults to false) 
         },
-        src: ['test/unit/*.js', 'test/integration/*.js']
+        src: ['test/unit/*.js', 'test/integration/*.js'],
       }
     }
   });
