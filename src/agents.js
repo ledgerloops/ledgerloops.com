@@ -69,7 +69,7 @@ Agent.prototype._probeTimerHandler = function() {
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
     if (output.length) {
       debug.log(`${this._myNick} initiates probes:`, activeNeighbors, this._ledgers, this._search, output);
-    };
+    }
     return this._handleProbeEngineOutput(output);
   });
 };
