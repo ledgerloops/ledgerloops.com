@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "base64-js": "^1.2.0",
+    "canonical-json": "0.0.4",
     "eccrypto": "^1.0.3",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.0.0"

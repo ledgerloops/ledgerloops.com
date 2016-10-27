@@ -1,4 +1,4 @@
-var stringify = require('./stringify');
+var stringify = require('canonical-json');
 
 // using camelCase for this constant
 // instead of UPPER_CASE for easy ES6-style

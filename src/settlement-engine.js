@@ -2,7 +2,7 @@
 var messages = require('./messages');
 var debug = require('./debug');
 var Signatures = require('./signatures');
-var stringify = require('./stringify');
+var stringify = require('canonical-json');
 
 //  pubkeyAnnounce: function(pubkey) {
 //  conditionalPromise: function(pubkey, pubkey2) {

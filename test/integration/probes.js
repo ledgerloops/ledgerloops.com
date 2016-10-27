@@ -7,7 +7,7 @@ var protocolVersion = require('../../src/messages').protocolVersion;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
-var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
+var stringify = require('canonical-json');
 
 // FIXME: these tests only work because messages are flushed in the same synchronous code
 // that creates them. Otherwise, messages from one test would end up at the other test.

@@ -4,7 +4,7 @@ var protocolVersion = require('../../src/messages').protocolVersion;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
-var stringify = require('../../src/stringify'); // TODO: do this via rewire as well (but not urgent, current approach works fine too)
+var stringify = require('canonical-json');
 
 debug.setLevel(false);
 
