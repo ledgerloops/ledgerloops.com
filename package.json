@@ -23,8 +23,17 @@
     "sinon": "^1.17.6"
   },
   "scripts": {
-    "test": "grunt test",
+    "test": "./node_modules/.bin/mocha --ui tdd",
     "build": "grunt build"
+  },
+  "testling": {
+    "harness": "mocha-tdd",
+    "files": "test/*/*.js",
+    "browsers": [
+      "ie/8..latest",
+      "chrome/latest",
+      "firefox/latest"
+    ]
   },
   "repository": {
     "type": "git",
