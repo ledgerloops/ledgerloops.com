@@ -29,105 +29,118 @@
 \date{November 2016}
 \maketitle
 \begin{abstract}
-LedgerLoops is a protocol for clearing debts and credits across multiple ledgers. Unlike Bitcoin, which introduces one global public ledger, LedgerLoops acts on a loop of two or more local ledgers. This whitepaper introduces the concept of second-order debts which is at the core of LedgerLoops, and explains how they can be created using the two LedgerLoops contract types. It also defines a messaging protocol which can be used to send these contracts along the ledger loop in a peer-to-peer fashion, and a decentralized algorithm to find cycles in a debt graph.
+LedgerLoops is a protocol for clearing debts and credits across multiple ledgers. Unlike Bitcoin, which introduces one global public ledger, LedgerLoops acts on a loop of two or more local ledgers.
+This whitepaper introduces the concept of cryptographically triggered debts, which is at the core of LedgerLoops, and explains how they can be represented in a LedgerLoops contract. It also defines a messaging protocol which can be used to send these contracts along the ledger loop in a peer-to-peer fashion, and a decentralized algorithm to find cycles in a debt graph.
 \end{abstract}
-\section{Second-order Debts}
-A debt can be represented by an "I owe you asset A"-message ("IOU" for short), sent from the debtor to the creditor. This would be a first-order debt. A second-order debt would take the form "I owe you asset A from the moment person X owes asset B to person Y". It doesn't matter who these persons Xand Y are (they might be complete strangers), nor what this asset B is (its description might be a reference only persons X and Y understand).
+\section{Cryptographically Triggered Debts}
+A debt can be represented by an "I owe you asset A"-message ("IOU" for short), sent from the debtor to the creditor.
+A cryptographically triggered debt would take the form "I owe you asset A from the moment person X signs a certain cleartext".
+It doesn't matter who this person X is (they might be a complete stranger). In fact, person X is only identified by a public key. The cleartext holds no meaning either, and can be chosen at random; it only acts as a trigger to activate the debt.
 
-A second-order debt does not immediately give the receiver a claim to the asset that is owed by the sender; however, if the receiver can present cryptographic proof that at any point in time, person X owed asset B to person Y, this triggers the sender's debt into action. So a second-order debt, combined with a cryptographic proof that the debt it refers to exists, or has existed in the past, is equivalent to a first-order debt. We say the cryptographic proof of the statement "Person X owes asset B to person Y" {\em activates} all second-order promises that are contingent on this clause.
+A cryptographically triggered debt does not immediately give the receiver a claim to the asset that would be owed by the sender; however, if the receiver can present cryptographic proof that at any point in time,
+person X signed the cleartext in question, this triggers the sender's debt into action.
+So a cryptographically triggered debt, combined with a cryptographic proof that the cleartext it refers to has been signed by with the public key it refers to existed in the past, is equivalent to a first-order debt.
+We say the existence of a valid signature {\em activates} all second-order promises that refer to this cleartext and this public key.
 
-Settling a second-order debt (after it has been activated) works the same way as settling a standard IOU (a first-order debt): the receiver of the IOU sends a message back to the IOU-sender, stating that the IOU-sender no longer owes the assets mentioned in that specific debt statement.
+Settling a cryptographically triggerd debt (after it has been activated) works the same way as settling
+a standard IOU: the IOU-receiver sends a message back to the IOU-sender, stating that the IOU-sender no longer owes
+the assets mentioned in that specific debt statement.
 
-\section{Contract Type I}
-Contract Type I is used to define first-order debts on which second-order debts can be based. It is written down as a canonical-JSON document containing the following data:
-
-\begin{lstlisting}
-{
-  protocolVersion: 'ledgerloops-0.4',
-  msgType: 'contract-type-i',
-  keyAlgorithm: <either 'ed25519' or 'rsa-256'>, // TODO: find out if these strings fully but minimally define how to interpret pubkey/pubkey2
-  pubkey: <a public key for which person X holds the private key, unique to this contract>,
-  pubkey2: <a public key for which person Y holds the private key, unique to this contract>,
-  currency: <a three-letter ISO-4217 code, for instance 'USD'>
-  amount: <a positive, terminating decimal number, for instance '13.5264235'>
-}
-\end{lstlisting}
-
-
-\section{Contract Type II}
-Contract Type II is used to define second-order debts. A Type II contract refers to exactly one Type I contract. It does so by mentioning the 'pubkey' field from the Type I contract in question. Type II contracts are written down in almost the same a canonical-JSON document, only the 'msgType' field is different:
+\section{The LedgerLoops Contract Format (version 0.5)}
+A LedgerLoops Contract is used to define cryptographically triggered debts. It refers to exactly one combination of a {\tt cleartext} and a {\tt pubkey}. It contains the following data (in UTF-8 JSON format):
 
 \begin{lstlisting}
 {
-  protocolVersion: 'ledgerloops-0.4',
-  msgType: 'contract-type-ii',
-  keyAlgorithm: <either 'ed25519' or 'rsa-256'>, // TODO: find out if these strings fully but minimally define how to interpret pubkey/pubkey2
-  pubkey: <the public key of person X>,
-  pubkey2: <the public key of person Y>,
-  currency: <a three-letter ISO-4217 code, for instance 'USD'>
-  amount: <a positive, terminating decimal number, for instance '13.5264235'>
+  "protocolVersion": "ledgerloops-0.5",
+  "msgType": "cryptographically-triggered-contract",
+  "keyAlgorithm": "ed25519", // TODO: add requirements about key format, hashing, padding, etc.
+  "pubkey": <some public key, compatible with keyAlgorithm>,
+  "cleartext": "Go!",
+  "debtor": <a string which both parties understand to identify the debtor>,
+  "beneficiary": <a string which both parties understand to identify the beneficiary>,
+  "deliverable": <a string which both parties understand to define both the maximum and minimum conditions for considering this debt paid>
 }
 \end{lstlisting}
-
-In the current version of LedgerLoops (version 0.4), the asset mentioned in Type II contract must be the same as the asset mentioned in the Type II contract it refers to, therefore also exposing the nature of the asset from the Type I contract to the participants in the Type II contract. A further restriction is that the asset consists of an amount of money, expressed in an ISO-4217 currency.
-
-Lifting these restrictions makes the algorithm a bit more complicated, but is definitely on the roadmap for future versions of LedgerLoops.
 
 \section{The Algorithm}
 To get a feel for how the LedgerLoops algorithm works, consider the following minimal example, involving three ledgers:
 
-/begin{itemize}
-John and William maintain a peer-to-peer ledger, on which John owes William one US dollar.
-William and Peter maintain a peer-to-peer ledger, on which William owes Peter one US dollar.
-Peter and John maintain a peer-to-peer ledger, on which Peter owes John one US dollar.
-/end{itemize}
+\begin{itemize}
+\item Bob and Otto maintain a peer-to-peer ledger, on which Bob owes Otto a banana.
+\item Otto and Michael maintain a peer-to-peer ledger, on which Otto owes Michael an orange.
+\item Michael and Bob maintain a peer-to-peer ledger, on which Michael owes Bob a mango.
+\end{itemize}
 
-John, William, and Peter can each only see two of these three ledgers, so none of them know that a debt cycle
-John -> William -> Peter -> back to John exists. They find this out and settle all three debts, they send the
+Bob, Otto, and Michael can each only see two of these three ledgers, so none of them know that a debt cycle
+Bob -> Otto -> Michael -> back to Bob exists. To find this out and settle all three debts, they send the
 following messages:
 
-\subsection{Round one (debtor to creditor)}
-John, William and Peter all send the following message to William, Peter and John, respectively:
+\subsection{Search round (debtor to creditor)}
+Bob, Otto and Michael all send the following message to Otto, Michael and Bob, respectively:
 "I have you as a creditor, but I also have at least one debtor, who may have other debtors, etc.,
-eventually leading back to you."
+which may eventually lead back to you."
 
-\subsection{Round two (debtor to creditor)}
-John, Peter and William all send the following message to Peter, William and John, respectively:
+In the actual implementation of the
+search round, a second message type is used - one indicating "Yes, I'm interested in moving on to the probe round",
+and one indicating "No, count me out". 
+This round only establishes a best-effort statement of intent between peers, and its only
+goal is to reduce the search space for the probe round.
+
+\subsection{Probe round (debtor to creditor)}
+Bob, Michael and Otto all send the following message to Michael, Otto and Bob, respectively:
 "Right, so you said you have at least one debtor, try sending them this token, instructing them to forward it,
-so I can see if it comes back to me." (accompanied by a long random string which is generated by John).
+so I can see if it comes back to me." (accompanied by a long random string which is generated by Bob).
 
-\subsection{Round three (debtor to creditor)}
-John sends the following message to Peter:
-"Right, the token came back so that's promising. Here is a public key which I just generated, you may want to use it
-in the pubkey2 field of a Type I contract."
+In the actual implementation, two tokens are used, one identifying Depth-First-Search tree, the other identifying
+(backtrack-)paths along this tree.
+After this round, if the token string used was long enough to be unguessable, and the token makes it back to Bob,
+then Bob knows that a ledger loop exists (even though some participants may still pull out of the negotiations
+in a later phase).
 
-Peter also generates a public key, for use in the pubkey field of a Type I contract which he may create later. For now,
-he only creates a Type II contract for 1 USD, reserves these funds on his ledger with William (i.e., will not use this credit
-for anything else as long as William may claim the second-order debt from this Type II contract), and sends the Type II
-contract to William.
+\subsection{Negotiation Round (debtor to creditor)}
+Bob now generates an asymmetric cryptographic key pair, keeps the private key safe, and creates
+a LedgerLoops contract mentioning:
+\begin{itemize}
+\item the public key from the keypair,
+\item himself as the debtor,
+\item Michael as the beneficiary,
+\item as the deliverable he describes cancelling out Michael's mango debt.
+\end{itemize}
 
-William sends a Type II contract with the same contents to John, after which John sends one to Peter.
+Note that Bob does not intend to give Michael the equivalent of a mango, he instead states that he's willing to cancel
+Michael's debt if this cryptographically triggered debt gets activated. So maybe 'cryptographically activated debt cancellation'
+ is a better name than 'cryptographically triggered debt'.
 
-\subsection{Round four (creditor to debtor)}
+Michael then sends an analoguous LedgerLoops contract to Otto (replacing the names and the asset referred to), and Otto does the
+same again, so that Bob now has a CADC from Otto, and holds the private key that activates it.
 
-Peter notices that in the Type II contract he received from John, the pubkey is the one he himself generated (only Peter himself
-knows this) and the pubkey2 field is the one John sent him (both John and Peter know this). He now generates and signs
-the Type I contract which corresponds to all Type II contracts sent so far, and sends it back in the opposite direction -
-back to John - accompanied by a message which amounts to:
+This round is called the negotiation round because, in future versions, peers may get a chance to haggle over exchange rates. That
+way, agents may for instance charge small transaction fees for converting between currencies - the smaller the transaction fee,
+the higher the chance all peers in the ledger loop accept the offer. But for now, a transaction fee of zero works best. :)
 
-"Hey, look what I got - a valid signature for the Type I contract corresponding to the Type II contract you just sent me.
-So that successfully activates your second-order debt, which we can settle against my 1 USD debt on our peer-to-peer ledger."
+\subsection{Settlement Round (creditor to debtor)}
 
-John confirms to Peter that he agrees to cancel Peter's pre-existing debt against his own activated second-order debt.
+In this round, the messages travel along the ledger loop in the opposite direction: from creditor to debtor. First, Bob signs the
+cleartext, and presents Otto with the signature, thereby triggering Otto's contract and claiming his deliverable of cancelling out
+Bob's banana debt.
 
-Like Peter earlier, John now has the valid signature of the Type I contract, and can use that to activate William's second-order
-debt, and settle his debt with William.
+Now that Otto has received the valid signature from Bob, he can use that to tell Michael to cancel out to Otto's orange debt.
 
-After that, William now has the valid signature of the Type I contract, and can use that to activate Peter's second-order
-debt, and settle his debt with Peter.
+Michael is also happy, because now that he received Bob's valid signature through Otto, he can tell Bob to cancel the mango debt.
 
-All debts have now been settled, and the goal has been achieved. None of the participants know (except by looking at how
-quickly the messages looped round), how long the loop was in which they participated.
+All three debts have now been settled, and the goal has been achieved.
+
+In this case the ledger length was quite short, but none of the participants know this precisely. Participants can roughly tell that
+a loop where the rounds take a long time is more likely to have more participants than one on which message loop around quickly,
+but this information is obfuscated by differences in speed of the communication network, and by participants who choose to wait a
+little bit before forwarding a messages.
+
+No central authority or Unique Node List was used, each participant only ever trusted their own direct peers, and none of the participants
+exposed the contents of their private ledgers to the rest of the network.
+
+Also, nobody except Bob knows who the public key belonged to that triggered all three LedgerLoops contracts, and each peer only exposed
+their identity to their direct neighbors in the ledger loop, unless participants volunteer to make this public,
+nobody (except for each participant's direct neighbors) knows exactly who particpated in which ledger loop.
 
 \section{Conclusion}
 This is a work in progress. Full implementation details of LedgerLoops 0.4, as well as an initial discussion of security considerations,
