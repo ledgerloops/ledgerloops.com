@@ -3,7 +3,7 @@ var stringify = require('canonical-json');
 // using camelCase for this constant
 // instead of UPPER_CASE for easy ES6-style
 // inclusion in objects, see below:
-const protocolVersion = 'opentabs-net-0.4';
+const protocolVersion = 'ledgerloops-0.4';
 
 module.exports = {
   protocolVersion,

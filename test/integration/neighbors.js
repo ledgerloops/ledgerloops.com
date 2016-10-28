@@ -11,7 +11,7 @@ var stringify = require('canonical-json');
 // FIXME: these tests only work because messages are flushed in the same synchronous code
 // that creates them. Otherwise, messages from one test would end up at the other test.
 // Should use multiple instances of the messaging simulator, see
-// https://github.com/michielbdejong/opentabs.net/issues/26
+// https://github.com/michielbdejong/ledgerloops/issues/26
 
 debug.setLevel(false);
 

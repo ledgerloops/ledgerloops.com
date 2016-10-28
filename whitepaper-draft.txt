@@ -1,4 +1,4 @@
-OpenTabs: Second-order promise loops
+LedgerLoops: Second-order promise loops
 
 Introduction to promise loops
 =============================
@@ -163,15 +163,15 @@ just fine. But the shortcoming of a two-party debt ledger is, of course, that yo
 So a better way to use second-order promise loops is to combine it with peer-to-peer debt ledgers:
 We write all debts in our ledger whenever one of us does something for the other person, and each of us could also have private
 peer-to-peer debt ledgers with other people, with whom we interact in the same way. This means that the group barter process can
-be entirely asynchronous from the actual commercial activity it negotiates. This is also where the name OpenTabs comes from:
-people keep a tab open (like a tab in a bar), and given a network of such open tabs, the OpenTabs protocol allows participants
+be entirely asynchronous from the actual commercial activity it negotiates. This is also where the name LedgerLoops comes from:
+people keep a tab open (like a tab in a bar), and given a network of such open tabs, the LedgerLoops protocol allows participants
 to search, negotiate, commit, and execute second-order promise loops that act like settlements to resolve or decrease the
 outstanding amounts of debt on each ledger.
 
-Comparison between OpenTabs and Money
+Comparison between LedgerLoops and Money
 =====================================
-As an OpenTabs user, you can convert your credit with people who owe you a favor, to obtain things you need from other people.
-This means that using OpenTabs will feel like what we know as money and you could define peer-to-peer debts as some sort of
+As an LedgerLoops user, you can convert your credit with people who owe you a favor, to obtain things you need from other people.
+This means that using LedgerLoops will feel like what we know as money and you could define peer-to-peer debts as some sort of
 one-time coin that gets anonymized into a different currency every time it passes to the next person, but such an abstract
 description probably doesn't help a lot to make the process more intuitive.
 
@@ -185,18 +185,18 @@ bank account (although of course your bank will). Bitcoin does not have this fea
 publically known which real-world person this wallet belongs to, and it's not necessary to reveal this if you're careful,
 a high level of obfuscation can still be achieved there as well.
 
-Unlike money, OpenTabs does not form a bubble that can burst.
-In OpenTabs, the ability to find useful promise loops grows with the network size of people actively looking for such promise
+Unlike money, LedgerLoops does not form a bubble that can burst.
+In LedgerLoops, the ability to find useful promise loops grows with the network size of people actively looking for such promise
 loops, with the number of connections between them, and with the frequency with which users put their activities and
 peer-to-peer debts up for barter.
-However, and this may seem unintuitive, OpenTabs usage can safely die and be revived in other places. It can be used in
+However, and this may seem unintuitive, LedgerLoops usage can safely die and be revived in other places. It can be used in
 several communities around the globe, which may stay disconnected from each other, become connected, and become disconnected
 again, without risk of devaluation of people's outstanding credits and debts. This is because there is no central currency
 or "bubble" of trust in the community (or its government) paying you back in the future.
 At any time, you can only owe debt to your direct peers, and only they can owe debts to you. If someone defaults on their
 debt, they only hurt their direct contacts, not the other participants in the network (remember that second-order promises
 will still hold, even if the first-order promise they are based on is not kept).
-Another way of seeing this is to say that OpenTabs is not a form of money, it is a ledger federation protocol.
+Another way of seeing this is to say that LedgerLoops is not a form of money, it is a ledger federation protocol.
 
 This does leave us with one important shortcoming of second-order money loops: privacy. Let's see if we can improve the
 system described so far by being more careful in what personal information you and I reveal to this hairdresser person.
@@ -320,12 +320,12 @@ participants made a local inference. But there might have been 10 degrees of sep
 "YM-1", and another 10 that led to the neighbor's interest in my task "NM-1". There is no way
 you can conclude anything about direct connections between your peers from the hairdresser's statement by itself,
 although you could time how fast the message arrived after you had your initial conversations with me and with the hairdresser,
-and do some statistics to discover which of your peers seem to be more closely connected to each other on the OpenTabs network
+and do some statistics to discover which of your peers seem to be more closely connected to each other on the LedgerLoops network
 than others. Apart from such timing attacks, the system can be made "partially anonymous", so that only your direct peers need to know
 exactly who you are in real life. In fact, if we use asymmetric cryptography to check digital signatures, you only need to trust the
 person who makes a promise to you, and none of the other participants in the promise loop.
 
-Example of an OpenTabs message sequence
+Example of an LedgerLoops message sequence
 =======================================
 
 Let's get some definitions down first. These definitions will be referred to in the messages participants send, and all participants
@@ -367,7 +367,7 @@ statement) signed a promise, will be indebted to do their best to succesfully pe
 * Condition: A logical predicate which can be true ("met") or false ("unmet").
 Once a condition has been met, it can never become unmet again (although, of course, it can seem like it has been met, but then later
 turn out to have been unmet all along, when new information arrives. When that happens, renegotation of that new situation is up to the
-persons involved, and outside the scope of OpenTabs. It is therefore important to, for instance, use strong cryptographic keying material
+persons involved, and outside the scope of LedgerLoops. It is therefore important to, for instance, use strong cryptographic keying material
 so that it is very unlikely that someone would be able to forge a signature.
 The condition described by a condition statement has been met if, and only if:
   * The condition statement in question contains a public key and a task identifier,
@@ -553,7 +553,7 @@ for a better name for "second-order promise loop", and other reactions or review
 There are possible several more such improvements that can be made, and other issues that will come up once we try to implement the
 basic parts of a software tool for the protocol described, and dig deeper into the details and dynamics.
 
-Improvements to this whitepaper-draft are currently being tracked on https://github.com/michielbdejong/opentabs.net-website/issues.
+Improvements to this whitepaper-draft are currently being tracked on https://github.com/michielbdejong/ledgerloops/issues.
 Thanks a lot for reading this far, please join the discussion there!
 
 

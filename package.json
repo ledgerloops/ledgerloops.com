@@ -1,5 +1,5 @@
 {
-  "name": "opentabs",
+  "name": "ledgerloops",
   "version": "0.3.0",
   "description": "Money without Banks",
   "main": "index.js",
@@ -26,12 +26,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/michielbdejong/opentabs.net-website.git"
+    "url": "git+https://github.com/michielbdejong/ledgerloops.git"
   },
   "author": "Michiel de Jong",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/michielbdejong/opentabs.net-website/issues"
+    "url": "https://github.com/michielbdejong/ledgerloops/issues"
   },
-  "homepage": "https://github.com/michielbdejong/opentabs.net-website#readme"
+  "homepage": "https://github.com/michielbdejong/ledgerloops#readme"
 }

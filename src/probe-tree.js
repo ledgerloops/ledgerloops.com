@@ -6,7 +6,7 @@ function ProbeTree(treeToken, inNeighborNick, outNeighborNicks, currency) {
   for (var i=0; i<outNeighborNicks.length; i++) {
     this._pathTokens[outNeighborNicks[i]] = false;
   }
-  this._outloopsReceived = []; // might use this in the future, for https://github.com/michielbdejong/opentabs.net/issues/28
+  this._outloopsReceived = []; // might use this in the future, for https://github.com/michielbdejong/ledgerloops/issues/28
   this._backtracksReceived = [];
   this._backtrackSent = false;
   this._loopFound = false;
