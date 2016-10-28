@@ -114,16 +114,28 @@ module.exports = {
     });
   },
 // * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
-  embeddablePromise: function(obj) {
-    return stringify({
-      protocolVersion,
-      msgType: 'embeddable-promise',
-      // no tree/path token since this message will not be sent/routed
-      pubkey: obj.pubkey,
-      pubkey2: obj.pubkey2,
-      currency: obj.currency,
-      amount: obj.amount,
-    });
+  embeddablePromise: function(obj, type) {
+    if (type === 2) {
+      return stringify({
+        protocolVersion,
+        msgType: 'contract-type-ii',
+        // no tree/path token since this message will not be sent/routed
+        pubkey: obj.pubkey,
+        pubkey2: obj.pubkey2,
+        currency: obj.currency,
+        amount: obj.amount,
+      });
+    } else {
+      return stringify({
+        protocolVersion,
+        msgType: 'contract-type-i',
+        // no tree/path token since this message will not be sent/routed
+        pubkey: obj.pubkey,
+        pubkey2: obj.pubkey2,
+        currency: obj.currency,
+        amount: obj.amount,
+      });
+    }
   },
 // * [satisfy-condition] A to B: Here is a signed promise for 0.01USD from ${A1}
 //                               to ${C2}, satisfying your condition:

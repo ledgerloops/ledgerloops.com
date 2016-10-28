@@ -23,7 +23,7 @@
     "sinon": "^1.17.6"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --ui tdd",
+    "test": "grunt test",
     "build": "grunt build"
   },
   "testling": {
