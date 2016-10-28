@@ -9,7 +9,7 @@ describe('Messages', function() {
         confirmIOU: 'confirm-IOU',
         pubkeyAnnounce: 'pubkey-announce',
         conditionalPromise: 'conditional-promise',
-        embeddablePromise: 'embeddable-promise',
+        embeddablePromise: 'contract-type-i',
         satisfyCondition: 'satisfy-condition',
         claimFulfillment: 'claim-fulfillment',
         confirmLedgerUpdate: 'confirm-ledger-update',

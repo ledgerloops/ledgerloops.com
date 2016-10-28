@@ -196,7 +196,7 @@ describe('SettlementEngine.generateReactions', function() {
           pubkey2: 'pub',
           embeddablePromise: {
             protocolVersion,
-            msgType: 'embeddable-promise',
+            msgType: 'contract-type-i',
             pubkey: 'asdf',
             pubkey2: 'pub',
           currency: 'USD',

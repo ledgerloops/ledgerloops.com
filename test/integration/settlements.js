@@ -72,7 +72,7 @@ describe('SettlementEngine.generateReactions', function() {
           pubkey2: 'pub',
           embeddablePromise: {
             protocolVersion,
-            msgType: 'embeddable-promise',
+            msgType: 'contract-type-i',
             pubkey: 'asdf',
             pubkey2: 'pub',
           currency: 'USD',
@@ -118,7 +118,7 @@ describe('SettlementEngine.generateReactions', function() {
       pubkey: 'asdf',
       pubkey2: 'pub',
       embeddablePromise: {
-        msgType: 'embeddable-promise',
+        msgType: 'contract-type-i',
         pubkey: 'asdf',
         pubkey2: 'pub',
           currency: 'USD',
@@ -147,7 +147,7 @@ describe('SettlementEngine.generateReactions', function() {
           pubkey: 'asdf',
           pubkey2: 'pub',
           embeddablePromise: {
-            msgType: 'embeddable-promise',
+            msgType: 'contract-type-i',
             pubkey: 'asdf',
             pubkey2: 'pub',
           currency: 'USD',
@@ -169,7 +169,7 @@ describe('SettlementEngine.generateReactions', function() {
       pubkey2: 'pub',
       embeddablePromise: {
         protocolVersion,
-        msgType: 'embeddable-promise',
+        msgType: 'contract-type-i',
         pubkey: 'asdf',
         pubkey2: 'pub',
           currency: 'USD',
@@ -197,7 +197,7 @@ describe('SettlementEngine.generateReactions', function() {
           msgType: 'claim-fulfillment',
           embeddablePromise: {
             protocolVersion,
-            msgType: 'embeddable-promise',
+            msgType: 'contract-type-i',
             pubkey: 'asdf',
             pubkey2: 'pub',
           currency: 'USD',
@@ -220,7 +220,7 @@ describe('SettlementEngine.generateReactions', function() {
       msgType: 'claim-fulfillment',
       embeddablePromise: {
         protocolVersion,
-        msgType: 'embeddable-promise',
+        msgType: 'contract-type-i',
         pubkey: 'asdf',
         pubkey2: 'pub',
           currency: 'USD',
@@ -383,7 +383,7 @@ describe('Settlement process', function() {
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
-              msgType: 'embeddable-promise',
+              msgType: 'contract-type-i',
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
@@ -421,7 +421,7 @@ describe('Settlement process', function() {
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
-              msgType: 'embeddable-promise',
+              msgType: 'contract-type-i',
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
@@ -459,7 +459,7 @@ describe('Settlement process', function() {
             pubkey: 'fake',
             pubkey2: 'pub',
             embeddablePromise: {
-              msgType: 'embeddable-promise',
+              msgType: 'contract-type-i',
               protocolVersion,
               pubkey: 'fake',
               pubkey2: 'pub',
