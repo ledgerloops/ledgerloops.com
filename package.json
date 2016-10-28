@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "grunt": "^1.0.1",
+    "grunt-browserify": "^5.0.0",
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-mocha-test": "^0.13.2",
     "mocha": "^3.1.2",
@@ -22,7 +23,8 @@
     "sinon": "^1.17.6"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "build": "grunt build"
   },
   "repository": {
     "type": "git",

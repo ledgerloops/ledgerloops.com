@@ -17,15 +17,28 @@ module.exports = function(grunt) {
         },
         src: ['test/unit/*.js', 'test/integration/*.js'],
       }
-    }
+    },
+    browserify: {
+      options: {
+        bundleOptions: {
+          debug: true
+        }
+      },
+      main: {
+        src: 'src/index.js',
+        dest: 'js/bundle.js',
+      }
+    },
   });
 
   // Load plugins
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-browserify');
  
   // Default task(s).
   grunt.registerTask('test', ['jshint', 'mochaTest']);
-  grunt.registerTask('default', ['test']);
+  grunt.registerTask('build', ['browserify']);
+  grunt.registerTask('default', ['test', 'build']);
 
 };

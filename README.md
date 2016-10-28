@@ -7,5 +7,7 @@ The contents of http://ledgerloops.com
 
 ```
 $ npm install -g grunt-cli
+$ npm install -g browserify
 $ npm install
 $ npm test
+$ npm build
