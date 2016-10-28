@@ -7,6 +7,7 @@ var debug = require('./debug');
 // within one simulation process:
 var channels = {};
 var queue = [];
+var autoFlush = false;
 
 function flush() {
   var iteration = queue;
@@ -39,11 +40,16 @@ module.exports = {
     debug.log(`Messaging channel for recipient ${address} created.`);
   },
   send: function(fromNick, toNick, msg) {
-    queue.push({ fromNick, toNick, msg });
-    debug.log(JSON.parse(msg));
-    return Promise.resolve();
+    if (autoFlush) {
+      return channels[toNick](fromNick, msg);
+    } else {
+      queue.push({ fromNick, toNick, msg });
+      debug.log(JSON.parse(msg));
+      return Promise.resolve();
+    }
   },
   flush,
+  autoFlush: function() { autoFlush = true; },
   getQueue: function() { return queue; },
   discardQueue: function() { queue = []; },
 };
