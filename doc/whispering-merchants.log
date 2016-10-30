@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  30 OCT 2016 14:22
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  30 OCT 2016 16:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -93,18 +93,14 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 30.
  [1
 
-]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [2]
-[3] (./whispering-merchants.aux) ) 
+] [2] [3] [4] [5] (./whispering-merchants.aux) ) 
 Here is how much of TeX's memory you used:
  1765 strings out of 493030
  25331 string characters out of 6136260
- 111757 words of memory out of 5000000
+ 112757 words of memory out of 5000000
  5346 multiletter control sequences out of 15000+600000
  8195 words of font info for 29 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 26i,6n,40p,449b,219s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 26i,6n,40p,855b,219s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on whispering-merchants.dvi (3 pages, 7096 bytes).
+Output written on whispering-merchants.dvi (5 pages, 17636 bytes).
