@@ -15,98 +15,90 @@
     <!-- img src="https://unhosted.org/img/opentabs.png" / -->
     <a href="https://github.com/michielbdejong/ledgerloops"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a> 
 
-    <h1>LedgerLoops</h1>
-    <h2>Almost there...</h2>
-    <p>After not working on this project that much, I recently started to write some code, and <a href="http://ledgerloops.com/doc/whitepaper.pdf">drafting a whitepaper (pdf)</a>. It's not ready yet, but I'll tweet about it extensively once it is. :) Below is the text from the website from a few years ago, as well as a video from a conference talk about it (when this project was still called OpenTabs).</p>
+    <h1>LedgerLoops (<a href="https://github.com/michielbdejong/ledgerloops/issues">Work in Progress</a>)</h1>
+    <h2>The Tale of the Whispering Merchants</h2>
 
-    <h2>Peer-to-peer money</h2>
-    <p>LedgerLoops is a peer-to-peer way to use money,
-      bypassing the Plain Old Banking System (POBS) as a man-in-the-middle.</p>
+    <h3>The bench around the old Tree</h3>
+      <p>Once upon a time, around an old tree on the village square, a circular wooden bench was made. Merchants would sit on this bench, with their backs to the tree, to seek shade and, of course, trade.
+      Each merchant would chat with the person sitting directly to their left, and the person sitting directly to their right. They can't see or directly communicate with anyone beyond their immediate neighbors.</p>
+      
+      <p>As the merchants tend to speak in whispers, none of them know exactly how many people are sitting around the tree, nor who the other merchants are, nor what trades they are discussing - except of course, for their own direct neighbors.</p>
+      
+      <p>Wild rumours would often circulate around the tree in either direction, but would often change or be exaggerated along the way, meaning that all merchants soon learn to only trust first-hand information, from either of the two persons they can see and speak to.</p>
+      
+    <h3>Peer-to-peer Barter, and the Deadlock Situation</h3>
+      <p>On some days, trade would be plentiful, as each merchant would bring various items, trade some of those against other items with their left neighbor, and do the same with their right neighbor, always looking for items they think they can sell again in a next barter transaction. Sometimes items would travel halfway around the tree before they reach a merchant who cannot sell it on further.</p>
+      
+      <p>But on this particular Monday, none of the merchants is able to reach a barter trade with either of their neighbors. The problem is that each merchant has an interesting item to offer to the person on their left, but not to the person on their right.</p>
+      
+      <p>Conversely, each merchant is only interested in the item offered by the person on their right, but not in the item offered by the person on their left.</p>
+      
+      <p>Each merchant would be willing to trade in either direction, but since the person on their left has nothing to offer to them, and they have nothing to offer to the person on their right, none of the conversations lead to a trade, and the merchants all go home disappointed, still holding the item they had hoped to sell.</p>
+      
+      <p>Trade stays blocked for weeks, as each merchant brings the same item with them every day, and sits at their usual spot inbetween the two neighbors they trust, but is unable to trade with either of them.</p>
+      
+      <p>Word goes round the tree that each merchant is in the same situation, wanting to sell an item to the left, and wanting to buy an item from the right. This makes the merchants even more frustrated, because they realize everyone could trade, if they would only have some system of cooperation. The merchants all realize they will have to invent some sort of financial technology, or stay in this deadlock situation forever.</p>
+      
+    <h3>Monday: Transitivity of Trust</h3>
+      <p>The next Monday, one merchant has an idea: he explains to his left neighbor that he is interested in an item from his right neighbor, and is willing to take a little risk, in everybody's benefit. He offers to lend the items he owns to his left neighbor, in the hope his neighbor would do the same, until his own right neighbor has lent the item he wants to him.
+      He promises his left neighbor to cancel the debt once all items have moved one position to the left, in the hope each merchant will do the same, and his own right neighbor will also cancel his own debt.</p>
+      <p>If this goes wrong at any point, the merchants can all just give the items back where they came from. This system seems to work at first, and all merchants are happy, until one merchant sees an opportunity to trick the system. Even though he did receive the item he wanted from his right neighbor, he quickly hides it, and tell his left neighbor sorry, I don't know what happened, but it seems the wave of transactions never made it around the tree, so please give me back the item I lent out to you. His left neighbor tells him, OK, I will give you back the item I borrowed from you as soon as I get back the item from my own left neighbor. All merchants ask their item back from their left neighbor, until somewhere someone in the chain decides they have no incentive to reverse the trade they just made, and doesn't cooperate.</p>
+      
+      <p>The merchants now realize that this system is very brittle, since it relies on transitivity of trust: even if your own left neighbor would never steal from you, and their left neighbor would never steal from them, this doesn't mean that this third person can also be trusted not to steal from you.</p>
+      
+    <h3>Tuesday: Commodity Money</h3>
+      <p>Having learned from their first experiment, on Tuesday, the merchants try out a different system. They realize that each of them eats fruits from the tree they're sitting under, and fruits on the tree are getting scarce. They decide to use fruit as a commodity currency. Each merchant offers the item they have for sale to their left neighbor in exchange for one piece of fruit. The items all move one merchant to the left, as pieces of fruit are moved to the right.</p>
+      
+      <p>Some merchants would hold ever bigger bags of fruit, until the fruit they buy from each other is much more than they will be able to eat, and carrying the bags of fruit becomes impractical.</p>
+      
+    <h3>Wednesday: Fiat Money</h3>
+      <p>On Wednesday, a banker appears in the village, and gains the trust of all merchants around the tree. He offers fruit vouchers in exchange for fruits, promising to exchange these vouchers back for one piece of fruit per voucher at any point in the future. The merchants start exchanging these vouchers instead of exchanging the cumbersome fruits themselves. The banker keeps a big pile of fruit while the merchants now only exchange pieces of paper whose value depends on the trustworthiness of this one banker. This system works quite well as long as the banker can be trusted not to eat all the fruit.</p>
+      
+      <p>This day, all items also successfully move one merchant to the left, and fruit vouchers which all merchants bought from the banker move to the right.</p>
+      <p>The banker also offers electronic banking to the merchants, meaning a merchant does not have to carry fruit vouchers as physical pieces of paper, but can also trust the bank to remember how many fruit vouchers the merchant has in his bank account. Instead of giving a piece of paper to his neighbor, a merchant can now instruct the banker to move some fruit vouchers from his own bank account to the bank account of the other merchant.</p>
+    <h3>Thursday: Bank Loans</h3>
+      <p>On Thursday, the banker starts to offer a new service: from now on, merchants don't have to give him one piece of fruit as the only way to obtain a fruit voucher; merchants can now also borrow fruit vouchers from the banker, as long as they promise to give back either one voucher or one piece of fruit in the future, and as long as they pay an interest fee. This allows the merchants to trade more, even when they haven't picked any fruits first. The banker soon realizes he can put more fruit vouchers into circulation than the number of fruits he actually has stocked, as long as merchants don't come and exchange their vouchers for fruits all at the same time.</p>
+      
+      <p>This day, all items also successfully move one merchant to the left, and fruit vouchers which all merchants borrowed from the banker move to the right.</p>
+      
+      <p>Some merchants go bankrupt and can't pay the banker back, which means the banker's fruit stock is now even smaller than he thought, the merchants all realize this and get nervous, so they ask the banker to exchange their vouchers for fruit, before the banker's stock runs out completely. And so, of course, the banker is out of fruit stock within minutes.</p>
+      
+      <p>The merchants learn from this, and realize that if bank loans can so easily lead to an unstable system, then fiat money was maybe also not such an ideal system, since it also relies on trusting a banker instead of just trusting the two merchants sitting directly beside you.</p>
+      
+      <p>The mayor of the village restores the banker's fruit stock, in the hope to keep trade around the tree flourishing, and to allow the banker to keep up the beautiful tradition of paying himself a bonus at the end of the year, but the merchants don't really trust the banker anymore, and they are already looking for a better financial technology.</p>
+      
+    <h3>Friday: Blockchains</h3>
+      <p>On Friday, one of the merchants creates a blockchain-based Altcoin, mines the first few blocks in order to build up some personal stock, and then starts allowing other merchants to also mine blocks for his Altcoin. He publishes some software which allows all merchants to mine and trade his Altcoin.</p>
+      
+      <p>Although the Altcoin has no intrinsic value, one merchant starts to offer the item he wants to sell to his left neighbor in exchange for one coin, while at the same time offering one coin for the item his right neighbor is trying to sell.</p>
+      
+      <p>As all merchants do this, all transactions are successfully completed, and the coin effectively obtains value.</p>
+      
+      <p>Some merchants start to speculate by selling and buying coins at strategic moments, others specialize in mining coins, and as the scarcity of
+      the coin fluctuates, so does its value. When the value is really high, the merchant who invented the Altcoin sells his personal stock from the first few block he mined, the coin's value plummets, and all merchants who owned coins at this time, suffer. The merchants decide to try something else the following day.</p>
+      
+    <h3>Saturday: Ledger Federation</h3>
+      <p>On Saturday, more bankers arrive in the village, and start offering different fruit vouchers. The merchants welcome the arrival of more bankers, as they feel it spreads their risk a little more than having just one banker in the village. However, as it's very impractical to have so many different fruit vouchers, they convince their bankers to accept fruit vouchers from other bankers as well. They also start asking their own banker to move fruit vouchers from their bank account to the bank account of a merchant who is using the services of one of the other bankers. The bankers get together and set up a Unique Node List, which lists one computer from each banker. Together, the computers in this Unique Node List are quite reliable for bankers to exchange each other's fruit vouchers among themselves.</p>
+      
+      <p>The merchants are sad though - they don't really trust the bankers, and they are bitter to see how the bankers rely on the bail-out guarantees from the mayor. And although Altcoins briefly seemed like a promising solution, now that they have seen how it works in practice, they also don't really trust the publishers of Altcoin software anymore.</p>
+      
+    <h3>Sunday: Ledger Loops</h3>
+      <p>On the seventh day, one of the merchants invents LedgerLoops. What he does is actually quite simple: he creates a cryptographic challenge which he knows only he can solve, but for which anyone could verify and agree whether a given solution is correct. He tells his left neighbor: I will give you this item if you can show me the solution of this cryptographic challenge. Each merchant tells his left neighbor the same, until the initiator's own right neighbor does so. After this, the correct solution is sent back in the other direction, and all trades are completed.</p>
+      <p>The bankers start offering participation in LedgerLoops as a service to merchants, meaning more trades become possible. The route along which value moves no longer needs to be exactly a full loop around the tree, but can also take shortcuts via a banker.</p>
+      <p>Merchants no longer need to ask their banker to move fruit vouchers from their bank account to another merchant's bank account, or even know if the other merchant has an account at a banker that is federated with their own banker; they just see if a LedgerLoop exists that passes through their own banker on one side, and through their neighbor merchant on the other side. So although they still need to trust bankers who act as their neighbors in a LedgerLoop, they no longer rely on bankers to issue fruit vouchers.</p>
+      <p>The mayor is also happy about this, because it means that although merchants still rely on bankers as a safe value store and as a source of bank loans, they no longer rely so heavily on banker's vouchers for facilitating trade.</p>
 
-    <p>Whenever one of your friends owes you money,
-      simply "tab it", so just write it down somewhere and accept that
-      situation as a natural state of peace between two peers,
-      instead of settling the debt. You can do this in several ways,
-      for instance:</p>
-    <ul>
-      <li>on a piece of paper,</li>
-      <li>in a text note on your phone</li>
-      <li>with a collaborative spreadsheet</li>
-      <li>in an email thread, or</li>
-      <li>using a specialized app like xMartin's <a href="http://grouptabs.xmartin.de/">Grouptabs</a>.</li>
-    </ul>
-
-    <p>Banks had their function in a time when our societies were ruled by buildings
-      full of paper. There was no way to administer trust other than through
-      these paperwork machines. But in recent decades, the upcoming power of cryptography, mobile phones
-      and internet connectivity have made it unnecessary to visit these paperwork buildings
-      each time we want to use money. Through these new decentralized tools,
-      it is now much simpler to simply "tab"
-      the things we give each other.</p>
-
-    <h2>Gift attribution</h2>
-    <p>Psychologically, LedgerLoops is a way to attribute recognition for the things
-      we give each other. In most social relationships, it would be rude to accept a gift
-      without saying thank you, and it would also be rude to spontaneously pay something for a
-      stranger; it brings the relationship in an uneven state. As a form of "closure" of this
-      uneven situation, simply writing the transaction down somewhere ("tabbing" it)
-      can fulfill this necessary gift attribution, without the need to add a reverse
-      transaction that cancels it out.</p>
-
-    <h2>Transactions</h2>
-    <p>When we do want to settle a tab, then we can do this through the plain old
-      banking system, but also through alternative money
-      systems like Bitcoin, M-Pesa, paypal, Western Union, or one of the
-      many grassroots "Bank Of Time" projects. These alternative platforms then simply take over the
-      man-in-the-middle role from POBS, and money stored on them is not by definition safe,
-      but the fact that we now have various equivalent
-      options is already a step towards decentralization.</p>
-
-    <h2>Mini-banks</h2>
-    <p>Taking the LedgerLoops approach one step further, a bar in a sports club could
-      allow its members to deposit money behind the bar, and then withdraw from this as they go.
-      Or equivalently, they could run a tab and settle it at the end of the month, together
-      with their contribution bill.</p>
-
-    <p>Once a sports club uses open bar tabs in this way, maybe using some software tool,
-      then members could also use their sports club as a mini-bank, making
-      transactions from one person's open bar tab to the other whenever this is convenient.</p>
-    
-    <h2>Mutual debts</h2>
-    <p>If more and more people would do this, then all this would add
-      more liquidity to the LedgerLoops system. In addition, people could help the system become
-      more liquid by adding mutual debts with people they trust. If you 
-      agree to owe some money back and forth with a good friend or family member, then this
-      becomes a series capacitor for the money circuit, which will allow alternating currents
-      to flow through it, up to the maximum you set.</p>
-
-    <h2>Paying a stranger</h2>
-    <p>Paying a stranger is still hard. A stranger will often want to receive either cash or
-      plastic money in exchange for something they give you. If more and more people use LedgerLoops
-      systems and connect them up to each other, making it more connected and liquid, then some
-      such transactions may be routable, but in general, you cannot rely on that yet. So then you
-      will still need to use an actual transaction, and for that you will either need to load
-      money onto your creditcard, or your bitcoin wallet, or get cash money out of an ATM using
-      a POBS bank card, or load money into a SIM-card based money system like M-Pesa.</p>
-
-    <h2>Roadmap</h2>
-    <p>We have been trying out LedgerLoops with about twenty people throughout 2012. We still need
-      to improve our tools quite a bit. In particular, we need ways to:</p>
-      <ul>
-      <li>generate different types of overviews from the raw activity data</li>
-      <li>send out notifications</li>
-      <li>detect cycles in the debt graph and automatically generate resolution proposals</li>
-      <li>import data from existing money platforms and automatically cross-reference it</li>      
-    </ul>
-    <p>We will be working on these goals throughout 2013, so stay tuned. And whenever you have
-      to split a bill with friends, remember: just tab it! :)</p>
+    <h2>Whitepaper</h2>
+      This story is of course fictional. LedgerLoops was not invented by a merchant under a tree, but by
+<a href="//michielbdejong.com">Michiel B. de Jong</a>. He is currently working on <a href="/doc/whitepaper.pdf">this whitepaper draft (pdf)</a> about it, and is publishing LedgerLoops under the CC-BY-SA license. LedgerLoops is free for all to use and profit from without his prior permission, as long as you include a reference to LedgerLoops somewhere in your documentation. LedgerLoops is decentralized and for everybody, which also means it's not for sale, although Michiel is currently <a href="https://www.linkedin.com/in/michielbdejong">available for hire</a>.
 
     <h2>Discussion at Complicity'13</h2>
+    This was recorded at a conference in Berlin, when LedgerLoops was still called Opentabs and didn't use cryptographic challenges yet:
     <iframe src="//player.vimeo.com/video/79024018?portrait=0&amp;color=aeb0b0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> <p><a href="http://vimeo.com/79024018">COMPLICITY | Michiel de Jong & Eleanor Saitta | #bgcon13</a> from <a href="http://vimeo.com/berlinergazette">Berliner Gazette</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
 
    <h2>Participate</h2>
-   <p>See <a href="https://github.com/michielbdejong/ledgerloops/issues">the github repo for this website</a>.
+   <p>See <a href="https://github.com/michielbdejong/ledgerloops/issues">the github repo for this website, the whitepaper, and the demo implementation</a>.
 
   </body>
-  <script src="./js/bundle.js"></script>
+  <!-- script src="./js/bundle.js"></script  -->
 </html>
