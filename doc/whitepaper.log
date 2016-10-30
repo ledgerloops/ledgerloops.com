@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  28 OCT 2016 18:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  30 OCT 2016 19:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -100,13 +100,7 @@ File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 69.
-[2]
-Overfull \hbox (0.89124pt too wide) in paragraph at lines 94--99
-[]\OT1/cmr/m/n/10.95 In the ac-tual im-ple-men-ta-tion, two to-kens are used, o
-ne iden-ti-fy-ing Depth-
- []
-
-[3] [4] (./whitepaper.aux) ) 
+[2] [3] [4] (./whitepaper.aux) ) 
 Here is how much of TeX's memory you used:
  1874 strings out of 493030
  26519 string characters out of 6136260
@@ -116,4 +110,4 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  26i,6n,40p,388b,1034s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on whitepaper.dvi (4 pages, 16596 bytes).
+Output written on whitepaper.dvi (4 pages, 17148 bytes).
