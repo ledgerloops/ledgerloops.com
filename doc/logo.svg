@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="200" height="200" viewBox="0 0 200 200">
+  <text x="0" y="35" font-family="univia-pro, sans-serif" font-size="35" fill="blue" font-weight="500">
+    Ledger
+  </text>
+  <text x="12.2" y="56.3" font-family="univia-pro, sans-serif" font-size="35" fill="blue" font-weight="500">
+    Loops
+  </text>
+</svg>
