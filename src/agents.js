@@ -160,7 +160,8 @@ console.log('confirming ledger update', debt);
     // break;
 
   default: // msgType is related to settlements:
-    var peerPair = this._probeEngine.getPeerPair(incomingMsgObj);
+    var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
+console.log('defaulting to settlements', incomingMsgObj.msgType, peerPair);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;
     if (fromNick === debtorNick) {

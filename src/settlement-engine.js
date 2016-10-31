@@ -1,6 +1,7 @@
 // using var instead of const here because of https://www.npmjs.com/package/rewire#limitations
 var messages = require('./messages');
 var debug = require('./debug');
+var tokens = require('./tokens');
 var Signatures = require('./signatures');
 var stringify = require('canonical-json');
 
@@ -38,6 +39,8 @@ function SettlementEngine() {
 // currency
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
   obj.pubkey = this._signatures.generateKeypair();
+  obj.cleartext = tokens.generateToken();
+  obj.transactionId = tokens.generateToken();
   // want to send this message to debtor ( = in-neighbor)
   this._outstandingNegotiations[obj.pubkey] = obj;
   return Promise.resolve([
