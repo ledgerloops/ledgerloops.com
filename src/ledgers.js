@@ -1,4 +1,5 @@
 var neighborChangeConstants = require('./neighbor-change-constants');
+var tokens = require('./tokens');
 
 function Ledger(peerNick, myNick) {
   this._peerNick = peerNick;
@@ -96,18 +97,20 @@ Ledger.prototype.addDebt = function(debt) {
 
 Ledger.prototype.createIOU = function(amount, currency) {
   var debt = {
-    debtor: this._myNick,
+    transactionId: tokens.generateToken(),
     note: `IOU sent from ${this._myNick} to ${this._peerNick} on ${new Date()}`,
+    debtor: this._myNick,
     addedDebts: {
       [currency]: amount,
      },
   };
-  this._pendingDebts[debt.note] = debt;
+  this._pendingDebts[debt.transactionId] = debt;
   return debt;
 };
 
-Ledger.prototype.markIOUConfirmed = function(note) {
-  var debt = this._pendingDebts[note];
+Ledger.prototype.markIOUConfirmed = function(transactionId) {
+  console.log('looking for pending debt', transactionId, this._pendingDebts);
+  var debt = this._pendingDebts[transactionId];
   return this.addDebt(debt);
 };
 
