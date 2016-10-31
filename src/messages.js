@@ -61,18 +61,6 @@ module.exports = {
    // SettlementEngine related: //
   ///////////////////////////////
 
-// * [pubkey-announce] A to C: My pubkey is ${A1}.
-  pubkeyAnnounce: function(obj) {
-    return stringify({
-      protocolVersion,
-      msgType: 'pubkey-announce',
-      treeToken: obj.treeToken,
-      pathToken: obj.pathToken,
-      pubkey: obj.pubkey,
-      currency: obj.currency,
-      amount: obj.amount,
-    });
-  },
 // * [conditional-promise] C to B: If ${A1} promises to give 0.01USD to ${C2},
 //                                 I will substract it from your debt.
   conditionalPromise: function(obj) {
@@ -80,7 +68,7 @@ module.exports = {
       protocolVersion,
       msgType: 'conditional-promise',
       pubkey: obj.pubkey,
-      pubkey2: obj.pubkey2,
+      cleartext: obj.cleartext,
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
       currency: obj.currency,
@@ -113,30 +101,6 @@ module.exports = {
       amount: obj.amount,
     });
   },
-// * [embeddable-promise] (signed, not sent): ${A1} promises to give 0.01USD to ${C2}.
-  embeddablePromise: function(obj, type) {
-    if (type === 2) {
-      return stringify({
-        protocolVersion,
-        msgType: 'contract-type-ii',
-        // no tree/path token since this message will not be sent/routed
-        pubkey: obj.pubkey,
-        pubkey2: obj.pubkey2,
-        currency: obj.currency,
-        amount: obj.amount,
-      });
-    } else {
-      return stringify({
-        protocolVersion,
-        msgType: 'contract-type-i',
-        // no tree/path token since this message will not be sent/routed
-        pubkey: obj.pubkey,
-        pubkey2: obj.pubkey2,
-        currency: obj.currency,
-        amount: obj.amount,
-      });
-    }
-  },
 // * [satisfy-condition] A to B: Here is a signed promise for 0.01USD from ${A1}
 //                               to ${C2}, satisfying your condition:
 //                               ${embeddablePromise}, ${signatureFromA1}.
@@ -148,29 +112,8 @@ module.exports = {
       treeToken: obj.treeToken,
       pathToken: obj.pathToken,
       pubkey: obj.pubkey,
-      pubkey2: obj.pubkey2,
-      embeddablePromise: obj.embeddablePromise,
+      cleartext: obj.cleartext,
       signature: obj.signature,
-      currency: obj.currency,
-      amount: obj.amount,
-    });
-  },
-// * [claim-fulfillment] C to A: Here is a signed promise for 0.01USD from ${A1}
-//                               (which is you) to ${C2} (which is me):
-//                               ${embeddablePromise}, ${signatureFromA1}.
-//                               Let's settle it against my debt.
-//                               ${proofOfOwningC2}
-  claimFulfillment: function(obj) {
-    return stringify({
-      protocolVersion,
-      msgType: 'claim-fulfillment',
-      treeToken: obj.treeToken,
-      pathToken: obj.pathToken,
-      embeddablePromise: obj.embeddablePromise,
-      pubkey: obj.pubkey,
-      signature: obj.signature,
-      pubkey2: obj.pubkey2,
-      proofOfOwnership: obj.proofOfOwnership,
       currency: obj.currency,
       amount: obj.amount,
     });
