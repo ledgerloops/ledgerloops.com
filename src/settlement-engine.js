@@ -7,30 +7,11 @@ var stringify = require('canonical-json');
 
 const FORWARDING_TIMEOUT = 50;
 
-//  conditionalPromise: function(pubkey, pubkey2) {
-//  satisfyCondition: function(pubkey, pubkey2, embeddablePromise, signature) {
-//  confirmLedgerUpdate: function(signature) {
-
-// The flow of this engine is as follows:
-//
-// A owes B owes C owes A 0.01USD.
-//
-// message types, v0.1:
-// * [conditional-promise] C to debtor B: Regarding chain ${A1},
-//                                        if ${A1} promises to give 0.01USD to ${C2},
-//                                        I will substract it from your debt.
-// * [satisfy-condition] A to creditor B: Regarding chain ${A1},
-//                                        here is a signed promise for 0.01USD from ${A1}
-//                                        to ${C2}, satisfying your condition:
-//                                        ${embeddablePromise}, ${signatureFromA1}.
-//                                        Please distract it from my debt as promised.
-// * [confirm-ledger-update] B to debtor A: Regarding chain ${A1},
-//                                          OK, ledger updated, added a reference to
-//                                          ${signatureFromA1} in the ledger entry.
-
 function SettlementEngine() {
   this._signatures = new Signatures();
   this._outstandingNegotiations = {};
+  this._fundingTransaction = {};
+  this._fundedTransaction = {};
 }
 
 // required fields in obj:
@@ -42,7 +23,7 @@ SettlementEngine.prototype.initiateNegotiation = function(obj) {
   obj.cleartext = tokens.generateToken();
   obj.transactionId = tokens.generateToken();
   // want to send this message to debtor ( = in-neighbor)
-  this._outstandingNegotiations[obj.pubkey] = obj;
+  this._outstandingNegotiations[obj.transactionId] = obj;
   return Promise.resolve([
     { toNick: obj.inNeighborNick, msg: messages.conditionalPromise(obj) },
   ]);
@@ -59,13 +40,14 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
     if (fromRole === 'debtor') {
       switch(msgObj.msgType) {
       case 'reject':
-        if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'object') {
-          delete this._outstandingNegotiations[msgObj.pubkey];
-          if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are A
+        if (typeof this._outstandingNegotiations[msgObj.transactionId] === 'object') {
+          delete this._outstandingNegotiations[msgObj.transactionId];
+console.log('checking', msgObj);
+          if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are A
             resolve([]);
           } else {
             resolve([
-              { to: creditorNick, msg: messages.reject(msgObj) },
+              { to: creditorNick, msg: messages.reject(this._fundingTransaction[msgObj.transactionId]) },
             ]);
           }
         } else {
@@ -73,14 +55,27 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         }
         break;
       case 'satisfy-condition':
-        if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are the initiator
+        // TODO: verify if the signature is actually correct
+console.log('received a satisfy-condition message', msgObj, this._outstandingNegotiations, this._fundingTransaction, this._fundedTransaction);
+        var ledgerUpdateObj = {
+          transactionId: msgObj.transactionId,
+          addedDebts: {
+            [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
+                -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
+          },
+          debtor: debtorNick,
+        };
+        if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
+console.log('initiating ledger update', msgObj.transactionId);
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
+            { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
           ]);
         } else {
+          console.log('looking for funding transaction', msgObj, 'funding transactionId is', this._fundingTransaction, this._fundingTransaction[msgObj.transactionId], 'obj for that is', this._outstandingNegotiations, this._outstandingNegotiations[this._fundingTransaction[msgObj.transactionId]]);
+console.log('initiating ledger update', ledgerUpdateObj);
           resolve([
-            { to: debtorNick, msg: messages.confirmLedgerUpdate(msgObj) },
-            { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
+            { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
+            { to: creditorNick, msg: messages.satisfyCondition(this._outstandingNegotiations[this._fundingTransaction[msgObj.transactionId]]) },
           ]);
         }
         break;
@@ -90,38 +85,61 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
     } else if (fromRole === 'creditor') {
       switch(msgObj.msgType) {
       case 'conditional-promise':
-        debug.log('conditional-promise from creditor');
-        if (this._signatures.haveKeypair(msgObj.pubkey)) { // you are the initiator
+        // First of all, store it:
+        // TODO: prefix transaction id's with id of neighbor who generated that id, to avoid clashes across namespaces.
+        this._outstandingNegotiations[msgObj.transaction.id] = msgObj;
+        debug.log('conditional-promise from creditor', msgObj);
+        if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are the initiator
           debug.log('pubkey is mine');
-          msgObj.signature = this._signatures.sign(msgObj.cleartext, msgObj.pubkey);
-          this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
+          msgObj.solution = this._signatures.sign(msgObj.challenge.cleartext, msgObj.challenge.pubkey);
+          msgObj.transactionId = msgObj.transaction.id;
+          this._outstandingNegotiations[msgObj.transaction.id] = 'can-still-reject';
           setTimeout(() => {
-            if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
+            if (typeof this._outstandingNegotiations[msgObj.transaction.id] === 'undefined') {
               resolve([]);
             } else {
-              this._outstandingNegotiations[msgObj.pubkey] = msgObj;
+              this._outstandingNegotiations[msgObj.transaction.id] = msgObj;
               resolve([
                 { to: creditorNick, msg: messages.satisfyCondition(msgObj) },
               ]);
             }
           }, FORWARDING_TIMEOUT);
         } else { // you are B
-          this._outstandingNegotiations[msgObj.pubkey] = 'can-still-reject';
+          // reuse challenge from incoming message:
+          var newMsgObj = {
+             pubkey: msgObj.challenge.pubkey,
+             cleartext: msgObj.challenge.cleartext,
+             // reuse routing info:
+             treeToken: msgObj.routing.treeToken,
+             pathToken: msgObj.routing.pathToken,
+             // set same amount and currency for your own conditional promise as what has been promised to you:
+             amount: msgObj.transaction.amount,
+             currency: msgObj.transaction.currency,
+             // but use your own transactionId:
+             transactionId: tokens.generateToken(),
+          };
+          this._fundedTransaction[msgObj.transaction.id] = newMsgObj.transactionId;
+          this._fundingTransaction[newMsgObj.transactionId] = msgObj.transaction.id;
+          console.log('funding:', this._fundingTransaction, this._fundedTransaction);
+
+          this._outstandingNegotiations[newMsgObj.transactionId] = 'can-still-reject';
+        
           setTimeout(() => {
-            if (typeof this._outstandingNegotiations[msgObj.pubkey] === 'undefined') {
+            if (typeof this._outstandingNegotiations[newMsgObj.transactionId] === 'undefined') {
               resolve([]);
             } else {
-              this._outstandingNegotiations[msgObj.pubkey] = msgObj;
+              // FIXME: messy way to get data fields in the right structure:
+              this._outstandingNegotiations[newMsgObj.transactionId] = JSON.parse(messages.conditionalPromise(newMsgObj));
               resolve([
-                { to: debtorNick, msg: messages.conditionalPromise(msgObj) },
+                { to: debtorNick, msg: messages.conditionalPromise(newMsgObj) },
               ]);
             }
           }, FORWARDING_TIMEOUT);
         }
         break;
       case 'please-reject':
-        if (this._outstandingNegotiations[msgObj.pubkey] === 'can-still-reject') {
-          delete this._outstandingNegotiations[msgObj.pubkey];
+        if (this._outstandingNegotiations[this._fundedTransaction[msgObj.transactionId]] === 'can-still-reject') {
+          delete this._outstandingNegotiations[this._fundedTransaction[msgObj.transactionId]];
           resolve([
             { to: creditorNick, msg: messages.reject(msgObj) },
           ]);
@@ -133,7 +151,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         break;
       case 'confirm-ledger-update':
         // TODO: encode ledger update into reactions returned here
-        delete this._outstandingNegotiations[msgObj.pubkey];
+        delete this._outstandingNegotiations[msgObj.transactionId];
         resolve([]);
         break;
       default:
