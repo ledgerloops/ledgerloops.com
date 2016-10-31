@@ -119,7 +119,12 @@ Sender.prototype.createChallenge = function() {
     this.key = keyObj;
     return exportKey(this.key).then(pubkey => {
       return createCleartext().then(cleartext => {
-        this.challenge = { pubkey, cleartext };
+        this.challenge = {
+          name: "ECDSA",
+          namedCurve: "P-256", //can be "P-256", "P-384", or "P-521"
+          pubkey,
+          cleartext,
+        };
         return this.challenge;
       });
     });
