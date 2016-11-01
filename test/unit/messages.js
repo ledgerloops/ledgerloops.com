@@ -5,14 +5,14 @@ describe('Messages', function() {
   describe('msgObj.msgType', function() {
     it('should be correct for each type', function() {
       var msgTypes = {
-        IOU: 'IOU',
-        confirmIOU: 'confirm-IOU',
-        pubkeyAnnounce: 'pubkey-announce',
+        ledgerUpdateInitiate: 'initiate-update',
+        ledgerUpdateConfirm: 'confirm-update',
+        ddcd: 'update-status',
+        probe: 'probe',
         conditionalPromise: 'conditional-promise',
-        embeddablePromise: 'contract-type-i',
+        pleaseReject: 'please-reject',
+        reject: 'reject',
         satisfyCondition: 'satisfy-condition',
-        claimFulfillment: 'claim-fulfillment',
-        confirmLedgerUpdate: 'confirm-ledger-update',
      }; 
      for (var func in msgTypes) {
        var msgObj = JSON.parse(messages[func]({}));

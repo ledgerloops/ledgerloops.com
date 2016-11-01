@@ -1,12 +1,13 @@
 var rewire = require('rewire');
+var tokens = rewire('../../src/tokens');
 var SettlementEngine = rewire('../../src/settlement-engine');
-var protocolVersion = require('../../src/messages').protocolVersion;
+var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
 var stringify = require('canonical-json');
 
-debug.setLevel(false);
+debug.setLevel(true);
 
 var shouldHaveKeypairs; // TODO: use sinon for this
 function MockSignatures() {}
@@ -28,59 +29,52 @@ MockSignatures.prototype.sign = function(cleartext, pubkey) {
 SettlementEngine.__set__('Signatures', MockSignatures);
 debug.log('signatures stub set');
 
+function CryptoMock() {
+  this.counter = 0;
+}
+CryptoMock.prototype.randomBytes = function() {
+  return {
+    toString: () => {
+      return `token-${this.counter++}`;
+    },
+  };
+};
+var cryptoMock = new CryptoMock();
+tokens.__set__('crypto', cryptoMock);
+SettlementEngine.__set__('tokens', tokens);
+
 describe('SettlementEngine.generateReactions', function() {
   var engine = new SettlementEngine();
-  it('should react correctly to pubkey-announce', function() {
-    shouldHaveKeypairs = [];
-    return engine.generateReactions('creditor', {
-      msgType: 'pubkey-announce',
-      pubkey: 'asdf',
-      currency: 'USD',
-      amount: 0.05,
-    }, 'myDebtor', 'myCreditor').then((reactions) => {
-      assert.equal(reactions.length, 1);
-      assert.deepEqual(reactions[0], {
-        to: 'myDebtor',
-        msg: stringify({
-          protocolVersion,
-          msgType: 'conditional-promise',
-          pubkey: 'asdf',
-          pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-        })
-      });
-    });
-  });
-
   it('should react correctly to conditional-promise if haveKeypair', function() {
     shouldHaveKeypairs = ['asdf'];
     return engine.generateReactions('creditor', {
+      protocol: protocolVersions.negotiation,
       msgType: 'conditional-promise',
-      pubkey: 'asdf',
-      pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      routing: {
+        protocol: protocolVersions.routing,
+        treeToken: 'token-0',
+        pathToken: 'token-1',
+      },
+      challenge: {
+        name: 'ECDSA',
+        namedCurve: 'P-256',
+        pubkey: 'asdf',
+        cleartext: 'token-2',
+      },
+      transaction: {
+        id: 'token-3',
+        currency: 'USD',
+        amount: 0.05,
+      }
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
         to: 'myCreditor',
         msg: stringify({
-          protocolVersion,
+          protocol: protocolVersions.negotiation,
           msgType: 'satisfy-condition',
-          pubkey: 'asdf',
-          pubkey2: 'pub',
-          embeddablePromise: {
-            protocolVersion,
-            msgType: 'contract-type-i',
-            pubkey: 'asdf',
-            pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
+          transactionId: 'token-3',
+          solution: 'signature',
         })
       });
     });
@@ -89,174 +83,106 @@ describe('SettlementEngine.generateReactions', function() {
   it('should react correctly to conditional-promise if not haveKeypair', function() {
     shouldHaveKeypairs = [];
     return engine.generateReactions('creditor', {
-      protocolVersion,
+      protocol: protocolVersions.negotiation,
       msgType: 'conditional-promise',
-      pubkey: 'asdf',
-      pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+      routing: {
+        protocol: protocolVersions.routing,
+        treeToken: 'token-0',
+        pathToken: 'token-1',
+      },
+      challenge: {
+        name: 'ECDSA',
+        namedCurve: 'P-256',
+        pubkey: 'asdf',
+        cleartext: 'token-2',
+      },
+      transaction: {
+        id: 'token-3',
+        currency: 'USD',
+        amount: 0.05,
+      }
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion,
+          protocol: protocolVersions.negotiation,
           msgType: 'conditional-promise',
-          pubkey: 'asdf',
-          pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+          routing: {
+            protocol: protocolVersions.routing,
+            treeToken: 'token-0',
+            pathToken: 'token-1',
+          },
+          challenge: {
+            name: 'ECDSA',
+            namedCurve: 'P-256',
+            pubkey: 'asdf',
+            cleartext: 'token-2',
+          },
+          transaction: {
+            id: 'token-0',
+            currency: 'USD',
+            amount: 0.05,
+          }
         })
       });
     });
   });
 
-  it('should react correctly to satisfy-condition (not have pubkey2)', function() {
+  it('should react correctly to satisfy-condition (not have pubkey)', function() {
     shouldHaveKeypairs = [];
     return engine.generateReactions('debtor', {
+      protocol: protocolVersions.negotiation,
       msgType: 'satisfy-condition',
-      pubkey: 'asdf',
-      pubkey2: 'pub',
-      embeddablePromise: {
-        msgType: 'contract-type-i',
-        pubkey: 'asdf',
-        pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-      },
-      signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
+      transactionId: 'token-0',
+      solution: 'signature',
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 2);
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion,
-          msgType: 'confirm-ledger-update',
-          pubkey: 'asdf',
-          currency: 'USD',
-          amount: 0.05,
+          protocol: protocolVersions.ledger,
+          msgType: 'initiate-update',
+          transactionId: 'token-0',
+          debtor: 'myDebtor',
+          addedDebts: {
+            'USD': -0.05,
+          },
         })
       });
       assert.deepEqual(reactions[1], {
         to: 'myCreditor',
         msg: stringify({
-          protocolVersion,
+          protocol: protocolVersions.negotiation,
           msgType: 'satisfy-condition',
-          pubkey: 'asdf',
-          pubkey2: 'pub',
-          embeddablePromise: {
-            msgType: 'contract-type-i',
-            pubkey: 'asdf',
-            pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
+          transactionId: 'token-3',
+          solution: 'signature',
         })
       });
     });
   });
 
-  it('should react correctly to satisfy-condition (have pubkey2)', function() {
-    shouldHaveKeypairs = ['pub'];
-    return engine.generateReactions('debtor', {
-      msgType: 'satisfy-condition',
-      pubkey: 'asdf',
-      pubkey2: 'pub',
-      embeddablePromise: {
-        protocolVersion,
-        msgType: 'contract-type-i',
-        pubkey: 'asdf',
-        pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-      },
-      signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
-    }, 'myDebtor', 'myCreditor').then((reactions) => {
-      assert.equal(reactions.length, 2);
-      assert.deepEqual(reactions[0], {
-        to: 'myDebtor',
-        msg: stringify({
-          protocolVersion,
-          msgType: 'confirm-ledger-update',
-          pubkey: 'asdf',
-          currency: 'USD',
-          amount: 0.05,
-        })
-      });
-      assert.deepEqual(reactions[1], {
-        to: 'myCreditor',
-        msg: stringify({
-          protocolVersion,
-          msgType: 'claim-fulfillment',
-          embeddablePromise: {
-            protocolVersion,
-            msgType: 'contract-type-i',
-            pubkey: 'asdf',
-            pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-          },
-          pubkey: 'asdf',
-          signature: 'signature',
-          pubkey2: 'pub',
-          proofOfOwnership: 'proof',
-          currency: 'USD',
-          amount: 0.05,
-        })
-      });
-    });
-  });
-
-  it('should react correctly to claim-fulfillment (have pubkey)', function() {
+  it('should react correctly to satisfy-condition (have pubkey)', function() {
     shouldHaveKeypairs = ['asdf'];
     return engine.generateReactions('debtor', {
-      msgType: 'claim-fulfillment',
-      embeddablePromise: {
-        protocolVersion,
-        msgType: 'contract-type-i',
-        pubkey: 'asdf',
-        pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-      },
-      pubkey: 'asdf',
-      signature: 'signature',
-      pubkey2: 'pub',
-      proofOfOwnership: 'proof',
-          currency: 'USD',
-          amount: 0.05,
+      protocol: protocolVersions.negotiation,
+      msgType: 'satisfy-condition',
+      transactionId: 'token-3',
+      solution: 'signature',
     }, 'myDebtor', 'myCreditor').then((reactions) => {
       assert.equal(reactions.length, 1);
       assert.deepEqual(reactions[0], {
         to: 'myDebtor',
         msg: stringify({
-          protocolVersion,
-          msgType: 'confirm-ledger-update',
-          pubkey: 'asdf',
-          currency: 'USD',
-          amount: 0.05,
+          protocol: protocolVersions.ledger,
+          msgType: 'initiate-update',
+          transactionId: 'token-3',
+          debtor: 'myDebtor',
+          addedDebts: {
+            'USD': -0.05,
+          },
         })
       });
-    });
-  });
-
-  it('should react correctly to confirm-ledger-update', function() {
-    shouldHaveKeypair = false;
-    return engine.generateReactions('creditor', {
-      msgType: 'confirm-ledger-update',
-      protocolVersion,
-      pubkey: 'asdf',
-          currency: 'USD',
-          amount: 0.05,
-    }, 'myDebtor', 'myCreditor').then((reactions) => {
-      assert.equal(reactions.length, 0);
     });
   });
 });
@@ -321,18 +247,46 @@ describe('Settlement process', function() {
     },
   };
 
-  // kickstart process with A sending pubkey-announce to B:
+  // kickstart process with A sending conditional-promise to B:
   var traffic1 = [{
     sender: 'a',
     receiver: 'b',
     msgObj: {
-      msgType: 'pubkey-announce',
-      protocolVersion,
-      pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
+      protocol: protocolVersions.negotiation,
+      msgType: 'conditional-promise',
+      routing: {
+        protocol: protocolVersions.routing,
+        treeToken: 'token-0',
+        pathToken: 'token-1',
+      },
+      challenge: {
+        name: 'ECDSA',
+        namedCurve: 'P-256',
+        pubkey: 'fake',
+        cleartext: 'token-2',
+      },
+      transaction: {
+        id: 'token-3',
+        currency: 'USD',
+        amount: 0.05,
+      }
     },
   }];
+  // in initiateNegotiation, a would have saved:
+  actors.a.engine._outstandingNegotiations['token-3'] = {
+    challenge: {
+      pubkey: 'fake',
+      cleartext: 'token-2',
+    },
+    transaction: {
+      id: 'token-3',
+      currency: 'USD',
+      amount: 0.05,
+    },
+  };
+  actors.a.engine._pubkeyCreatedFor.fake = 'token-3';
+  // TODO: use actual initiageNegotiation function here ^^^
+
   it('should find a settlement', function() {
     debug.log('Step 1:');
     // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
@@ -342,12 +296,24 @@ describe('Settlement process', function() {
       assert.deepEqual(traffic2, [
         {
           msgObj: {
+            protocol: protocolVersions.negotiation,
             msgType: 'conditional-promise',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+            routing: {
+              protocol: protocolVersions.routing,
+              treeToken: 'token-0',
+              pathToken: 'token-1',
+            },
+            challenge: {
+              name: 'ECDSA',
+              namedCurve: 'P-256',
+              pubkey: 'fake',
+              cleartext: 'token-2',
+            },
+            transaction: {
+              id: 'token-1',
+              currency: 'USD',
+              amount: 0.05,
+            }
           },
           receiver: 'c',
           sender: 'b',
@@ -360,12 +326,24 @@ describe('Settlement process', function() {
       assert.deepEqual(traffic3, [
         {
           msgObj: {
+            protocol: protocolVersions.negotiation,
             msgType: 'conditional-promise',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
+            routing: {
+              protocol: protocolVersions.routing,
+              treeToken: 'token-0',
+              pathToken: 'token-1',
+            },
+            challenge: {
+              name: 'ECDSA',
+              namedCurve: 'P-256',
+              pubkey: 'fake',
+              cleartext: 'token-2',
+            },
+            transaction: {
+              id: 'token-2',
+              currency: 'USD',
+              amount: 0.05,
+            }
           },
           receiver: 'a',
           sender: 'c',
@@ -379,20 +357,9 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'satisfy-condition',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'contract-type-i',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
+            protocol: protocolVersions.negotiation,
+            solution: 'signature',
+            transactionId: 'token-2',
           },
           receiver: 'c',
           sender: 'a',
@@ -405,11 +372,13 @@ describe('Settlement process', function() {
       assert.deepEqual(traffic5, [
         {
           msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-            pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-2',
+            debtor: 'a',
+            addedDebts: {
+              'USD': -0.05,
+            },
           },
           receiver: 'a',
           sender: 'c',
@@ -417,20 +386,9 @@ describe('Settlement process', function() {
         {
           msgObj: {
             msgType: 'satisfy-condition',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'contract-type-i',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
-          currency: 'USD',
-          amount: 0.05,
+            protocol: protocolVersions.negotiation,
+            solution: 'signature',
+            transactionId: 'token-1',
           },
           receiver: 'b',
           sender: 'c',
@@ -438,38 +396,30 @@ describe('Settlement process', function() {
       ]);
       debug.log('Step 5:');
       shouldHaveKeypairs = ['pub']; // a is now responding only to confirm-legder-update; setting this for b
-      return nextStep(actors, traffic5);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, [traffic5[1]]);
     }).then((traffic6) => {
+console.log('traffic6', traffic6);
       assert.deepEqual(traffic6, [
         {
           msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-           pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-1',
+            debtor: 'c',
+            addedDebts: {
+              'USD': -0.05,
+            },
           },
           receiver: 'c',
           sender: 'b',
         },
         {
           msgObj: {
-            msgType: 'claim-fulfillment',
-            protocolVersion,
-            pubkey: 'fake',
-            pubkey2: 'pub',
-            embeddablePromise: {
-              msgType: 'contract-type-i',
-              protocolVersion,
-              pubkey: 'fake',
-              pubkey2: 'pub',
-          currency: 'USD',
-          amount: 0.05,
-            },
-            signature: 'signature',
-            proofOfOwnership: 'proof',
-          currency: 'USD',
-          amount: 0.05,
+            msgType: 'satisfy-condition',
+            protocol: protocolVersions.negotiation,
+            solution: 'signature',
+            transactionId: 'token-3',
           },
           receiver: 'a',
           sender: 'b',
@@ -477,16 +427,19 @@ describe('Settlement process', function() {
       ]);
       debug.log('Step 6:');
       shouldHaveKeypairs = ['fake']; // c is now responding only to confirm-legder-update; setting this for a
-      return nextStep(actors, traffic6);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, [traffic6[1]]);
     }).then((traffic7) => {
       assert.deepEqual(traffic7, [
         {
           msgObj: {
-            msgType: 'confirm-ledger-update',
-            protocolVersion,
-           pubkey: 'fake',
-          currency: 'USD',
-          amount: 0.05,
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-3',
+            debtor: 'b',
+            addedDebts: {
+              'USD': -0.05,
+            },
           },
           receiver: 'b',
           sender: 'a',
@@ -494,7 +447,8 @@ describe('Settlement process', function() {
       ]);
       shouldHaveKeypairs = ['pub']; // setting this for b
       debug.log('Step 7:');
-      return nextStep(actors, traffic7);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, []);
     }).then((traffic8) => {
       assert.equal(traffic8.length, 0);
     });

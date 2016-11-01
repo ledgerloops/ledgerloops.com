@@ -4,7 +4,7 @@ var ProbeEngine = rewire('../../src/probe-engine');
 var SettlementEngine = rewire('../../src/settlement-engine');
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
-var protocolVersion = require('../../src/messages').protocolVersion;
+var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
@@ -33,11 +33,19 @@ var cryptoMock = new CryptoMock();
 tokens.__set__('crypto', cryptoMock);
 ProbeEngine.__set__('tokens', tokens);
 Agent.__set__('ProbeEngine', ProbeEngine);
+SettlementEngine.__set__('tokens', tokens);
+Agent.__set__('SettlementEngine', SettlementEngine);
 
 //rewire Signatures in SettlementEngine, then rewire SettlementEngine in Agent:
 function MockSignatures() {
 }
+
+var shouldHaveKeypair = {
+  'mocked-pubkey': true,
+};
+MockSignatures.prototype.haveKeypair = function(pubkey) { return !!shouldHaveKeypair[pubkey]; };
 MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey'; };
+MockSignatures.prototype.sign = function() { return 'signature'; };
 SettlementEngine.__set__('Signatures', MockSignatures);
 Agent.__set__('SettlementEngine', SettlementEngine);
 
@@ -104,7 +112,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -120,7 +128,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -136,7 +144,7 @@ describe('Once a cycle has been found', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -148,17 +156,29 @@ describe('Once a cycle has been found', function() {
 
       return messaging.flush();
     }).then(messagesSent => {
+ console.log({ protocolVersions });
       assert.deepEqual(messagesSent, [
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'pubkey-announce',
-            treeToken: 'token-0',
-            pathToken: 'token-1',
-            pubkey: 'mocked-pubkey',
-            currency: 'USD',
-            amount: 0.05,
+            protocol: protocolVersions.negotiation,
+            msgType: 'conditional-promise',
+            routing: {
+              protocol: protocolVersions.routing,
+              treeToken: 'token-0',
+              pathToken: 'token-1',
+            },
+            challenge: {
+              name: 'ECDSA',
+              namedCurve: 'P-256',
+              pubkey: 'mocked-pubkey',
+              cleartext: 'token-2',
+            },
+            transaction: {
+              id: 'token-3',
+              currency: 'USD',
+              amount: 0.05,
+            }
           }),
           toNick: 'charlie',
         },
@@ -231,7 +251,7 @@ describe('If cycle is broken', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -247,7 +267,7 @@ describe('If cycle is broken', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -375,7 +395,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -391,7 +411,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-1',
@@ -407,7 +427,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-2',
@@ -423,7 +443,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-2',
@@ -439,7 +459,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-2',
@@ -455,7 +475,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-3',
@@ -471,7 +491,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-3',
@@ -487,7 +507,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-3',
@@ -503,7 +523,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-4',
@@ -519,7 +539,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-4',
@@ -535,7 +555,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-4',
@@ -551,7 +571,7 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
+            protocol: protocolVersions.routing,
             msgType: 'probe',
             treeToken: 'token-0',
             pathToken: 'token-4',
@@ -567,13 +587,24 @@ describe('If two cycles exist', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'pubkey-announce',
-            treeToken: 'token-0',
-            pathToken: 'token-4',
-            pubkey: 'mocked-pubkey',
-            currency: 'USD',
-            amount: 0.05,
+            protocol: protocolVersions.negotiation,
+            msgType: 'conditional-promise',
+            routing: {
+              protocol: protocolVersions.routing,
+              treeToken: 'token-0',
+              pathToken: 'token-4',
+            },
+            challenge: {
+              name: 'ECDSA',
+              namedCurve: 'P-256',
+              pubkey: 'mocked-pubkey',
+              cleartext: 'token-5',
+            },
+            transaction: {
+              id: 'token-6',
+              currency: 'USD',
+              amount: 0.05,
+            },
           }),
           toNick: 'charlie',
         },

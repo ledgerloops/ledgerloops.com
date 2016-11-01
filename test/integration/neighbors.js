@@ -1,8 +1,9 @@
 var rewire = require('rewire');
-var Signatures = rewire('../../src/signatures');
+var tokens = rewire('../../src/tokens');
+var Ledger = rewire('../../src/ledgers');
 var Agent = rewire('../../src/agents');
 var messaging = require('../../src/messaging');
-var protocolVersion = require('../../src/messages').protocolVersion;
+var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
 var sinon = require('sinon');
@@ -22,10 +23,20 @@ DateMock.prototype.toString = function() {
 };
 Agent.__set__('Date', DateMock);
 
-Signatures.__set__('generateToken', function() {
-// return crypto.randomBytes(42).toString('base64');
-  return 'some-random-tokenz';
-});
+function CryptoMock() {
+  this.counter = 0;
+}
+CryptoMock.prototype.randomBytes = function() {
+  return {
+    toString: () => {
+      return `token-${this.counter++}`;
+    },
+  };
+};
+var cryptoMock = new CryptoMock();
+tokens.__set__('crypto', cryptoMock);
+Ledger.__set__('tokens', tokens);
+Agent.__set__('Ledger', Ledger);
 
 describe('IOUs between Alice and Bob', function() {
   afterEach(function() {
@@ -47,8 +58,9 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            transactionId: 'token-0',
+            msgType: 'initiate-update',
             debtor: 'alice',
             note: 'IOU sent from alice to bob on the now time',
             addedDebts: {
@@ -70,24 +82,24 @@ describe('IOUs between Alice and Bob', function() {
       assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], { '["alice","USD"]': { awake: false } });
       assert.deepEqual(agents.bob._search._neighbors.out, {});
-
+console.log(messaging.getQueue());
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from alice to bob on the now time',
+            protocol: protocolVersions.ledger,
+            transactionId: 'token-0',
+            msgType: 'confirm-update',
           }),
           toNick: 'alice'
         },
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -114,8 +126,8 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -136,8 +148,9 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-1',
             debtor: 'bob',
             note: 'IOU sent from bob to alice on the now time',
             addedDebts: {
@@ -159,17 +172,17 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from bob to alice on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-1',
           }),
           toNick: 'bob'
         },
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -188,8 +201,8 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -216,8 +229,9 @@ describe('IOUs between Alice and Bob', function() {
         {
           fromNick: 'alice',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-2',
             debtor: 'alice',
             note: 'IOU sent from alice to bob on the now time',
             addedDebts: {
@@ -227,7 +241,7 @@ describe('IOUs between Alice and Bob', function() {
           toNick: 'bob'
         },
       ]);
-      // Bob has removed Alice as a neighbor, but Alice is still waiting for confirm-IOU
+      // Bob has removed Alice as a neighbor, but Alice is still waiting for confirm-update
       assert.deepEqual(agents.alice._search._neighbors['in'], { '["bob","USD"]': { awake: false } });
       assert.deepEqual(agents.alice._search._neighbors.out, {});
       assert.deepEqual(agents.bob._search._neighbors['in'], {});
@@ -235,16 +249,16 @@ describe('IOUs between Alice and Bob', function() {
 
       return messaging.flush();
     }).then(messagesSent => {
-      // Bob assumes Alice will delete him as a neighbor after his confirm-IOU
+      // Bob assumes Alice will delete him as a neighbor after his confirm-update
       // message which brings their debt to zero, so he doesn't send
-      // a dynamic-decentralized-cycle-detection message anymore:
+      // a update-status message anymore:
       assert.deepEqual(messagesSent, [
         {
           fromNick: 'bob',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from alice to bob on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-2',
           }),
           toNick: 'alice'
         },
@@ -286,8 +300,9 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'fred',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-3',
             debtor: 'fred',
             note: 'IOU sent from fred to edward on the now time',
             addedDebts: {
@@ -299,8 +314,9 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-4',
             debtor: 'edward',
             note: 'IOU sent from edward to charlie on the now time',
             addedDebts: {
@@ -312,8 +328,9 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-5',
             debtor: 'daphne',
             note: 'IOU sent from daphne to edward on the now time',
             addedDebts: {
@@ -330,9 +347,9 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from fred to edward on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-3',
           }),
           toNick: 'fred'
         },
@@ -340,8 +357,8 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-             msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+             msgType: 'update-status',
              currency: 'USD',
              value: false,
           }),
@@ -351,17 +368,17 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from edward to charlie on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-4',
           }),
           toNick: 'edward'
         },
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -371,18 +388,18 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from daphne to edward on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-5',
           }),
           toNick: 'daphne'
         },
-        // Generated before Edward got a confirm-IOU from Charlie, so for the moment he's still a dead-end:
+        // Generated before Edward got a confirm-update from Charlie, so for the moment he's still a dead-end:
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-             msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+             msgType: 'update-status',
              currency: 'USD',
              value: false,
           }),
@@ -393,46 +410,46 @@ describe('Cycle Detection', function() {
       return messaging.flush();
     }).then(messagesSent => {
       assert.deepEqual(messagesSent, [
-        // Fred responding to Edward's confirm-IOU, before seeing Edward's GO_TO_SLEEP msg:
+        // Fred responding to Edward's confirm-update, before seeing Edward's GO_TO_SLEEP msg:
         {
           fromNick: 'fred',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
           toNick: 'edward'
         },
-        // Edward waking up Fred because of Charlie's confirm-IOU:
+        // Edward waking up Fred because of Charlie's confirm-update:
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: true,
           }),
           toNick: 'fred'
         },
-        // Edward waking up Daphne because of Charlie's confirm-IOU:
+        // Edward waking up Daphne because of Charlie's confirm-update:
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: true,
           }),
           toNick: 'daphne'
         },
-        // Daphne and Fred will not generate new messages in response to Edward's GO_TO_SLEEPs which followed his confirm-IOUs
-        // However, Edward should send 'false alarm' to Fred and Daphne, because of Charlie's GO_TO_SLEEP which followed his confirm-IOU:
+        // Daphne and Fred will not generate new messages in response to Edward's GO_TO_SLEEPs which followed his confirm-updates
+        // However, Edward should send 'false alarm' to Fred and Daphne, because of Charlie's GO_TO_SLEEP which followed his confirm-update:
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -441,19 +458,19 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
           toNick: 'daphne'
         },
-        // Daphne responding to Edward's confirm-IOU:
+        // Daphne responding to Edward's confirm-update:
         {
           fromNick: 'daphne',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -467,8 +484,8 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'fred',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -477,8 +494,8 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: false,
           }),
@@ -504,8 +521,9 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
-            msgType: 'IOU',
+            protocol: protocolVersions.ledger,
+            msgType: 'initiate-update',
+            transactionId: 'token-6',
             debtor: 'charlie',
             note: 'IOU sent from charlie to daphne on the now time',
             addedDebts: {
@@ -522,17 +540,17 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'daphne',
           msg: stringify({
-            protocolVersion,
-            msgType: 'confirm-IOU',
-            note: 'IOU sent from charlie to daphne on the now time',
+            protocol: protocolVersions.ledger,
+            msgType: 'confirm-update',
+            transactionId: 'token-6',
           }),
           toNick: 'charlie'
         },
         {
           fromNick: 'daphne',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: true,
           }),
@@ -546,8 +564,8 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'charlie',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: true,
           }),
@@ -556,8 +574,8 @@ describe('Cycle Detection', function() {
         {
           fromNick: 'edward',
           msg: stringify({
-            protocolVersion,
-            msgType: 'dynamic-decentralized-cycle-detection',
+            protocol: protocolVersions.routing,
+            msgType: 'update-status',
             currency: 'USD',
             value: true,
           }),

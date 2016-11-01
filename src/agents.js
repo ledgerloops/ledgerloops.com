@@ -83,9 +83,9 @@ Agent.prototype._ensurePeer = function(peerNick) {
 Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
-  messaging.send(this._myNick, creditorNick, messages.IOU(debt));
+  messaging.send(this._myNick, creditorNick, messages.ledgerUpdateInitiate(debt));
   return new Promise((resolve, reject) => {
-    this._sentIOUs[debt.note] = { resolve, reject };
+    this._sentIOUs[debt.transactionId] = { resolve, reject };
   });
 };
 
@@ -101,15 +101,16 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
   var neighborChanges;
   switch(incomingMsgObj.msgType) {
 
-  case 'IOU':
+  case 'initiate-update':
     // for simplicity, always accept the IOU.
     var debt = incomingMsgObj;
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
+console.log('confirming ledger update', debt);
     return this._sendMessages([{
       toNick: fromNick,
-      msg: messages.confirmIOU(debt),
+      msg: messages.ledgerUpdateConfirm(debt),
     }]).then(() => {
       debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
       return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
@@ -124,8 +125,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     });
     // break;
 
-  case 'confirm-IOU':
-    neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.note);
+  case 'confirm-update':
+    neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
     debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
     return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
       var promises = [];
@@ -137,12 +138,12 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       return Promise.all(promises);
     }).then(() => {
       // handle callbacks linked to this sentIOU:
-      this._sentIOUs[incomingMsgObj.note].resolve();
-      delete this._sentIOUs[incomingMsgObj.note];
+      this._sentIOUs[incomingMsgObj.transactionId].resolve();
+      delete this._sentIOUs[incomingMsgObj.transactionId];
     });
     // break;
 
-  case 'dynamic-decentralized-cycle-detection':
+  case 'update-status':
     debug.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
     var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
     var promises = [];
@@ -159,7 +160,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   default: // msgType is related to settlements:
-    var peerPair = this._probeEngine.getPeerPair(incomingMsgObj);
+    var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
+console.log('defaulting to settlements', incomingMsgObj.msgType, peerPair);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;
     if (fromNick === debtorNick) {
