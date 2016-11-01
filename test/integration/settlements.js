@@ -4,7 +4,7 @@ var SettlementEngine = rewire('../../src/settlement-engine');
 var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
-var sinon = require('sinon');
+// var sinon = require('sinon');
 var stringify = require('canonical-json');
 
 debug.setLevel(true);
@@ -19,12 +19,13 @@ MockSignatures.prototype.haveKeypair = function(pubkey) {
   debug.log('it is checking keypair', pubkey);
   return (shouldHaveKeypairs.indexOf(pubkey) !== -1);
 };
-MockSignatures.prototype.proofOfOwnership = function(pubkey) {
-  return 'proof';
-};
 MockSignatures.prototype.sign = function(cleartext, pubkey) {
   debug.log(`signing "${cleartext}" with "${pubkey}"`);
   return 'signature';
+};
+MockSignatures.prototype.verify = function(cleartext, pubkey, signature) {
+  debug.log(`signing "${cleartext}" with "${pubkey}"`);
+  return (signature === 'signature');
 };
 SettlementEngine.__set__('Signatures', MockSignatures);
 debug.log('signatures stub set');

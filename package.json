@@ -7,7 +7,9 @@
     "test": "test"
   },
   "dependencies": {
+    "atob": "^2.0.3",
     "base64-js": "^1.2.0",
+    "btoa": "^1.1.2",
     "canonical-json": "0.0.4",
     "eccrypto": "^1.0.3",
     "grunt": "^1.0.1",
