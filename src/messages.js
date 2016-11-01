@@ -29,7 +29,6 @@ module.exports = {
     });
   },
   ledgerUpdateConfirm: function(obj) {
-console.log('ledgerUpdateConfirm message', obj);
     return stringify({
       protocol: ledgerProtocolVersion,
       msgType: 'confirm-update',

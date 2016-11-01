@@ -107,7 +107,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
-console.log('confirming ledger update', debt);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.ledgerUpdateConfirm(debt),
@@ -161,7 +160,6 @@ console.log('confirming ledger update', debt);
 
   default: // msgType is related to settlements:
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
-console.log('defaulting to settlements', incomingMsgObj.msgType, peerPair);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;
     if (fromNick === debtorNick) {

@@ -70,7 +70,6 @@ module.exports = {
     });
   },
   useKey: function(publicKeyBase64, cleartext) {
- console.log('using key', publicKeyBase64, cleartext, keyStore);
     var keyObj = keyStore[publicKeyBase64];
     return sign(keyObj, cleartext);
   },

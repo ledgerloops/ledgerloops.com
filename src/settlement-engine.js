@@ -55,7 +55,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
       case 'reject':
         if (typeof this._outstandingNegotiations[msgObj.transactionId] === 'object') {
           delete this._outstandingNegotiations[msgObj.transactionId];
-console.log('checking', msgObj);
           if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are A
             resolve([]);
           } else {
@@ -69,7 +68,6 @@ console.log('checking', msgObj);
         break;
       case 'satisfy-condition':
         // TODO: verify if the signature is actually correct
-console.log('received a satisfy-condition message', msgObj, this._outstandingNegotiations, this._fundingTransaction, this._fundedTransaction);
         var ledgerUpdateObj = {
           transactionId: msgObj.transactionId,
           addedDebts: {
@@ -79,17 +77,14 @@ console.log('received a satisfy-condition message', msgObj, this._outstandingNeg
           debtor: debtorNick,
         };
         if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
-console.log('initiating ledger update', msgObj.transactionId);
           resolve([
             { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
           ]);
         } else {
-          console.log('looking for funding transaction', msgObj, 'funding transactionId is', this._fundingTransaction, this._fundingTransaction[msgObj.transactionId]);
           var mySatisfyConditionObj = {
             transactionId: this._fundingTransaction[msgObj.transactionId],
             solution: msgObj.solution,
           };
-console.log('initiating ledger update', ledgerUpdateObj);
           resolve([
             { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
             { to: creditorNick, msg: messages.satisfyCondition(mySatisfyConditionObj) },
@@ -108,7 +103,6 @@ console.log('initiating ledger update', ledgerUpdateObj);
         debug.log('conditional-promise from creditor', msgObj);
         if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are the initiator
           debug.log('pubkey is mine');
-console.log('linking', this._pubkeyCreatedFor);
           this._fundedTransaction[msgObj.transaction.id] =
               this._pubkeyCreatedFor[msgObj.challenge.pubkey];
           this._fundingTransaction[
@@ -144,7 +138,6 @@ console.log('linking', this._pubkeyCreatedFor);
           };
           this._fundedTransaction[msgObj.transaction.id] = newMsgObj.transactionId;
           this._fundingTransaction[newMsgObj.transactionId] = msgObj.transaction.id;
-          console.log('funding:', this._fundingTransaction, this._fundedTransaction);
 
           this._outstandingNegotiations[newMsgObj.transactionId] = 'can-still-reject';
         

@@ -109,7 +109,6 @@ Ledger.prototype.createIOU = function(amount, currency) {
 };
 
 Ledger.prototype.markIOUConfirmed = function(transactionId) {
-  console.log('looking for pending debt', transactionId, this._pendingDebts);
   var debt = this._pendingDebts[transactionId];
   return this.addDebt(debt);
 };

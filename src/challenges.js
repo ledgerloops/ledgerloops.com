@@ -8,7 +8,6 @@ ba2str = bufferUtils.ba2str;
 
 function importPublicKey(base64) {
   var pubkey = fromBase64(base64);
-console.log('importPublicKey', base64);
   return window.crypto.subtle.importKey(
       "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
       pubkey, //can be a publicKey or privateKey, as long as extractable was true
@@ -86,7 +85,6 @@ Challenge.prototype.solve = function() {
 };
 
 Challenge.prototype.verifySolution = function(solution) {
-  console.log('verifying solution');
   return importPublicKey(this._publicKeyBase64).then(pubkeyObj => {
     return verifySignature(pubkeyObj, this._cleartext, solution);
   });
