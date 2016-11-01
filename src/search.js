@@ -102,7 +102,19 @@ Search.prototype._haveAwakeNeighbors = function(direction) {
 Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState) {
   debug.log('handleNeighborStateChange', { neighborDirection, newNeighborState });
   if (newNeighborState === 'new') {
-    if(!this._haveNeighbors(OPPOSITE[neighborDirection])) {
+    if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
+      if (!this._awake) {
+        // Wake up, guys!
+        debug.log('waking up!');
+        this._awake = true;
+        debug.log(`Waking up ${OPPOSITE[neighborDirection]}-neighbors:`);
+        return this._updateNeighbors(OPPOSITE[neighborDirection], WAKE_UP);
+      } else {
+        // Were already awake, no change:
+        debug.log('was already awake!');
+        return [];
+      }
+    } else {
       // dead-end notification:
       debug.log('staying asleep, I\'m a dead-end!', this._neighbors);
       debug.log(`Putting to sleep ${neighborDirection}-neighbors:`);

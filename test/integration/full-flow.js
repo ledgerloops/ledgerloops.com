@@ -16,6 +16,18 @@ function messageTypes(traffic) {
   return msgType;
 }
 
+function checkNeighborStates(agents) {
+  for (var main in agents) {
+    for (var dir in agents[main]._search._neighbors) {
+      for (var other in agents[main]._search._neighbors[dir]) {
+        var peerNick = agents[main]._search._neighbors[dir].peerNick;
+        var thinksAwake = agents[main]._search._neighbors[dir].awake;
+        assert.equal(thinksAwake, agents[peerNick]._search._awake);
+      }
+    }
+  }
+}
+
 describe('three agents staggered', function() {
   var agents = {
     alice: new Agent('alice'),
@@ -24,40 +36,57 @@ describe('three agents staggered', function() {
   };
   it('should setlle debt loop', function() {  
     return agents.alice.sendIOU('bob', 0.1, 'USD').then(() => {
-      console.log('IOU sent');
-      return agents.bob.sendIOU('charlie', 0.1, 'USD');
-    }).then(() => {
+      console.log('IOU alice to bob sent');
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'alice', 'bob', 'initiate-update' ],
-        [ 'bob', 'charlie', 'initiate-update' ],
       ]);
+      checkNeighborStates();
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'bob', 'alice', 'confirm-update' ],
+      ]);
+      checkNeighborStates();
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+      ]);
+      checkNeighborStates();
+      return agents.bob.sendIOU('charlie', 0.1, 'USD');
+      console.log('IOU bob to charlie sent');
+    }).then(() => {
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'bob', 'charlie', 'initiate-update' ],
+      ]);
+      checkNeighborStates();
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
         [ 'charlie', 'bob', 'confirm-update' ],
       ]);
+      checkNeighborStates();
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'bob', 'alice', 'update-status', true ],
       ]);
-      return messaging.flush();
-    }).then(traffic => {
-      console.log(messageTypes(traffic));
-      assert.deepEqual(messageTypes(traffic), [
-        [ 'alice', 'bob', 'update-status', false ],
-      ]);
+      checkNeighborStates();
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
       ]);
+      checkNeighborStates();
       return agents.charlie.sendIOU('alice', 0.1, 'USD');
     }).then(() => {
       return messaging.flush();
@@ -66,6 +95,8 @@ describe('three agents staggered', function() {
       assert.deepEqual(messageTypes(traffic), [
         [ 'charlie', 'alice', 'initiate-update' ],
       ]);
+      checkNeighborStates();
+console.log(agents.alice._search);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
@@ -73,18 +104,20 @@ describe('three agents staggered', function() {
         [ 'alice', 'charlie', 'confirm-update' ],
         [ 'alice', 'bob', 'update-status', true ],
       ]);
+      checkNeighborStates();
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'charlie', 'bob', 'update-status', true ],
-        [ 'bob', 'charlie', 'update-status', true ],
       ]);
+      checkNeighborStates();
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
       ]);
+      checkNeighborStates();
       assert.equal(agents.alice._search._awake, true);
       assert.equal(agents.bob._search._awake, true);
       assert.equal(agents.charlie._search._awake, true);
@@ -94,26 +127,9 @@ describe('three agents staggered', function() {
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
-      ]);
-      return messaging.flush();
-    }).then(traffic => {
-      console.log(messageTypes(traffic));
-      assert.deepEqual(messageTypes(traffic), [
         [ 'charlie', 'bob', 'probe' ],
       ]);
-      return messaging.flush();
-    }).then(traffic => {
-      console.log(messageTypes(traffic));
-      assert.deepEqual(messageTypes(traffic), [
-      ]);
-      return agents.alice._probeTimerHandler();
-    }).then(() => {
-      return messaging.flush();
-    }).then(traffic => {
-      console.log(messageTypes(traffic));
-      assert.deepEqual(messageTypes(traffic), [
-      ]);
-      return messaging.flush();
+      checkNeighborStates();
     });
   });
 });
