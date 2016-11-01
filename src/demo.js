@@ -1,10 +1,10 @@
 var Challenge = require('./challenges');
 
 function Sender() {
-};
+}
 
 function Receiver() {
-};
+}
 
 Sender.prototype.createChallenge = function() {
   this._challenge = new Challenge();
