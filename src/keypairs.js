@@ -49,6 +49,9 @@ function generateKeypair() {
         namedCurve: "P-256", //can be "P-256", "P-384", or "P-521"
       },
       false, //whether the key is extractable (i.e. can be used in exportKey)
+
+//  the API always allows public keys to be exported, regardless of how they are created or imported. That’s because public keys are not sensitive information. They are intended to be shared. - https://blog.engelke.com/2014/09/19/saving-cryptographic-keys-in-the-browser/
+
       ["sign", "verify"] //can be any combination of "sign" and "verify"
       );
 }
