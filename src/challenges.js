@@ -1,30 +1,14 @@
 var keypairs = require('./keypairs');
+var bufferUtils = require('./buffer-utils');
+fromBase64 = bufferUtils.fromBase64;
+toBase64 = bufferUtils.toBase64;
+ba2str = bufferUtils.ba2str;
 
 // TODO: find browserify modules for window.crypto.subtle so this also works in nodejs
 
-function fromBase64( base64 ) {
-  var binary_string =  window.atob(base64);
-  var len = binary_string.length;
-  var bytes = new Uint8Array( len );
-  for (var i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-function toBase64( buffer ) {
-  var binary = '';
-  var bytes = new Uint8Array(buffer);
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode( bytes[ i ] );
-  }
-  return window.btoa( binary );
-}
-
 function importPublicKey(base64) {
   var pubkey = fromBase64(base64);
-console.log('importPublicKey', { pubkey, base64 });
+console.log('importPublicKey', base64);
   return window.crypto.subtle.importKey(
       "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
       pubkey, //can be a publicKey or privateKey, as long as extractable was true
@@ -47,23 +31,14 @@ function verifySignature(pubkeyObj, cleartext, signature) {
       },
       pubkeyObj, //from generateKey or importKey above
       fromBase64(signature), //ArrayBuffer of the signature
-      fromBase64(cleartext) //ArrayBuffer of the data
+      str2ab(cleartext) //ArrayBuffer of the data
       ).catch(function(err){
     console.error(err);
   });
 }
 
 function createCleartext() {
-  var charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  var i;
-  var result = "";
-  var length = 256;
-  values = new Uint32Array(length);
-  window.crypto.getRandomValues(values);
-  for(i=0; i<length; i++) {
-      result += charset[values[i] % charset.length];
-  }
-  return Promise.resolve(result);
+  return Promise.resolve(toBase64(window.crypto.getRandomValues(new Uint8Array(32))));
 }
 
 function Challenge() {

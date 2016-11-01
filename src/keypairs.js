@@ -1,3 +1,9 @@
+var bufferUtils = require('./buffer-utils');
+fromBase64 = bufferUtils.fromBase64;
+toBase64 = bufferUtils.toBase64;
+str2ab = bufferUtils.str2ab;
+ab2str = bufferUtils.ab2str;
+
 if (typeof window === 'undefined') {
   window = {
     atob: require('atob'),
@@ -12,30 +18,6 @@ if (typeof window === 'undefined') {
       },
     },
   };
-}
-
-function str2ba( binary_string ) {
-  var len = binary_string.length;
-  var bytes = new Uint8Array( len );
-  for (var i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-function fromBase64( base64 ) {
-  var binary_string =  window.atob(base64);
-  return str2ba(binary_string);
-}
-
-function toBase64( buffer ) {
-  var binary = '';
-  var bytes = new Uint8Array(buffer);
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode( bytes[ i ] );
-  }
-  return window.btoa( binary );
 }
 
 function exportPublicKey(key) {
@@ -55,7 +37,7 @@ function sign(keyObj, cleartext) {
         hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
       },
       keyObj.privateKey, //from generateKey or importKey above
-      str2ba(cleartext) //ArrayBuffer of data you want to sign
+      str2ab(cleartext) //ArrayBuffer of data you want to sign
       ).then(function(signature){
     return toBase64(signature);
   }).catch(function(err){

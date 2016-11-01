@@ -3,18 +3,11 @@ var keypairs = rewire('../../src/keypairs');
 var Challenge = rewire('../../src/challenges');
 var assert = require('assert');
 
-function ab2str(buf) {
-  return String.fromCharCode.apply(null, new Uint8Array(buf));
-}
-
-function str2ab(str) {
-  var buf = new ArrayBuffer(str.length);
-  var bufView = new Uint8Array(buf);
-  for (var i=0, strLen=str.length; i<strLen; i++) {
-    bufView[i] = str.charCodeAt(i);
-  }
-  return buf;
-}
+var bufferUtils = require('../../src/buffer-utils');
+fromBase64 = bufferUtils.fromBase64;
+toBase64 = bufferUtils.toBase64;
+str2ab = bufferUtils.str2ab;
+ab2str = bufferUtils.ab2str;
 
 // TOOD: spy on the mocked window.crypto methods
 // var sinon = require('sinon');
@@ -24,13 +17,20 @@ var WindowMock = {
   atob: require('atob'),
   btoa: require('btoa'),
   crypto: {
-    getRandomValues: function() {
-      var ret = str2ab(`bin:random-${counter++}`);
-      console.log('getRandomValues returns:', ab2str(ret));
-      return Promise.resolve(ret);
+    getRandomValues: function(bufView) {
+      var str = `bin:random-${counter++}`;
+      for (var i=0, strLen=str.length; i<strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+      }
+      console.log('random values filled', ab2str(bufView.buffer));
+      return bufView;
     },
     subtle: {
-      generateKey: function() {
+      generateKey: function(keytypeobj, extractable, purposes) {
+        assert.equal(keytypeobj.name, 'ECDSA');
+        assert.equal(keytypeobj.namedCurve, 'P-256');
+        assert.equal(extractable, false);
+        assert.deepEqual(purposes, ['sign', 'verify']);
         var keyNum = counter++;
         var ret = {
           privateKey: { priv: keyNum },
@@ -46,27 +46,36 @@ var WindowMock = {
         console.log('exportKey returns:', pubkeyobj, ab2str(ret));
         return Promise.resolve(ret);
       },
-      // pubkey will be of form str2ab(`bin:pub-from-key-obj:pub-i`)
-      importKey: function(format, pubkey) {
+      // pubkey will be of form str2ab(`ab-pubkey:i`)
+      importKey: function(format, pubkey, keytypeobj, extractable, purposes) {
         assert.equal(format, 'spki');
+        assert.equal(keytypeobj.name, 'ECDSA');
+        assert.equal(keytypeobj.namedCurve, 'P-256');
+        assert.equal(extractable, false);
+        assert.deepEqual(purposes, ['verify']);
         console.log('crypto.subtle importing key', ab2str(pubkey));
-        var ret = { privateKey: null, publicKey: pubkey };
-        console.log('importKey returns:', pubkey, ret);
+        var ret = { privateKey: null, publicKey: { pub: ab2str(pubkey) } };
+        console.log('importKey returns:', ab2str(pubkey), ret);
         return Promise.resolve(ret);
       },
       sign: function(algobj, privkeyobj, cleartext) {
         assert.equal(algobj.name, 'ECDSA');
         assert.equal(algobj.hash.name, 'SHA-256');
-        console.log('crypto.subtle.sign', privkeyobj, cleartext, typeof cleartext, ab2str(cleartext));
+        console.log('crypto.subtle.sign', privkeyobj, ab2str(cleartext));
         var ret = str2ab(`bin:signature-${privkeyobj.priv}-${ab2str(cleartext)}`);
-        console.log('sign returns:', privkeyobj, ab2str(cleartext), ret);
+        console.log('sign returns:', privkeyobj, ab2str(cleartext), ab2str(ret));
         return Promise.resolve(ret);
       },
-      verify: function(algobj, pubkeyObj, cleartext, signature) {
+      verify: function(algobj, pubkeyObj, signature, cleartext) {
+        console.log('verify', { algobj, pubkeyObj, cleartext2str: ab2str(cleartext), signature2str: ab2str(signature) });
         assert.equal(algobj.name, 'ECDSA');
         assert.equal(algobj.hash.name, 'SHA-256');
-        var keyobj = ab2str(pubkeyObj).substring('bin:pub-from-'.length);
-        var ret = (ab2str(signature) === `bin:signature-${keyobj}-${cleartext}`);
+        var keyNum = pubkeyObj.publicKey.pub.substring('ab:public-'.length);
+        var cleartextStr = ab2str(cleartext);
+        var targetStr = `bin:signature-${keyNum}-${cleartextStr}`;
+        var signatureStr = ab2str(fromBase64(signature));
+        console.log('comparing', { signatureStr, keyNum, cleartextStr, targetStr });
+        var ret = (signatureStr === targetStr);
         console.log('verify returns', pubkeyObj, ab2str(cleartext), ab2str(signature), ret);
         return Promise.resolve(ret);
       },
@@ -134,14 +143,17 @@ describe('Challenges', function() {
       console.log({ challenge });
       receiver.rememberChallenge(challenge);
     }).then(() => {
-      return receiver.verifySolution('asdf');
+console.log('here comes the test', sender, receiver);
+      return receiver.verifySolution(WindowMock.btoa('asdf'));
     }).then(verdictForWrongSolution => {
       console.log({ verdictForWrongSolution });
+      assert.equal(verdictForWrongSolution, false);
       return sender.solveChallenge();
     }).then(solution => {
       console.log({ solution });
       return receiver.verifySolution(solution);
     }).then(verdictForSenderSolution => {
+      assert.equal(verdictForSenderSolution, true);
       console.log({ verdictForSenderSolution });
     });
   });
