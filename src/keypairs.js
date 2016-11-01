@@ -1,11 +1,31 @@
-function fromBase64( base64 ) {
-  var binary_string =  window.atob(base64);
+if (typeof window === 'undefined') {
+  window = {
+    atob: require('atob'),
+    btoa: require('btoa'),
+    crypto: {
+      subtle: {
+        getRandomValues: function() { throw new Error('TODO: make this work in nodejs too'); },
+        generateKey: function() { throw new Error('TODO: make this work in nodejs too'); },
+        sign: function() { throw new Error('TODO: make this work in nodejs too'); },
+        verify: function() { throw new Error('TODO: make this work in nodejs too'); },
+        exportKey: function() { throw new Error('TODO: make this work in nodejs too'); },
+      },
+    },
+  };
+}
+
+function str2ba( binary_string ) {
   var len = binary_string.length;
   var bytes = new Uint8Array( len );
   for (var i = 0; i < len; i++) {
     bytes[i] = binary_string.charCodeAt(i);
   }
   return bytes.buffer;
+}
+
+function fromBase64( base64 ) {
+  var binary_string =  window.atob(base64);
+  return str2ba(binary_string);
 }
 
 function toBase64( buffer ) {
@@ -35,7 +55,7 @@ function sign(keyObj, cleartext) {
         hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
       },
       keyObj.privateKey, //from generateKey or importKey above
-      fromBase64(cleartext) //ArrayBuffer of data you want to sign
+      str2ba(cleartext) //ArrayBuffer of data you want to sign
       ).then(function(signature){
     return toBase64(signature);
   }).catch(function(err){
@@ -68,6 +88,7 @@ module.exports = {
     });
   },
   useKey: function(publicKeyBase64, cleartext) {
+ console.log('using key', publicKeyBase64, cleartext, keyStore);
     var keyObj = keyStore[publicKeyBase64];
     return sign(keyObj, cleartext);
   },

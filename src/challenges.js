@@ -1,5 +1,7 @@
 var keypairs = require('./keypairs');
 
+// TODO: find browserify modules for window.crypto.subtle so this also works in nodejs
+
 function fromBase64( base64 ) {
   var binary_string =  window.atob(base64);
   var len = binary_string.length;
@@ -22,6 +24,7 @@ function toBase64( buffer ) {
 
 function importPublicKey(base64) {
   var pubkey = fromBase64(base64);
+console.log('importPublicKey', { pubkey, base64 });
   return window.crypto.subtle.importKey(
       "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
       pubkey, //can be a publicKey or privateKey, as long as extractable was true
