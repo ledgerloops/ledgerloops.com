@@ -58,11 +58,11 @@ var keyStore = {};
 module.exports = {
   createKey: function() {
     return generateKeypair().then(newKey => {
-      return exportPublicKey(newKey).then(publicKeyBase64) => {
+      return exportPublicKey(newKey).then(publicKeyBase64 => {
         keyStore[publicKeyBase64] = keyObj;
         return publicKeyBase64;
-      }
-    }
+      });
+    });
   },
   useKey: function(publicKeyBase64, cleartext) {
     var keyObj = keyStore[publicKeyBase64];
