@@ -45,6 +45,7 @@ var shouldHaveKeypair = {
 };
 MockSignatures.prototype.haveKeypair = function(pubkey) { return !!shouldHaveKeypair[pubkey]; };
 MockSignatures.prototype.generateKeypair = function() { return 'mocked-pubkey'; };
+MockSignatures.prototype.sign = function() { return 'signature'; };
 SettlementEngine.__set__('Signatures', MockSignatures);
 Agent.__set__('SettlementEngine', SettlementEngine);
 

@@ -144,6 +144,10 @@ describe('SettlementEngine.generateReactions', function() {
           protocol: protocolVersions.ledger,
           msgType: 'initiate-update',
           transactionId: 'token-0',
+          debtor: 'myDebtor',
+          addedDebts: {
+            'USD': -0.05,
+          },
         })
       });
       assert.deepEqual(reactions[1], {
@@ -173,6 +177,10 @@ describe('SettlementEngine.generateReactions', function() {
           protocol: protocolVersions.ledger,
           msgType: 'initiate-update',
           transactionId: 'token-3',
+          debtor: 'myDebtor',
+          addedDebts: {
+            'USD': -0.05,
+          },
         })
       });
     });
@@ -264,6 +272,21 @@ describe('Settlement process', function() {
       }
     },
   }];
+  // in initiateNegotiation, a would have saved:
+  actors.a.engine._outstandingNegotiations['token-3'] = {
+    challenge: {
+      pubkey: 'fake',
+      cleartext: 'token-2',
+    },
+    transaction: {
+      id: 'token-3',
+      currency: 'USD',
+      amount: 0.05,
+    },
+  };
+  actors.a.engine._pubkeyCreatedFor.fake = 'token-3';
+  // TODO: use actual initiageNegotiation function here ^^^
+
   it('should find a settlement', function() {
     debug.log('Step 1:');
     // FIXME: this is a bit weird as it sets the keypairs for all agents at the same time:
@@ -365,7 +388,7 @@ describe('Settlement process', function() {
             msgType: 'satisfy-condition',
             protocol: protocolVersions.negotiation,
             solution: 'signature',
-            transactionId: 'token-2',
+            transactionId: 'token-1',
           },
           receiver: 'b',
           sender: 'c',
@@ -373,16 +396,20 @@ describe('Settlement process', function() {
       ]);
       debug.log('Step 5:');
       shouldHaveKeypairs = ['pub']; // a is now responding only to confirm-legder-update; setting this for b
-      return nextStep(actors, traffic5);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, [traffic5[1]]);
     }).then((traffic6) => {
+console.log('traffic6', traffic6);
       assert.deepEqual(traffic6, [
         {
           msgObj: {
             protocol: protocolVersions.ledger,
             msgType: 'initiate-update',
-            transactionId: 'token-2',
-            currency: 'USD',
-            amount: 0.05,
+            transactionId: 'token-1',
+            debtor: 'c',
+            addedDebts: {
+              'USD': -0.05,
+            },
           },
           receiver: 'c',
           sender: 'b',
@@ -392,7 +419,7 @@ describe('Settlement process', function() {
             msgType: 'satisfy-condition',
             protocol: protocolVersions.negotiation,
             solution: 'signature',
-            transactionId: 'token-2',
+            transactionId: 'token-3',
           },
           receiver: 'a',
           sender: 'b',
@@ -400,16 +427,19 @@ describe('Settlement process', function() {
       ]);
       debug.log('Step 6:');
       shouldHaveKeypairs = ['fake']; // c is now responding only to confirm-legder-update; setting this for a
-      return nextStep(actors, traffic6);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, [traffic6[1]]);
     }).then((traffic7) => {
       assert.deepEqual(traffic7, [
         {
           msgObj: {
             protocol: protocolVersions.ledger,
             msgType: 'initiate-update',
-            transactionId: 'token-2',
-            currency: 'USD',
-            amount: 0.05,
+            transactionId: 'token-3',
+            debtor: 'b',
+            addedDebts: {
+              'USD': -0.05,
+            },
           },
           receiver: 'b',
           sender: 'a',
@@ -417,7 +447,8 @@ describe('Settlement process', function() {
       ]);
       shouldHaveKeypairs = ['pub']; // setting this for b
       debug.log('Step 7:');
-      return nextStep(actors, traffic7);
+      // remove initiate-update message as it's not part of settlements:
+      return nextStep(actors, []);
     }).then((traffic8) => {
       assert.equal(traffic8.length, 0);
     });

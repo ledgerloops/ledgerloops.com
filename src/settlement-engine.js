@@ -12,6 +12,7 @@ function SettlementEngine() {
   this._outstandingNegotiations = {};
   this._fundingTransaction = {};
   this._fundedTransaction = {};
+  this._pubkeyCreatedFor = {};
 }
 
 // required fields in obj:
@@ -22,8 +23,20 @@ SettlementEngine.prototype.initiateNegotiation = function(obj) {
   obj.pubkey = this._signatures.generateKeypair();
   obj.cleartext = tokens.generateToken();
   obj.transactionId = tokens.generateToken();
+  // hack to make outgoing object same format as incoming object:
+  obj.challenge = {
+    cleartext: obj.cleartext,
+    pubkey: obj.pubkey,
+  };
+  obj.transaction = {
+    currency: obj.currency,
+    amount: obj.amount,
+  };
   // want to send this message to debtor ( = in-neighbor)
   this._outstandingNegotiations[obj.transactionId] = obj;
+  // will need this to link funding/funded transaction if this pubkey
+  // boomerangs:
+  this._pubkeyCreatedFor[obj.pubkey] = obj.transactionId;
   return Promise.resolve([
     { toNick: obj.inNeighborNick, msg: messages.conditionalPromise(obj) },
   ]);
@@ -71,11 +84,15 @@ console.log('initiating ledger update', msgObj.transactionId);
             { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
           ]);
         } else {
-          console.log('looking for funding transaction', msgObj, 'funding transactionId is', this._fundingTransaction, this._fundingTransaction[msgObj.transactionId], 'obj for that is', this._outstandingNegotiations, this._outstandingNegotiations[this._fundingTransaction[msgObj.transactionId]]);
+          console.log('looking for funding transaction', msgObj, 'funding transactionId is', this._fundingTransaction, this._fundingTransaction[msgObj.transactionId]);
+          var mySatisfyConditionObj = {
+            transactionId: this._fundingTransaction[msgObj.transactionId],
+            solution: msgObj.solution,
+          };
 console.log('initiating ledger update', ledgerUpdateObj);
           resolve([
             { to: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
-            { to: creditorNick, msg: messages.satisfyCondition(this._outstandingNegotiations[this._fundingTransaction[msgObj.transactionId]]) },
+            { to: creditorNick, msg: messages.satisfyCondition(mySatisfyConditionObj) },
           ]);
         }
         break;
@@ -86,11 +103,18 @@ console.log('initiating ledger update', ledgerUpdateObj);
       switch(msgObj.msgType) {
       case 'conditional-promise':
         // First of all, store it:
-        // TODO: prefix transaction id's with id of neighbor who generated that id, to avoid clashes across namespaces.
+        // TODO: prefix transaction ids with id of neighbor who generated that id, to avoid clashes across namespaces.
         this._outstandingNegotiations[msgObj.transaction.id] = msgObj;
         debug.log('conditional-promise from creditor', msgObj);
         if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are the initiator
           debug.log('pubkey is mine');
+console.log('linking', this._pubkeyCreatedFor);
+          this._fundedTransaction[msgObj.transaction.id] =
+              this._pubkeyCreatedFor[msgObj.challenge.pubkey];
+          this._fundingTransaction[
+              this._pubkeyCreatedFor[msgObj.challenge.pubkey]] =
+              msgObj.transaction.id;
+
           msgObj.solution = this._signatures.sign(msgObj.challenge.cleartext, msgObj.challenge.pubkey);
           msgObj.transactionId = msgObj.transaction.id;
           this._outstandingNegotiations[msgObj.transaction.id] = 'can-still-reject';
@@ -148,11 +172,6 @@ console.log('initiating ledger update', ledgerUpdateObj);
             { to: debtorNick, msg: messages.pleaseReject(msgObj) },
           ]);
         }
-        break;
-      case 'confirm-ledger-update':
-        // TODO: encode ledger update into reactions returned here
-        delete this._outstandingNegotiations[msgObj.transactionId];
-        resolve([]);
         break;
       default:
         reject(new Error(`unknown msgType to creditor: ${msgObj.msgType}`));
