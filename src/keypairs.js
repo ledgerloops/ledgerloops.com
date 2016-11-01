@@ -60,9 +60,9 @@ var keyStore = {};
 
 module.exports = {
   createKey: function() {
-    return generateKeypair().then(newKey => {
-      return exportPublicKey(newKey).then(publicKeyBase64 => {
-        keyStore[publicKeyBase64] = keyObj;
+    return generateKeypair().then(newKeyObj => {
+      return exportPublicKey(newKeyObj).then(publicKeyBase64 => {
+        keyStore[publicKeyBase64] = newKeyObj;
         return publicKeyBase64;
       });
     });
