@@ -57,6 +57,28 @@ describe('three agents', function() {
       assert.equal(agents.alice._search._awake, true);
       assert.equal(agents.bob._search._awake, true);
       assert.equal(agents.charlie._search._awake, true);
+      return agents.alice._probeTimerHandler();
+    }).then(() => {
+      return agents.bob._probeTimerHandler();
+    }).then(() => {
+      return agents.charlie._probeTimerHandler();
+    }).then(() => {
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'alice', 'bob', 'probe' ],
+        [ 'bob', 'charlie', 'probe' ],
+        [ 'charlie', 'alice', 'probe' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'bob', 'charlie', 'probe' ],
+        [ 'charlie', 'alice', 'probe' ],
+        [ 'alice', 'bob', 'probe' ],
+      ]);
       return messaging.flush();
     });
   });

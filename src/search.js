@@ -107,7 +107,6 @@ if (!respondingToExistingAgent) {
 }
     if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
       if (!this._awake) {
-debug.setLevel(true);
         // Wake up, guys!
         debug.log('waking up!');
         this._awake = true;
