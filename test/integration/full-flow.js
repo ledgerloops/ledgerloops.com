@@ -38,39 +38,25 @@ describe('three agents', function() {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'bob', 'alice', 'confirm-update' ],
-        [ 'bob', 'alice', 'update-status', false ],
         [ 'charlie', 'bob', 'confirm-update' ],
-        [ 'charlie', 'bob', 'update-status', false ],
         [ 'alice', 'charlie', 'confirm-update' ],
-        [ 'alice', 'charlie', 'update-status', false ],
       ]);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
-        [ 'alice', 'charlie', 'update-status' ],
-        [ 'alice', 'charlie', 'update-status' ],
-        [ 'bob', 'alice', 'update-status' ],
-        [ 'bob', 'alice', 'update-status' ],
-        [ 'charlie', 'bob', 'update-status' ],
-        [ 'charlie', 'bob', 'update-status' ],
-      ]);
-      return messaging.flush();
-    }).then(traffic => {
-      console.log(messageTypes(traffic));
-      assert.deepEqual(messageTypes(traffic), [
-        [ 'charlie', 'bob', 'update-status' ],
-        [ 'charlie', 'bob', 'update-status' ],
-        [ 'alice', 'charlie', 'update-status' ],
-        [ 'alice', 'charlie', 'update-status' ],
-        [ 'bob', 'alice', 'update-status' ],
-        [ 'bob', 'alice', 'update-status' ],
+        [ 'alice', 'charlie', 'update-status', true ],
+        [ 'bob', 'alice', 'update-status', true ],
+        [ 'charlie', 'bob', 'update-status', true ],
       ]);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
       ]);
+      assert.equal(agents.alice._search._awake, true);
+      assert.equal(agents.bob._search._awake, true);
+      assert.equal(agents.charlie._search._awake, true);
       return messaging.flush();
     });
   });
