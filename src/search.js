@@ -35,7 +35,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: false,
      };
-     return this._handleNeighborStateChange('out', 'awake', false);
+     return this._handleNeighborStateChange('out', 'new', false);
      // break;
 
    case neighborChangeConstants.CREDITOR_REMOVED:
@@ -47,7 +47,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: false,
      };
-     return this._handleNeighborStateChange('in', 'awake', false);
+     return this._handleNeighborStateChange('in', 'new', false);
      // break;
 
    case neighborChangeConstants.DEBTOR_REMOVED:
@@ -62,7 +62,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: false,
      };
-     return responses.concat(this._handleNeighborStateChange('out', 'awake', false));
+     return responses.concat(this._handleNeighborStateChange('out', 'new', false));
      // break;
 
    case neighborChangeConstants.CREDITOR_TO_DEBTOR:
@@ -72,7 +72,7 @@ Search.prototype.onNeighborChange = function(neighborChange) {
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
        awake: false,
      };
-     return responses.concat(this._handleNeighborStateChange('in', 'awake', false));
+     return responses.concat(this._handleNeighborStateChange('in', 'new', false));
      // break;
    }
 };
@@ -99,12 +99,17 @@ Search.prototype._haveAwakeNeighbors = function(direction) {
 // If the last neighbor in a direction is removed and you were awake, go to sleep and sleep neighbors in remaining direction
 // If you get a wake-up message, mark that neighbor awake, wake up, and forward the msg
 // If you get a sleep message, mark that neighbor asleep, and if all neighbors in that dir now sleep, go to sleep, and forward the msg
-Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState, respondingToExistingAgent) {
+Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState) {
   debug.log('handleNeighborStateChange', { neighborDirection, newNeighborState });
+  if (newNeighborState === 'new') {
+    if(!this._haveNeighbors(OPPOSITE[neighborDirection])) {
+      // dead-end notification:
+      debug.log('staying asleep, I\'m a dead-end!', this._neighbors);
+      debug.log(`Putting to sleep ${neighborDirection}-neighbors:`);
+      return this._updateNeighbors(neighborDirection, GO_TO_SLEEP);
+    }
+  }
   if (newNeighborState === 'awake') {
-if (!respondingToExistingAgent) {
-  console.log('neighbor added', neighborDirection, this._haveNeighbors(neighborDirection), this._haveNeighbors(OPPOSITE[neighborDirection]), this._awake);
-}
     if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
       if (!this._awake) {
         // Wake up, guys!
@@ -117,11 +122,6 @@ if (!respondingToExistingAgent) {
         debug.log('was already awake!');
         return [];
       }
-    } else if (respondingToExistingAgent) {
-      // dead-end notification:
-      debug.log('staying asleep, I\'m a dead-end!', this._neighbors);
-      debug.log(`Putting to sleep ${neighborDirection}-neighbors:`);
-      return this._updateNeighbors(neighborDirection, GO_TO_SLEEP);
     }
   }
   if (newNeighborState === 'asleep' && !this._haveAwakeNeighbors(neighborDirection)) {
@@ -189,6 +189,7 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
 };
 
 Search.prototype.getActiveNeighbors = function() {
+console.log('getting active neighbors', this._neighbors);
   var ret = {};
   ['in', 'out'].map(direction => {
     ret[direction] = [];

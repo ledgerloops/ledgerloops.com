@@ -66,6 +66,7 @@ Agent.prototype._handleProbeEngineOutput = function (output) {
 
 Agent.prototype._probeTimerHandler = function() {
   var activeNeighbors = this._search.getActiveNeighbors();
+console.log(activeNeighbors);
   return this._probeEngine.maybeSendProbes(activeNeighbors).then(output => {
     if (output.length) {
       debug.log(`${this._myNick} initiates probes:`, activeNeighbors, this._ledgers, this._search, output);
@@ -75,18 +76,23 @@ Agent.prototype._probeTimerHandler = function() {
 };
 
 Agent.prototype._ensurePeer = function(peerNick) {
+  console.log('ensurePeer', this._myNick, peerNick);
   if (typeof this._ledgers[peerNick] === 'undefined') {
     this._ledgers[peerNick] = new Ledger(peerNick, this._myNick);
   }
 };
 
-Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
+Agent.prototype.sendIOU = function(creditorNick, amount, currency, waitForConfirmation) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
-  messaging.send(this._myNick, creditorNick, messages.ledgerUpdateInitiate(debt));
-  return new Promise((resolve, reject) => {
-    this._sentIOUs[debt.transactionId] = { resolve, reject };
-  });
+  if (waitForConfirmation) {
+    return new Promise((resolve, reject) => {
+     this._sentIOUs[debt.transactionId] = { resolve, reject };
+    });
+  } else {
+    this._sentIOUs[debt.transactionId] = { resolve: function() {}, reject: function(err) { throw err; } };
+    return messaging.send(this._myNick, creditorNick, messages.ledgerUpdateInitiate(debt));
+  }
 };
 
 Agent.prototype._sendMessages = function(reactions) {
@@ -99,6 +105,7 @@ Agent.prototype._sendMessages = function(reactions) {
 
 Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
   var neighborChanges;
+  console.log('handleMessage', fromNick, this._myNick, incomingMsgObj);
   switch(incomingMsgObj.msgType) {
 
   case 'initiate-update':
@@ -107,11 +114,12 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
+console.log('neighborChanges from initiate-update', neighborChanges);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.ledgerUpdateConfirm(debt),
     }]).then(() => {
-      debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
+      console.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
       return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
         var promises = [];
         for (var i=0; i<results.length; i++) {
@@ -122,9 +130,11 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
         return Promise.all(promises);
       });
     });
+    console.log('running into break!');
     // break;
 
   case 'confirm-update':
+    console.log('confirm-update received from', fromNick, this._ledgers);
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
     debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
     return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
