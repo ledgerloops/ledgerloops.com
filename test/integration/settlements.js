@@ -4,7 +4,7 @@ var SettlementEngine = rewire('../../src/settlement-engine');
 var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
-var sinon = require('sinon');
+// var sinon = require('sinon');
 var stringify = require('canonical-json');
 
 debug.setLevel(true);

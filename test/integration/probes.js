@@ -7,7 +7,7 @@ var messaging = require('../../src/messaging');
 var protocolVersions = require('../../src/messages').protocolVersions;
 var debug = require('../../src/debug');
 var assert = require('assert');
-var sinon = require('sinon');
+// var sinon = require('sinon');
 var stringify = require('canonical-json');
 
 debug.setLevel(false);
