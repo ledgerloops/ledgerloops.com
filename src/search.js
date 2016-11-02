@@ -114,7 +114,7 @@ Search.prototype._haveAwakeNeighbors = function(direction, currency) {
 Search.prototype._haveInactiveNeighbors = function(direction, currency) {
   for (var neighborId in this._neighbors[direction]) {
     var vals = JSON.parse(neighborId);
-    if (vals[1] === currency && this._neighbors[direction][neighborId].myPingPending === false) {
+    if (vals[1] === currency && this._neighbors[direction][neighborId].myPingPending !== true) {
       return true;
     }
   }
