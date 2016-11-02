@@ -10,7 +10,7 @@ ProbeEngine.prototype.getPeerPair = function(obj) {
   if (typeof this._probeTrees[obj.treeToken] === 'undefined') {
     return null;
   }
-  return this._probeTrees[obj.treeToken].getPeerPair(obj.pathToken);
+  return this._probeTrees[obj.treeToken].getPeerPair(obj.pathToken, obj.inNeighborNick);
 };
 
 
@@ -48,6 +48,7 @@ function listOutNeighborNicks(currency, neighbors) {
 
 // TODO: make this method shorter, maybe moving some functionality to ProbeTree class.
 ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
+console.log('ProbeEngine.prototype.handleIncomingProbe = function(', fromNick, incomingMsgObj, activeNeighbors);
   // FIXME: what's the nice way to declare variables that are used locally in two places in the same function?
   var peerPair;
   if (this._isNeighbor('in', fromNick, incomingMsgObj.currency, activeNeighbors)) {
@@ -138,6 +139,7 @@ console.log('backtraking probe from ${fromNick} since have no outNeighbors!', ac
     } else { // next sibling
       incomingMsgObj.pathToken = newPathToken;
       incomingMsgObj.outNeighborNick = nextOutNeighborNick;
+ console.log('next sibling', incomingMsgObj);
     }
     return Promise.resolve({
       forwardMessages: [ incomingMsgObj ],

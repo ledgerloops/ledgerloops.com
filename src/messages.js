@@ -115,6 +115,12 @@ module.exports = {
       msgType: 'satisfy-condition',
       transactionId: obj.transactionId,
       solution: obj.solution,
+      // TODO: get rid of routing info in this message type, transactionId should be enough for agents.
+      routing: {
+        protocol: routingProtocolVersion,
+        treeToken: obj.treeToken,
+        pathToken: obj.pathToken,
+      },
     });
   },
 };

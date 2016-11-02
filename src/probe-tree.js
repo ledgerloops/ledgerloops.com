@@ -1,6 +1,7 @@
 function ProbeTree(treeToken, inNeighborNick, outNeighborNicks, currency) {
   this._treeToken = treeToken;
   this._inNeighborNick = inNeighborNick;
+  this._createArgs = arguments;// for debugging
   this._currency = currency;
   this._pathTokens = {};
   for (var i=0; i<outNeighborNicks.length; i++) {
@@ -80,7 +81,15 @@ ProbeTree.prototype.guessOutNeighbor = function(pathToken) {
   }
 };
 
-ProbeTree.prototype.getPeerPair = function(pathToken) {
+ProbeTree.prototype.getPeerPair = function(pathToken, newInNeighborNick) {
+  if (typeof this._inNeighborNick === 'undefined') {
+console.log('setting inNeighborNick, this ProbeTree was created here and didnt have one', newInNeighborNick);
+    this._inNeighborNick = newInNeighborNick;
+  }
+  if (typeof this._inNeighborNick === 'undefined') {
+    console.log(this);
+    throw new Error('cannot ask me for a peer pair if I have no in-neighbor!');
+  }
   if (this._backtracked === pathToken) {
     return {
       inNeighborNick: this._inNeighborNick,
@@ -88,14 +97,16 @@ ProbeTree.prototype.getPeerPair = function(pathToken) {
       weBacktrackedThisPathToken: true,
     };
   }
+console.log('looking at pathTokens for outNeighborNick', this._pathTokens, pathToken);
   for (var outNeighborNick in this._pathTokens) {
     if (this._pathTokens[outNeighborNick] === pathToken) {
       return {
-        inNeighborNick: this._inNeighbor,
+        inNeighborNick: this._inNeighborNick,
         outNeighborNick,
       };
     }
   }
+  throw new Error('Cannot ask me for a peerpair if I havent routed this pathToken to any out-neighbor before!');
 };
 
 ProbeTree.prototype.getProbeObj = function(outNeighborNick) {
