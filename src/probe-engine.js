@@ -54,6 +54,7 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
     if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') { // unknown treeToken
       var outNeighborNicks = listOutNeighborNicks(incomingMsgObj.currency, activeNeighbors);
       if (outNeighborNicks.length === 0) {
+console.log('backtraking probe from ${fromNick} since have no outNeighbors!', activeNeighbors);
         // backtrack immediately
         incomingMsgObj.outNeighborNick = fromNick;
         return Promise.resolve({
@@ -165,7 +166,6 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
       currenciesThrough[neighbors.out[i].currency] = true;
     }
   }
-
   var probesToSend = [];
   for (var currency in currenciesThrough) {
     if (!this._haveProbeFor(currency)) {
@@ -179,6 +179,7 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
       probesToSend.push(this._probeTrees[treeToken].getProbeObj(firstOutNeighborNick));
     }
   }
+console.log({currenciesThrough}, probesToSend);
   return Promise.resolve({
     forwardMessages: probesToSend,
     cycleFound: null,

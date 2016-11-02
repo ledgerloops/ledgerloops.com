@@ -32,8 +32,8 @@ Search.prototype.onNeighborChange = function(neighborChange) {
   switch (neighborChange.change) {
    case neighborChangeConstants.CREDITOR_CREATED:
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       lastSentValue: null,
-       lastRcvdValue: null,
+       myPingPending: null,
+       theirPingPending: null,
      };
      return this._updateNeighbors('in', true);
      // break;
@@ -48,8 +48,8 @@ Search.prototype.onNeighborChange = function(neighborChange) {
 
    case neighborChangeConstants.DEBTOR_CREATED:
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       lastSentValue: null,
-       lastRcvdValue: null,
+       myPingPending: null,
+       theirPingPending: null,
      };
 console.log('debtor/in-neighbor created', neighborChange, 'updating outneighbors');
      return this._updateNeighbors('out', true);
@@ -66,8 +66,8 @@ console.log('debtor/in-neighbor created', neighborChange, 'updating outneighbors
    case neighborChangeConstants.DEBTOR_TO_CREDITOR:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       lastSentValue: null,
-       lastRcvdValue: null,
+       myPingPending: null,
+       theirPingPending: null,
      };
      if (this._haveNeighbors('in')) { // it was not your last debtor
        // and you just got a new creditor
@@ -79,8 +79,8 @@ console.log('debtor/in-neighbor created', neighborChange, 'updating outneighbors
    case neighborChangeConstants.CREDITOR_TO_DEBTOR:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       lastSentValue: null,
-       lastRcvdValue: null,
+       myPingPending: null,
+       theirPingPending: null,
      };
      if (this._haveNeighbors('out')) { // it was not your last creditor
        // and you just got a new debtor
@@ -104,7 +104,7 @@ Search.prototype._haveNeighbors = function(direction, currency) {
 Search.prototype._haveAwakeNeighbors = function(direction, currency) {
   for (var neighborId in this._neighbors[direction]) {
     var vals = JSON.parse(neighborId);
-    if (vals[1] === currency && this._neighbors[direction][neighborId].lastRcvdValue === true) {
+    if (vals[1] === currency && this._neighbors[direction][neighborId].theirPingPending === true) {
       return true;
     }
   }
@@ -112,12 +112,20 @@ Search.prototype._haveAwakeNeighbors = function(direction, currency) {
 };
 
 Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState, neighborNick, currency) {
-  if (newNeighborState === false && this._haveAwakeNeighbors(neighborDirection, currency)) {
-    // still have other awake neighbors in that direction
-    return [];
+  var neighborId = JSON.stringify([neighborNick, currency]);
+  if (newNeighborState === false) {
+    // consider this message as the rejection of any pings you sent earlier:
+    this._neighbors[neighborDirection][neighborId].myPingPending = false;
+console.log('canceled my pending ping!', this._neighbors);
+//exit();
+    if (this._haveAwakeNeighbors(neighborDirection, currency)) {
+      // still have other awake neighbors in that direction, so not canceling their pending pings yet
+      return [];
+    }
   }
   if (newNeighborState === true && !this._haveNeighbors(OPPOSITE[neighborDirection], currency)) {
-    // I'm a dead-end
+    // I'm a dead-end, cancel their pending ping:
+    this._neighbors[neighborDirection][neighborId].theirPingPending = false;
     return [{
       peerNick: neighborNick,
       currency,
@@ -130,7 +138,7 @@ Search.prototype._handleNeighborStateChange = function(neighborDirection, newNei
 Search.prototype._updateNeighbors = function(messageDirection, value) {
   var messages = [];
   for (var neighborId in this._neighbors[messageDirection]) {
-    if (this._neighbors[messageDirection][neighborId].lastSentValue !== value) { // FIXME: careful here, lastSentValue could be null or false/true
+    if (this._neighbors[messageDirection][neighborId].myPingPending !== value) { // FIXME: careful here, myPingPending could be null or false/true
       var vals = JSON.parse(neighborId);
       console.log('found a neighbor to update', { vals, value }, this._neighbors[messageDirection]);
       messages.push({
@@ -138,7 +146,7 @@ Search.prototype._updateNeighbors = function(messageDirection, value) {
         currency: vals[1],
         value,
       });
-      this._neighbors[messageDirection][neighborId].lastSentValue = value;
+      this._neighbors[messageDirection][neighborId].myPingPending = value;
 } else {
 console.log(neighborId, 'knows already', messageDirection, value, this._neighbors);
     }
@@ -158,8 +166,8 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return Promise.resolve([]);
   }
-  debug.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
-  this._neighbors[neighborDirection][neighborId].lastRcvdValue = value;
+  console.log(`REACTING TO STATUS MESSAGE FROM ${neighborNick}, value: ${value}`, this._neighbors);
+  this._neighbors[neighborDirection][neighborId].theirPingPending = value;
   return this._handleNeighborStateChange(neighborDirection, value, neighborNick, currency);
 };
 
@@ -169,7 +177,7 @@ console.log('getting active neighbors', this._neighbors);
   ['in', 'out'].map(direction => {
     ret[direction] = [];
     for (var neighborId in this._neighbors[direction]) {
-      if (this._neighbors[direction][neighborId].awake) {
+      if (this._neighbors[direction][neighborId].theirPingPending === true) {
         var vals = JSON.parse(neighborId);
         ret[direction].push({
           peerNick: vals[0],
