@@ -64,7 +64,6 @@ Agent.prototype._handleProbeEngineOutput = function (output) {
   return this._handleCycle(output.cycleFound).then(() => {
     return Promise.all(output.forwardMessages.map(probeMsgObj => {
       if (typeof probeMsgObj.outNeighborNick === 'undefined') {
-        console.log(probeMsgObj);
         throw new Error('where should this message go to?');
       }
       return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
@@ -102,7 +101,6 @@ Agent.prototype.sendIOU = function(creditorNick, amount, currency, waitForConfir
 };
 
 Agent.prototype._sendMessages = function(reactions) {
-console.log(`Agent ${this._myNick} sends messages:`, reactions);
   var promises = [];
   for (var i=0; i<reactions.length; i++) {
     promises.push(messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg));
@@ -172,8 +170,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   default: // msgType is related to settlements:
-  console.log([ 'probe', 'initiate-update', 'confirm-update', 'update-status', 'probe', ], incomingMsgObj.msgType, 'must be settlements! :)');
-console.log('routing negotiation message based on its routing info:', incomingMsgObj.routing);
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;

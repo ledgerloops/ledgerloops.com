@@ -52,12 +52,6 @@ Challenge.prototype.fromScratch = function() {
     return createCleartext();
   }).then(cleartext => {
     this._cleartext = cleartext;
-    console.log('fromScratch return', {
-      name: "ECDSA",
-      namedCurve: "P-256", //can be "P-256", "P-384", or "P-521"
-      pubkey: this._publicKeyBase64,
-      cleartext: this._cleartext,
-    });
     return {
       name: "ECDSA",
       namedCurve: "P-256", //can be "P-256", "P-384", or "P-521"
@@ -68,7 +62,6 @@ Challenge.prototype.fromScratch = function() {
 };
 
 Challenge.prototype.fromData = function(obj) {
-console.log('fromData', obj);
   this._publicKeyBase64 = obj.pubkey;
   this._cleartext = obj.cleartext;
   this._havePrivateKey = false;

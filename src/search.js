@@ -55,7 +55,6 @@ Search.prototype.onNeighborChange = function(neighborChange) {
        myPingPending: null,
        theirPingPending: null,
      };
-console.log('debtor/in-neighbor created', neighborChange, 'updating outneighbors');
      return this._updateNeighbors('out', true);
      // break;
 
@@ -130,8 +129,6 @@ Search.prototype._handleNeighborStateChange = function(neighborDirection, newNei
   if (newNeighborState === false) {
     // consider this message as the rejection of any pings you sent earlier:
     this._neighbors[neighborDirection][neighborId].myPingPending = false;
-console.log('canceled my pending ping!', this._neighbors);
-//exit();
     if (this._haveAwakeNeighbors(neighborDirection, currency)) {
       // still have other awake neighbors in that direction, so not canceling their pending pings yet
       return [];
@@ -167,18 +164,14 @@ Search.prototype._updateNeighbors = function(messageDirection, value) {
   for (var neighborId in this._neighbors[messageDirection]) {
     if (this._neighbors[messageDirection][neighborId].myPingPending !== value) { // FIXME: careful here, myPingPending could be null or false/true
       var vals = JSON.parse(neighborId);
-      console.log('found a neighbor to update', { vals, value }, this._neighbors[messageDirection]);
       messages.push({
         peerNick: vals[0],
         currency: vals[1],
         value,
       });
       this._neighbors[messageDirection][neighborId].myPingPending = value;
-} else {
-console.log(neighborId, 'knows already', messageDirection, value, this._neighbors);
     }
   }
-  console.log('messages from _updateNeighbors', { messageDirection, value, messages });
   return messages;
 };
 
@@ -193,7 +186,6 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value, isRep
     debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return Promise.resolve([]);
   }
-  console.log(`REACTING TO STATUS MESSAGE FROM ${neighborNick}, value: ${value}`, this._neighbors);
   if (isReply) {
     this._neighbors[neighborDirection][neighborId].myPingPending = value;
   } else {
@@ -203,7 +195,6 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value, isRep
 };
 
 Search.prototype.getActiveNeighbors = function() {
-console.log('getting active neighbors', this._neighbors);
   var ret = {};
   ['in', 'out'].map(direction => {
     ret[direction] = [];

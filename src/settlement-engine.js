@@ -39,7 +39,6 @@ SettlementEngine.prototype.initiateNegotiation = function(obj) {
     // will need this to link funding/funded transaction if this pubkey
     // boomerangs:
     this._pubkeyCreatedFor[obj.pubkey] = obj.transactionId;
-  console.log('initiating negotiation, from obj:', obj);
     this._recordPendingDebt(obj.inNeighborNick, obj); // obj should have transactionId, amount, currency
     return Promise.resolve([
       { toNick: obj.inNeighborNick, msg: messages.conditionalPromise(obj) },
@@ -77,7 +76,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           resolve([]);
           return;
         }
-console.log(pendingNegotiation);
         this._signatures.verify(
             pendingNegotiation.challenge.cleartext, 
             pendingNegotiation.challenge.pubkey,
@@ -124,14 +122,12 @@ console.log(pendingNegotiation);
         this._outstandingNegotiations[msgObj.transaction.id] = msgObj;
         debug.log('conditional-promise from creditor', msgObj);
         if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are the initiator
-console.log('have keypair', this._signatures, msgObj);
           debug.log('pubkey is mine');
           this._fundedTransaction[msgObj.transaction.id] =
               this._pubkeyCreatedFor[msgObj.challenge.pubkey];
           this._fundingTransaction[
               this._pubkeyCreatedFor[msgObj.challenge.pubkey]] =
               msgObj.transaction.id;
-console.log('I think I can solve this!', msgObj, this._signatures._challenges);
           this._signatures.solve(msgObj.challenge.pubkey).then(solution => {
             msgObj.solution = solution;
             msgObj.transactionId = msgObj.transaction.id;
@@ -151,7 +147,6 @@ console.log('I think I can solve this!', msgObj, this._signatures._challenges);
             }, FORWARDING_TIMEOUT);
           });
         } else { // you are B
-console.log('not have keypair', this._signatures, msgObj);
           // reuse challenge from incoming message:
           var newMsgObj = {
              pubkey: msgObj.challenge.pubkey,
@@ -175,7 +170,6 @@ console.log('not have keypair', this._signatures, msgObj);
               resolve([]);
             } else {
               // FIXME: messy way to get data fields in the right structure:
-console.log('forwarding negotiation, from obj:', newMsgObj);
               this._recordPendingDebt(debtorNick, newMsgObj); // obj should have transactionId, amount, currency
               this._outstandingNegotiations[newMsgObj.transactionId] = JSON.parse(messages.conditionalPromise(newMsgObj));
               resolve([

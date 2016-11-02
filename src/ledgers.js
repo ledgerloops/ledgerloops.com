@@ -122,7 +122,6 @@ Ledger.prototype.createPendingSettlement = function(transactionId, amount, curre
 };
 
 Ledger.prototype.markIOUConfirmed = function(transactionId) {
-console.log('looking in pending debts', transactionId, this._pendingDebts);
   var debt = this._pendingDebts[transactionId];
   return this.addDebt(debt);
 };
