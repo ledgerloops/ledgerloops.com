@@ -157,7 +157,7 @@ console.log('sending!', results[i][j]);
 
   case 'update-status':
     console.log(`${this._myNick} handles a DCDD message from ${fromNick}:`, incomingMsgObj);
-    var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
+    var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value, incomingMsgObj.isReply);
     var promises = [];
     for (var i=0; i<results.length; i++) {
       promises.push(messaging.send(this._myNick, results[i].peerNick, messages.ddcd(results[i])));

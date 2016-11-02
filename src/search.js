@@ -111,7 +111,17 @@ Search.prototype._haveAwakeNeighbors = function(direction, currency) {
   return false;
 };
 
-Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState, neighborNick, currency) {
+Search.prototype._haveInactiveNeighbors = function(direction, currency) {
+  for (var neighborId in this._neighbors[direction]) {
+    var vals = JSON.parse(neighborId);
+    if (vals[1] === currency && this._neighbors[direction][neighborId].myPingPending === false) {
+      return true;
+    }
+  }
+  return false;
+};
+
+Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState, neighborNick, currency, isReply) {
   var neighborId = JSON.stringify([neighborNick, currency]);
   if (newNeighborState === false) {
     // consider this message as the rejection of any pings you sent earlier:
@@ -130,6 +140,19 @@ console.log('canceled my pending ping!', this._neighbors);
       peerNick: neighborNick,
       currency,
       value: false,
+      isReply: true,
+    }];
+  }
+  // initiate positive reply to outgoing ping, but not don't reply to replies:
+  if (newNeighborState === true && !this._haveInactiveNeighbors(OPPOSITE[neighborDirection], currency) && !isReply) {
+    // I have nowhere to forward their ping to, not because I'm a dead-end, but because I already sent a ping myself which masks theirs:
+    // This is necessary for the race test in test/integration/full-flow.js
+    this._neighbors[neighborDirection][neighborId].theirPingPending = true;
+    return [{
+      peerNick: neighborNick,
+      currency,
+      value: true,
+      isReply: true,
     }];
   }
   return this._updateNeighbors(OPPOSITE[neighborDirection], newNeighborState);
@@ -155,7 +178,7 @@ console.log(neighborId, 'knows already', messageDirection, value, this._neighbor
   return messages;
 };
 
-Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
+Search.prototype.onStatusMessage = function(neighborNick, currency, value, isReply) {
   var neighborDirection;
   var neighborId = JSON.stringify([neighborNick, currency]);
   if (typeof this._neighbors['in'][neighborId] !== 'undefined') {
@@ -167,8 +190,12 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     return Promise.resolve([]);
   }
   console.log(`REACTING TO STATUS MESSAGE FROM ${neighborNick}, value: ${value}`, this._neighbors);
-  this._neighbors[neighborDirection][neighborId].theirPingPending = value;
-  return this._handleNeighborStateChange(neighborDirection, value, neighborNick, currency);
+  if (isReply) {
+    this._neighbors[neighborDirection][neighborId].myPingPending = value;
+  } else {
+    this._neighbors[neighborDirection][neighborId].theirPingPending = value;
+  }
+  return this._handleNeighborStateChange(neighborDirection, value, neighborNick, currency, isReply);
 };
 
 Search.prototype.getActiveNeighbors = function() {

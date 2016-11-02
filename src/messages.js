@@ -46,6 +46,7 @@ module.exports = {
       msgType: 'update-status',
       currency: obj.currency,
       value: obj.value,
+      isReply: !!obj.isReply,
     });
   },
   probe: function(obj) {
