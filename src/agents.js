@@ -27,7 +27,7 @@ const SETTLEMENT_AMOUNT = { // lower values make it more likely a loop is found,
 };
 
 function Agent(myNick) {
-  this._settlementEngine = new SettlementEngine();
+  this._settlementEngine = new SettlementEngine((peerNick, obj) => { this._createPendingSettlement(peerNick, obj); });
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
   this._probeTimer = setInterval(() => { this._probeTimerHandler(); }, PROBE_INTERVAL);
@@ -38,6 +38,10 @@ function Agent(myNick) {
     return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
+
+Agent.prototype._createPendingSettlement = function(peerNick, obj) {
+  this._ledgers[peerNick].createPendingSettlement(obj.transactionId, obj.amount, obj.currency);
+};
 
 Agent.prototype._handleCycle = function(cycleObj) {
   if (cycleObj === null) {
@@ -59,7 +63,11 @@ Agent.prototype._handleCycle = function(cycleObj) {
 Agent.prototype._handleProbeEngineOutput = function (output) {
   return this._handleCycle(output.cycleFound).then(() => {
     return Promise.all(output.forwardMessages.map(probeMsgObj => {
-    return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
+      if (typeof probeMsgObj.outNeighborNick === 'undefined') {
+        console.log(probeMsgObj);
+        throw new Error('where should this message go to?');
+      }
+      return messaging.send(this._myNick, probeMsgObj.outNeighborNick, messages.probe(probeMsgObj));
     }));
   });
 };
@@ -80,16 +88,21 @@ Agent.prototype._ensurePeer = function(peerNick) {
   }
 };
 
-Agent.prototype.sendIOU = function(creditorNick, amount, currency) {
+Agent.prototype.sendIOU = function(creditorNick, amount, currency, waitForConfirmation) {
   this._ensurePeer(creditorNick);
   var debt = this._ledgers[creditorNick].createIOU(amount, currency);
-  messaging.send(this._myNick, creditorNick, messages.ledgerUpdateInitiate(debt));
-  return new Promise((resolve, reject) => {
-    this._sentIOUs[debt.transactionId] = { resolve, reject };
-  });
+  if (waitForConfirmation) {
+    return new Promise((resolve, reject) => {
+     this._sentIOUs[debt.transactionId] = { resolve, reject };
+    });
+  } else {
+    this._sentIOUs[debt.transactionId] = { resolve: function() {}, reject: function(err) { throw err; } };
+    return messaging.send(this._myNick, creditorNick, messages.ledgerUpdateInitiate(debt));
+  }
 };
 
 Agent.prototype._sendMessages = function(reactions) {
+console.log(`Agent ${this._myNick} sends messages:`, reactions);
   var promises = [];
   for (var i=0; i<reactions.length; i++) {
     promises.push(messaging.send(this._myNick, reactions[i].toNick, reactions[i].msg));
@@ -107,13 +120,11 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
-console.log('confirming ledger update', debt);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.ledgerUpdateConfirm(debt),
     }]).then(() => {
-      debug.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
-      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+      return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
         var promises = [];
         for (var i=0; i<results.length; i++) {
           for (var j=0; j<results[i].length; j++) {
@@ -127,8 +138,8 @@ console.log('confirming ledger update', debt);
 
   case 'confirm-update':
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
-    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
-    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`, neighborChanges);
+    return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
       var promises = [];
       for (var i=0; i<results.length; i++) {
         for (var j=0; j<results[i].length; j++) {
@@ -137,15 +148,16 @@ console.log('confirming ledger update', debt);
       }
       return Promise.all(promises);
     }).then(() => {
-      // handle callbacks linked to this sentIOU:
-      this._sentIOUs[incomingMsgObj.transactionId].resolve();
+      // handle callbacks linked to this sentIOU (not applicable when a pending settlements is confirms instead of a pending IOU
+      if (typeof this._sentIOUs[incomingMsgObj.transactionId] !== 'undefined') {
+        this._sentIOUs[incomingMsgObj.transactionId].resolve();
+      }
       delete this._sentIOUs[incomingMsgObj.transactionId];
     });
     // break;
 
   case 'update-status':
-    debug.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
-    var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
+    var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value, incomingMsgObj.isReply);
     var promises = [];
     for (var i=0; i<results.length; i++) {
       promises.push(messaging.send(this._myNick, results[i].peerNick, messages.ddcd(results[i])));
@@ -160,10 +172,14 @@ console.log('confirming ledger update', debt);
     // break;
 
   default: // msgType is related to settlements:
+  console.log([ 'probe', 'initiate-update', 'confirm-update', 'update-status', 'probe', ], incomingMsgObj.msgType, 'must be settlements! :)');
+console.log('routing negotiation message based on its routing info:', incomingMsgObj.routing);
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
-console.log('defaulting to settlements', incomingMsgObj.msgType, peerPair);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;
+    if ((typeof debtorNick === 'undefined') || (typeof creditorNick === 'undefined')) {
+      throw new Error('unroutable negotiation message', incomingMsgObj);
+    }
     if (fromNick === debtorNick) {
       fromRole = 'debtor';
     } else if (fromNick === creditorNick) {

@@ -14,7 +14,6 @@ function Search(messagesCallback) {
     'in': {},
     out: {},
   };
-  this._awake = false;
 }
 
 //        sends IOU
@@ -23,6 +22,10 @@ function Search(messagesCallback) {
 // [in] [out]      [in]    [out]
 
 Search.prototype.onNeighborChange = function(neighborChange) {
+  if (neighborChange === null) {
+    return [];
+  }
+
   debug.log('incoming neighbor change', neighborChange);
   var newNeigbors = {
     'in': [],
@@ -33,123 +36,153 @@ Search.prototype.onNeighborChange = function(neighborChange) {
   switch (neighborChange.change) {
    case neighborChangeConstants.CREDITOR_CREATED:
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       awake: true,
+       myPingPending: null,
+       theirPingPending: null,
      };
-     return this._handleNeighborStateChange('out', 'awake');
+     return this._updateNeighbors('in', true);
      // break;
 
    case neighborChangeConstants.CREDITOR_REMOVED:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     return this._handleNeighborStateChange('out', 'deleted');
+     if (this._haveNeighbors('out')) { // it was not your last creditor
+       return Promise.resolve();
+     }
+     return this._updateNeighbors('in', false);
      // break;
 
    case neighborChangeConstants.DEBTOR_CREATED:
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       awake: true,
+       myPingPending: null,
+       theirPingPending: null,
      };
-     return this._handleNeighborStateChange('in', 'awake');
+console.log('debtor/in-neighbor created', neighborChange, 'updating outneighbors');
+     return this._updateNeighbors('out', true);
      // break;
 
    case neighborChangeConstants.DEBTOR_REMOVED:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     return this._handleNeighborStateChange('in', 'deleted');
+     if (this._haveNeighbors('in')) { // it was not your last debtor
+       return Promise.resolve();
+     }
+     return this._updateNeighbors('out', false);
      // break;
 
    case neighborChangeConstants.DEBTOR_TO_CREDITOR:
      delete this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     responses = this._handleNeighborStateChange('in', 'deleted');
-
      this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       awake: true,
+       myPingPending: null,
+       theirPingPending: null,
      };
-     return responses.concat(this._handleNeighborStateChange('out', 'awake'));
+     if (this._haveNeighbors('in')) { // it was not your last debtor
+       // and you just got a new creditor
+       return this._updateNeighbors('in', true);
+     }
+     return this._updateNeighbors('out', false);
      // break;
 
    case neighborChangeConstants.CREDITOR_TO_DEBTOR:
      delete this._neighbors.out[JSON.stringify([neighborChange.peerNick, neighborChange.currency])];
-     responses = this._handleNeighborStateChange('out', 'deleted');
-     debug.log('responses to creditor deletion (becomes a debtor)', responses);
      this._neighbors['in'][JSON.stringify([neighborChange.peerNick, neighborChange.currency])] = {
-       awake: true,
+       myPingPending: null,
+       theirPingPending: null,
      };
-     return responses.concat(this._handleNeighborStateChange('in', 'awake'));
+     if (this._haveNeighbors('out')) { // it was not your last creditor
+       // and you just got a new debtor
+       return this._updateNeighbors('out', true);
+     }
+     return this._updateNeighbors('in', false);
      // break;
    }
 };
 
-Search.prototype._haveNeighbors = function(direction) {
-  return (Object.keys(this._neighbors[direction]).length > 0);
-};
-
-Search.prototype._haveAwakeNeighbors = function(direction) {
+Search.prototype._haveNeighbors = function(direction, currency) {
   for (var neighborId in this._neighbors[direction]) {
-    if (this._neighbors[direction][neighborId].awake) {
+    var vals = JSON.parse(neighborId);
+    if (vals[1] === currency) {
       return true;
     }
   }
   return false;
 };
 
-Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState) {
-  debug.log('handleNeighborStateChange', { neighborDirection, newNeighborState });
-  if (newNeighborState === 'awake') {
-    if (this._haveNeighbors(OPPOSITE[neighborDirection])) {
-      if (!this._awake) {
-        // Wake up, guys!
-        debug.log('waking up!');
-        this._awake = true;
-        debug.log(`Waking up ${OPPOSITE[neighborDirection]}-neighbors:`);
-        return this._updateNeighbors(OPPOSITE[neighborDirection], WAKE_UP);
-      } else {
-        // Were already awake, no change:
-        debug.log('was already awake!');
-        return [];
-      }
-    } else {
-      // dead-end notification:
-      debug.log('staying asleep, I\'m a dead-end!', this._neighbors);
-      debug.log(`Putting to sleep ${neighborDirection}-neighbors:`);
-      return this._updateNeighbors(neighborDirection, GO_TO_SLEEP);
+Search.prototype._haveAwakeNeighbors = function(direction, currency) {
+  for (var neighborId in this._neighbors[direction]) {
+    var vals = JSON.parse(neighborId);
+    if (vals[1] === currency && this._neighbors[direction][neighborId].theirPingPending === true) {
+      return true;
     }
   }
-  if (newNeighborState === 'asleep' && !this._haveAwakeNeighbors(neighborDirection)) {
-    // last awake neighbor in that direction went to sleep
-    debug.log(`Last ${neighborDirection}-neighbor just went to sleep! Going to sleep myself too`);
-    this._awake = false;
-    debug.log(`And telling my ${OPPOSITE[neighborDirection]}-neighbors to go to sleep too:`);
-    return this._updateNeighbors(OPPOSITE[neighborDirection], GO_TO_SLEEP);
+  return false;
+};
+
+Search.prototype._haveInactiveNeighbors = function(direction, currency) {
+  for (var neighborId in this._neighbors[direction]) {
+    var vals = JSON.parse(neighborId);
+    if (vals[1] === currency && this._neighbors[direction][neighborId].myPingPending !== true) {
+      return true;
+    }
   }
-  debug.log({ neighborDirection, newNeighborState }, this._haveNeighbors(neighborDirection), this._awake);
-  if (newNeighborState === 'deleted' && !this._haveNeighbors(neighborDirection) && this._awake) {
-    // last neighbor in that direction deleted while we were awake
-    debug.log(`Last ${neighborDirection}-neighbor was deleted while we were awake! Sleeping...`);
-    this._awake = false;
-    debug.log(`And telling my {OPPOSITE[$neighborDirection]}-neighbors to go to sleep too:`);
-    return this._updateNeighbors(OPPOSITE[neighborDirection], GO_TO_SLEEP);
+  return false;
+};
+
+Search.prototype._handleNeighborStateChange = function(neighborDirection, newNeighborState, neighborNick, currency, isReply) {
+  var neighborId = JSON.stringify([neighborNick, currency]);
+  if (newNeighborState === false) {
+    // consider this message as the rejection of any pings you sent earlier:
+    this._neighbors[neighborDirection][neighborId].myPingPending = false;
+console.log('canceled my pending ping!', this._neighbors);
+//exit();
+    if (this._haveAwakeNeighbors(neighborDirection, currency)) {
+      // still have other awake neighbors in that direction, so not canceling their pending pings yet
+      return [];
+    }
   }
-  // no messages resulting from neighbor state change:
-  debug.log(`no messages resulting from neighbor state change`);
-  return [];
+  if (newNeighborState === true && !this._haveNeighbors(OPPOSITE[neighborDirection], currency)) {
+    // I'm a dead-end, cancel their pending ping:
+    this._neighbors[neighborDirection][neighborId].theirPingPending = false;
+    return [{
+      peerNick: neighborNick,
+      currency,
+      value: false,
+      isReply: true,
+    }];
+  }
+  // initiate positive reply to outgoing ping, but not don't reply to replies:
+  if (newNeighborState === true && !this._haveInactiveNeighbors(OPPOSITE[neighborDirection], currency) && !isReply) {
+    // I have nowhere to forward their ping to, not because I'm a dead-end, but because I already sent a ping myself which masks theirs:
+    // This is necessary for the race test in test/integration/full-flow.js
+    this._neighbors[neighborDirection][neighborId].theirPingPending = true;
+    return [{
+      peerNick: neighborNick,
+      currency,
+      value: true,
+      isReply: true,
+    }];
+  }
+  return this._updateNeighbors(OPPOSITE[neighborDirection], newNeighborState);
 };
 
 Search.prototype._updateNeighbors = function(messageDirection, value) {
   var messages = [];
   for (var neighborId in this._neighbors[messageDirection]) {
-    var vals = JSON.parse(neighborId);
-    if (this._neighbors[messageDirection][neighborId].awake !== value) {
-      this._neighbors[messageDirection][neighborId].awake = value;
+    if (this._neighbors[messageDirection][neighborId].myPingPending !== value) { // FIXME: careful here, myPingPending could be null or false/true
+      var vals = JSON.parse(neighborId);
+      console.log('found a neighbor to update', { vals, value }, this._neighbors[messageDirection]);
       messages.push({
         peerNick: vals[0],
         currency: vals[1],
         value,
       });
+      this._neighbors[messageDirection][neighborId].myPingPending = value;
+} else {
+console.log(neighborId, 'knows already', messageDirection, value, this._neighbors);
     }
   }
-  debug.log('messages from _updateNeighbors', { messageDirection, value, messages });
+  console.log('messages from _updateNeighbors', { messageDirection, value, messages });
   return messages;
 };
 
-Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
+Search.prototype.onStatusMessage = function(neighborNick, currency, value, isReply) {
   var neighborDirection;
   var neighborId = JSON.stringify([neighborNick, currency]);
   if (typeof this._neighbors['in'][neighborId] !== 'undefined') {
@@ -160,27 +193,22 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value) {
     debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return Promise.resolve([]);
   }
-  debug.log(`Reacting to status message from ${neighborNick}, value: ${value}`, { neighborDirection });
-  if (this._neighbors[neighborDirection][neighborId].awake && value === GO_TO_SLEEP) {
-    debug.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to sleep`);
-    this._neighbors[neighborDirection][neighborId].awake = false;
-    return this._handleNeighborStateChange(neighborDirection, 'asleep');
+  console.log(`REACTING TO STATUS MESSAGE FROM ${neighborNick}, value: ${value}`, this._neighbors);
+  if (isReply) {
+    this._neighbors[neighborDirection][neighborId].myPingPending = value;
+  } else {
+    this._neighbors[neighborDirection][neighborId].theirPingPending = value;
   }
-  if (!this._neighbors[neighborDirection][neighborId].awake && value === WAKE_UP) {
-    debug.log(`Setting ${neighborDirection}-neighbor ${neighborNick} to awake`);
-    this._neighbors[neighborDirection][neighborId].awake = true;
-    return this._handleNeighborStateChange(neighborDirection, 'awake');
-  }
-  debug.log(`${neighborDirection}-neighbor ${neighborNick} already had its awake bit set to ${value}!`);
-  return Promise.resolve([]);
+  return this._handleNeighborStateChange(neighborDirection, value, neighborNick, currency, isReply);
 };
 
 Search.prototype.getActiveNeighbors = function() {
+console.log('getting active neighbors', this._neighbors);
   var ret = {};
   ['in', 'out'].map(direction => {
     ret[direction] = [];
     for (var neighborId in this._neighbors[direction]) {
-      if (this._neighbors[direction][neighborId].awake) {
+      if (this._neighbors[direction][neighborId].theirPingPending === true) {
         var vals = JSON.parse(neighborId);
         ret[direction].push({
           peerNick: vals[0],

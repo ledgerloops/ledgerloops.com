@@ -10,7 +10,7 @@ ProbeEngine.prototype.getPeerPair = function(obj) {
   if (typeof this._probeTrees[obj.treeToken] === 'undefined') {
     return null;
   }
-  return this._probeTrees[obj.treeToken].getPeerPair(obj.pathToken);
+  return this._probeTrees[obj.treeToken].getPeerPair(obj.pathToken, obj.inNeighborNick);
 };
 
 
@@ -48,12 +48,14 @@ function listOutNeighborNicks(currency, neighbors) {
 
 // TODO: make this method shorter, maybe moving some functionality to ProbeTree class.
 ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, activeNeighbors) {
+console.log('ProbeEngine.prototype.handleIncomingProbe = function(', fromNick, incomingMsgObj, activeNeighbors);
   // FIXME: what's the nice way to declare variables that are used locally in two places in the same function?
   var peerPair;
   if (this._isNeighbor('in', fromNick, incomingMsgObj.currency, activeNeighbors)) {
     if (typeof this._probeTrees[incomingMsgObj.treeToken] === 'undefined') { // unknown treeToken
       var outNeighborNicks = listOutNeighborNicks(incomingMsgObj.currency, activeNeighbors);
       if (outNeighborNicks.length === 0) {
+console.log('backtraking probe from ${fromNick} since have no outNeighbors!', activeNeighbors);
         // backtrack immediately
         incomingMsgObj.outNeighborNick = fromNick;
         return Promise.resolve({
@@ -137,6 +139,7 @@ ProbeEngine.prototype.handleIncomingProbe = function(fromNick, incomingMsgObj, a
     } else { // next sibling
       incomingMsgObj.pathToken = newPathToken;
       incomingMsgObj.outNeighborNick = nextOutNeighborNick;
+ console.log('next sibling', incomingMsgObj);
     }
     return Promise.resolve({
       forwardMessages: [ incomingMsgObj ],
@@ -165,7 +168,6 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
       currenciesThrough[neighbors.out[i].currency] = true;
     }
   }
-
   var probesToSend = [];
   for (var currency in currenciesThrough) {
     if (!this._haveProbeFor(currency)) {
@@ -179,6 +181,7 @@ ProbeEngine.prototype.maybeSendProbes = function(neighbors) {
       probesToSend.push(this._probeTrees[treeToken].getProbeObj(firstOutNeighborNick));
     }
   }
+console.log({currenciesThrough}, probesToSend);
   return Promise.resolve({
     forwardMessages: probesToSend,
     cycleFound: null,

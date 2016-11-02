@@ -9,6 +9,14 @@ var channels = {};
 var queue = [];
 var autoFlush = false;
 
+function sendOneMessage(obj) {
+  if (typeof channels[obj.toNick] === 'undefined') {
+    console.error('Unknown recipient', obj);
+    return Promise.reject(new Error('unknown message recipient'));
+  }
+  return channels[obj.toNick](obj.fromNick, obj.msg);
+}
+
 function flush() {
   var iteration = queue;
   var cursor = 0;
@@ -18,7 +26,7 @@ function flush() {
       return Promise.resolve();
     }
     debug.log('flushing message', cursor);
-    return channels[iteration[cursor].toNick](iteration[cursor].fromNick, iteration[cursor].msg).then(() => {
+    return sendOneMessage(iteration[cursor]).then(() => {
       debug.log('done flushing message', cursor);
       debug.log(`Queue now has ${queue.length} messages, iteration has ${iteration.length}.`);
       cursor++;
@@ -41,7 +49,7 @@ module.exports = {
   },
   send: function(fromNick, toNick, msg) {
     if (autoFlush) {
-      return channels[toNick](fromNick, msg);
+      return sendOneMessage({ fromNick, toNick, msg });
     } else {
       queue.push({ fromNick, toNick, msg });
       debug.log(JSON.parse(msg));

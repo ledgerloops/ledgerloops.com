@@ -29,7 +29,6 @@ module.exports = {
     });
   },
   ledgerUpdateConfirm: function(obj) {
-console.log('ledgerUpdateConfirm message', obj);
     return stringify({
       protocol: ledgerProtocolVersion,
       msgType: 'confirm-update',
@@ -45,9 +44,9 @@ console.log('ledgerUpdateConfirm message', obj);
     return stringify({
       protocol: routingProtocolVersion,
       msgType: 'update-status',
-      direction: obj.direction,
       currency: obj.currency,
       value: obj.value,
+      isReply: !!obj.isReply,
     });
   },
   probe: function(obj) {
@@ -111,11 +110,20 @@ console.log('ledgerUpdateConfirm message', obj);
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Please distract it from my debt as promised.
   satisfyCondition: function(obj) {
+    if (typeof obj.treeToken === 'undefined') {
+      throw new Error('where is your treeToken?');
+    }
     return stringify({
       protocol: negotiationProtocolVersion,
       msgType: 'satisfy-condition',
       transactionId: obj.transactionId,
       solution: obj.solution,
+      // TODO: get rid of routing info in this message type, transactionId should be enough for agents.
+      routing: {
+        protocol: routingProtocolVersion,
+        treeToken: obj.treeToken,
+        pathToken: obj.pathToken,
+      },
     });
   },
 };
