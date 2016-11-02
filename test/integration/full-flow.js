@@ -1,3 +1,6 @@
+['keypairs', 'challenges', 'signatures', 'settlement-engine', 'agents'].map(file => {
+  delete require.cache[require.resolve(`../../src/${file}`)];
+});
 var rewire = require('rewire');
 var keypairs = rewire('../../src/keypairs');
 var Challenge = rewire('../../src/challenges');
@@ -19,6 +22,7 @@ ab2str = bufferUtils.ab2str;
 
 // TODO: put this sort of code in helpers instead of copied into each test:
 var counter = 0;
+var verifyShouldFail = false;
 var WindowMock = {
   atob: require('atob'),
   btoa: require('btoa'),
@@ -73,6 +77,9 @@ var WindowMock = {
         return Promise.resolve(ret);
       },
       verify: function(algobj, pubkeyObj, signature, cleartext) {
+        if(verifyShouldFail) {
+          return Promise.resolve(false);
+        }
         console.log('verify', { algobj, pubkeyObj, cleartext2str: ab2str(cleartext), signature2str: ab2str(signature) });
         assert.equal(algobj.name, 'ECDSA');
         assert.equal(algobj.hash.name, 'SHA-256');
@@ -460,6 +467,7 @@ describe('three agents racing', function() {
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
+      verifyShouldFail = true;
       assert.deepEqual(messageTypes(traffic), [
         [ 'edward', 'daphne', 'initiate-update' ],
         [ 'edward', 'fred', 'satisfy-condition' ],
@@ -488,21 +496,21 @@ describe('three agents racing', function() {
       assert.deepEqual(messageTypes(traffic), [
         [ 'edward', 'fred', 'confirm-update' ],
         [ 'edward', 'daphne', 'update-status', false, false ],
-        [ 'daphne', 'fred', 'initiate-update' ],
+        // [ 'daphne', 'fred', 'initiate-update' ], ->  missing because we set verifyShouldFail = true
         [ 'fred', 'daphne', 'confirm-update' ],
         [ 'fred', 'edward', 'update-status', false, false ],
-        [ 'edward', 'daphne', 'initiate-update' ],
+        // [ 'edward', 'daphne', 'initiate-update' ], ->  missing because we set verifyShouldFail = true
         [ 'daphne', 'edward', 'confirm-update' ],
         [ 'daphne', 'fred', 'update-status', false, false ],
-        [ 'fred', 'edward', 'initiate-update' ],
+        // [ 'fred', 'edward', 'initiate-update' ], ->  missing because we set verifyShouldFail = true
       ]);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
-        [ 'fred', 'daphne', 'confirm-update' ],
-        [ 'daphne', 'edward', 'confirm-update' ],
-        [ 'edward', 'fred', 'confirm-update' ],
+        // [ 'fred', 'daphne', 'confirm-update' ], ->  missing because we set verifyShouldFail = true
+        // [ 'daphne', 'edward', 'confirm-update' ], ->  missing because we set verifyShouldFail = true
+        // [ 'edward', 'fred', 'confirm-update' ], ->  missing because we set verifyShouldFail = true
       ]);
       return messaging.flush();
     }).then(traffic => {

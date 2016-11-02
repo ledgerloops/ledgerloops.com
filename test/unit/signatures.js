@@ -3,6 +3,7 @@
 // var rewire = require('rewire');
 // var keypairs = rewire('../../src/keypairs');
 // var Challenge = rewire('../../src/challenges');
+// var Signatures = rewire('../../src/signatures');
 // var assert = require('assert');
 // 
 // var bufferUtils = require('../../src/buffer-utils');
@@ -69,7 +70,11 @@
 //         return Promise.resolve(ret);
 //       },
 //       verify: function(algobj, pubkeyObj, signature, cleartext) {
-//         console.log('verify', { algobj, pubkeyObj, cleartext2str: ab2str(cleartext), signature2str: ab2str(signature) });
+//         // FIXME: looks like cleartext that gets passed into here is not a ArrayBuffer?
+//         
+//         console.log('verify types:', typeof algobj, typeof pubkeyObj, typeof signature, typeof cleartext);
+//         console.log('verify', { algobj, pubkeyObj, signature2str: ab2str(signature), cleartext2str: ab2str(cleartext) });
+// 
 //         assert.equal(algobj.name, 'ECDSA');
 //         assert.equal(algobj.hash.name, 'SHA-256');
 //         var keyNum = pubkeyObj.publicKey.pub.substring('ab:public-'.length);
@@ -88,75 +93,29 @@
 // keypairs.__set__('window', WindowMock);
 // Challenge.__set__('keypairs', keypairs);
 // Challenge.__set__('window', WindowMock);
+// Signatures.__set__('Challenge', Challenge);
 // 
-// describe('Challenges test mocks', function() {
-//   it('should btoa and atob correctly', function() {
-//     assert.equal('aGVsbG8gdGhlcmU=', WindowMock.btoa('hello there'));
-//     assert.equal('hello there', WindowMock.atob('aGVsbG8gdGhlcmU='));
-//   });
-//   it('should str2ab and ab2str correctly', function() {
-//     assert.equal('hello there', ab2str(str2ab('hello there')));
-//   });
-// });
-// 
-// describe('keypairs', function() {
-//   it('should generate first key', function() {
-//     return keypairs.createKey().then(pubkeyBase64 => {
-//       assert.equal('ab-pubkey:0', WindowMock.atob(pubkeyBase64));
+// describe('Signatures', function() {
+//   var solver = new Signatures();
+//   var checker = new Signatures();
+// console.log(solver, checker);
+//   it('should generate, solve, and verify challenges', function() {
+//     return solver.generateChallenge().then(obj => {
+//       return solver.solve(obj.pubkey).then(solution => {
+//         return checker.verify(obj.cleartext, obj.pubkey, solution);
+//       });
+//     }).then(verdict => {
+//       assert.equal(verdict, true);
 //     });
 //   });
-//   it('should allow signing a cleartext', function() {
-//     return keypairs.useKey(WindowMock.btoa('ab-pubkey:0'), 'my clear text').then(signatureBase64 => {
-//       return assert.equal('bin:signature-0-my clear text', WindowMock.atob(signatureBase64));
-//     });
-//   });
-// });
-// 
-// function Sender() {
-// }
-// 
-// function Receiver() {
-// }
-// 
-// Sender.prototype.createChallenge = function() {
-//   this._challenge = new Challenge();
-//   return this._challenge.fromScratch();
-// };
-// 
-// Sender.prototype.solveChallenge = function() {
-//   console.log('solving challenge');
-//   return this._challenge.solve();
-// };
-// 
-// Receiver.prototype.rememberChallenge = function(obj) {
-//   this._challenge = new Challenge();
-//   return this._challenge.fromData(obj);
-// };
-// 
-// Receiver.prototype.verifySolution = function(solution) {
-//   return this._challenge.verifySolution(solution);
-// };
-// 
-// describe('Challenges', function() {
-//   var sender = new Sender();
-//   var receiver = new Receiver();
-//   it('should correctly verify its own solution', function() {
-//     sender.createChallenge().then(challenge => {
-//       console.log({ challenge });
-//       receiver.rememberChallenge(challenge);
-//     }).then(() => {
-// console.log('here comes the test', sender, receiver);
-//       return receiver.verifySolution(WindowMock.btoa('asdf'));
-//     }).then(verdictForWrongSolution => {
-//       console.log({ verdictForWrongSolution });
-//       assert.equal(verdictForWrongSolution, false);
-//       return sender.solveChallenge();
-//     }).then(solution => {
-//       console.log({ solution });
-//       return receiver.verifySolution(solution);
-//     }).then(verdictForSenderSolution => {
-//       assert.equal(verdictForSenderSolution, true);
-//       console.log({ verdictForSenderSolution });
+//   it('should reject a random solution', function() {
+//     return solver.generateChallenge().then(obj => {
+//       return solver.solve(obj.pubkey).then(solution => {
+//         assert.equal(typeof solution, 'string');
+//         return checker.verify(obj.cleartext, obj.pubkey, solution.substring(1));
+//       });
+//     }).then(verdict => {
+//       assert.equal(verdict, false);
 //     });
 //   });
 // });

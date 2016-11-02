@@ -24,6 +24,13 @@ agents.alice.sendIOU('bob', 0.1, 'USD');
 // alice will notify bob, and both will update their peer ledger.
 agents.bob.sendIOU('charlie', 0.1, 'USD');
 agents.charlie.sendIOU('alice', 0.1, 'USD');
+
+if (typeof window !== 'undefined') {
+  window.agents = agents;
+  setTimeout(function() {
+    debug.log('See window.agents.alice._ledgers');
+  }, 10000);
+}
 // at this point, charlie will notify alice, and alice can use her credit with charlie to settle her debt with bob.
 // each agent only knows, only interacts with, and only trusts their own direct debtors and creditors.
 // Yet the network can still find a second-order promise loop where all peer-to-peer debts are settled.

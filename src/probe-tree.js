@@ -83,11 +83,9 @@ ProbeTree.prototype.guessOutNeighbor = function(pathToken) {
 
 ProbeTree.prototype.getPeerPair = function(pathToken, newInNeighborNick) {
   if (typeof this._inNeighborNick === 'undefined') {
-console.log('setting inNeighborNick, this ProbeTree was created here and didnt have one', newInNeighborNick);
     this._inNeighborNick = newInNeighborNick;
   }
   if (typeof this._inNeighborNick === 'undefined') {
-    console.log(this);
     throw new Error('cannot ask me for a peer pair if I have no in-neighbor!');
   }
   if (this._backtracked === pathToken) {
@@ -97,7 +95,6 @@ console.log('setting inNeighborNick, this ProbeTree was created here and didnt h
       weBacktrackedThisPathToken: true,
     };
   }
-console.log('looking at pathTokens for outNeighborNick', this._pathTokens, pathToken);
   for (var outNeighborNick in this._pathTokens) {
     if (this._pathTokens[outNeighborNick] === pathToken) {
       return {

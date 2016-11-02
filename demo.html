@@ -8,6 +8,9 @@
   </head>
   <body>
     <h1>See console (use your "F12" key in Firefox or Chrome)</h1>
+    <p>This page is what I use to test improvements in the LedgerLoops protocol. It is <strong>not</strong> a production-ready implementation
+yet. Changes in the early versions of the protocol have left their scars on the code, and the number of TODO's and FIXME's in the code vastly outnumbers the number of tests. Also, the protocol has not yet been through security review and I have not done any simulations yet of how the protocol behaves when you add more than three or four nodes to the network (including malicious and malfunctioning ones), all adding IOUs, finding routes, initiating negotiations, and completing or rejecting them. Please comment in <a href="https://github.com/michielbdejong/ledgerloops">GitHub Issues</a> if you're interested in helping with some of this work!</p>
+    <p>While on this page, you can interact with three agents that create, find, and resolve a debt-loop for 0.05 USD (see console). You can for instance see each Alice's ledgers by looking at `window.alice._ledgers`.</p>
   </body>
   <script src="./js/bundle.js"></script>
 </html>

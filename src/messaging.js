@@ -14,6 +14,7 @@ function sendOneMessage(obj) {
     console.error('Unknown recipient', obj);
     return Promise.reject(new Error('unknown message recipient'));
   }
+  debug.log(`${JSON.parse(obj.msg).msgType} message from ${obj.fromNick} to ${obj.toNick}:`, JSON.parse(obj.msg));
   return channels[obj.toNick](obj.fromNick, obj.msg);
 }
 
