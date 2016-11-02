@@ -44,7 +44,6 @@ module.exports = {
     return stringify({
       protocol: routingProtocolVersion,
       msgType: 'update-status',
-      direction: obj.direction,
       currency: obj.currency,
       value: obj.value,
     });

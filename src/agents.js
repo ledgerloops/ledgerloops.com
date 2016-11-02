@@ -120,14 +120,16 @@ console.log('neighborChanges from initiate-update', neighborChanges);
       msg: messages.ledgerUpdateConfirm(debt),
     }]).then(() => {
       console.log(`${this._myNick} handles neighbor changes after receiving an IOU from ${fromNick}:`);
-      return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+      return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
+console.log('onNeighborChange results', results);
         var promises = [];
         for (var i=0; i<results.length; i++) {
           for (var j=0; j<results[i].length; j++) {
+console.log('sending!', results[i][j]);
             promises.push(messaging.send(this._myNick, results[i][j].peerNick, messages.ddcd(results[i][j])));
           }
         }
-        return Promise.all(promises);
+        return Promise.all(promises).then(results2 => { console.log(results2, 'sent'); }, err => { console.log('sending failed', err); });
       });
     });
     console.log('running into break!');
@@ -135,9 +137,10 @@ console.log('neighborChanges from initiate-update', neighborChanges);
 
   case 'confirm-update':
     console.log('confirm-update received from', fromNick, this._ledgers);
+    debug.setLevel(true);
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
-    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`);
-    return Promise.all(neighborChanges.map(neighborChange => this._search.onNeighborChange(neighborChange))).then(results => {
+    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`, neighborChanges);
+    return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
       var promises = [];
       for (var i=0; i<results.length; i++) {
         for (var j=0; j<results[i].length; j++) {
@@ -153,7 +156,7 @@ console.log('neighborChanges from initiate-update', neighborChanges);
     // break;
 
   case 'update-status':
-    debug.log(`${this._myNick} handles a DCDD message from ${fromNick}:`);
+    console.log(`${this._myNick} handles a DCDD message from ${fromNick}:`, incomingMsgObj);
     var results = this._search.onStatusMessage(fromNick, incomingMsgObj.currency, incomingMsgObj.value);
     var promises = [];
     for (var i=0; i<results.length; i++) {
