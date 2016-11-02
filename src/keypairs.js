@@ -39,6 +39,8 @@ function sign(keyObj, cleartext) {
       keyObj.privateKey, //from generateKey or importKey above
       str2ab(cleartext) //ArrayBuffer of data you want to sign
       ).then(function(signature){
+    console.log('sign', keyObj.privateKey, cleartext, toBase64(signature));
+//exit();
     return toBase64(signature);
   }).catch(function(err){
     console.error(err);

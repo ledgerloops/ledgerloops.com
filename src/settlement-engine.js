@@ -21,9 +21,9 @@ function SettlementEngine(pendingDebtCallback) {
 // amount
 // currency
 SettlementEngine.prototype.initiateNegotiation = function(obj) {
-  return this._signatures.generateKeypair().then(pubkey => {
-    obj.pubkey = pubkey;
-    obj.cleartext = tokens.generateToken();
+  return this._signatures.generateChallenge().then(obj2 => {
+    obj.pubkey = obj2.pubkey;
+    obj.cleartext = obj2.cleartext;
     obj.transactionId = tokens.generateToken();
     // hack to make outgoing object same format as incoming object:
     obj.challenge = {
@@ -72,32 +72,46 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         }
         break;
       case 'satisfy-condition':
-        // TODO: verify if the signature is actually correct
-        var ledgerUpdateObj = {
-          transactionId: msgObj.transactionId,
-          addedDebts: {
-            [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
-                -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
-          },
-          debtor: debtorNick,
-        };
-        if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
-          resolve([
-            { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
-          ]);
-        } else {
-          var mySatisfyConditionObj = {
-            transactionId: this._fundingTransaction[msgObj.transactionId],
-            solution: msgObj.solution,
-            // TODO: get rid of routing info in satisfy-condition objects:
-            treeToken: msgObj.routing.treeToken,
-            pathToken: msgObj.routing.pathToken,
-          };
-          resolve([
-            { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
-            { toNick: creditorNick, msg: messages.satisfyCondition(mySatisfyConditionObj) },
-          ]);
+        var pendingNegotiation = this._outstandingNegotiations[msgObj.transactionId];
+        if (typeof pendingNegotiation === 'undefined') { // reject silently 
+          resolve([]);
+          return;
         }
+console.log(pendingNegotiation);
+        this._signatures.verify(
+            pendingNegotiation.challenge.cleartext, 
+            pendingNegotiation.challenge.pubkey,
+            msgObj.solution).then(verdict => {
+          if (!verdict) { // reject silently 
+            resolve([]);
+            return;
+          }
+          var ledgerUpdateObj = {
+            transactionId: msgObj.transactionId,
+            addedDebts: {
+              [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
+                  -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
+            },
+            debtor: debtorNick,
+          };
+          if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
+            resolve([
+              { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
+            ]);
+          } else {
+            var mySatisfyConditionObj = {
+              transactionId: this._fundingTransaction[msgObj.transactionId],
+              solution: msgObj.solution,
+              // TODO: get rid of routing info in satisfy-condition objects:
+              treeToken: msgObj.routing.treeToken,
+              pathToken: msgObj.routing.pathToken,
+            };
+            resolve([
+              { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
+              { toNick: creditorNick, msg: messages.satisfyCondition(mySatisfyConditionObj) },
+            ]);
+          }
+        }, reject);
         break;
       default:
         reject(new Error(`unknown msgType to debtor: ${msgObj.msgType}`));
@@ -118,7 +132,7 @@ console.log('have keypair', this._signatures, msgObj);
               this._pubkeyCreatedFor[msgObj.challenge.pubkey]] =
               msgObj.transaction.id;
 console.log('I think I can solve this!', msgObj, this._signatures._challenges);
-          this._signatures.sign(msgObj.challenge.cleartext, msgObj.challenge.pubkey).then(solution => {
+          this._signatures.solve(msgObj.challenge.pubkey).then(solution => {
             msgObj.solution = solution;
             msgObj.transactionId = msgObj.transaction.id;
             // TODO: get rid of routing info in satisfy-condition objects:
