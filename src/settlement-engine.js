@@ -120,9 +120,7 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
         // First of all, store it:
         // TODO: prefix transaction ids with id of neighbor who generated that id, to avoid clashes across namespaces.
         this._outstandingNegotiations[msgObj.transaction.id] = msgObj;
-        debug.log('conditional-promise from creditor', msgObj);
         if (this._signatures.haveKeypair(msgObj.challenge.pubkey)) { // you are the initiator
-          debug.log('pubkey is mine');
           this._fundedTransaction[msgObj.transaction.id] =
               this._pubkeyCreatedFor[msgObj.challenge.pubkey];
           this._fundingTransaction[

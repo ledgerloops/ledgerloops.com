@@ -26,7 +26,6 @@ Search.prototype.onNeighborChange = function(neighborChange) {
     return [];
   }
 
-  debug.log('incoming neighbor change', neighborChange);
   var newNeigbors = {
     'in': [],
      out: [],
@@ -183,7 +182,6 @@ Search.prototype.onStatusMessage = function(neighborNick, currency, value, isRep
   } else if (typeof this._neighbors.out[neighborId] !== 'undefined') {
     neighborDirection = 'out';
   } else {
-    debug.log(`${neighborNick} is not a neighbor for currency ${currency}!`);
     return Promise.resolve([]);
   }
   if (isReply) {
