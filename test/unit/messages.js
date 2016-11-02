@@ -15,7 +15,7 @@ describe('Messages', function() {
         satisfyCondition: 'satisfy-condition',
      }; 
      for (var func in msgTypes) {
-       var msgObj = JSON.parse(messages[func]({}));
+       var msgObj = JSON.parse(messages[func]({ treeToken: 'hello' }));
        assert.equal(msgObj.msgType, msgTypes[func]);
      }
     });
