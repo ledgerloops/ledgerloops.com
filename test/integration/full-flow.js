@@ -287,137 +287,229 @@ console.log(agents.alice._search);
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
-        [ 'bob', 'charlie', 'satisfy-condition' ],
         [ 'bob', 'alice', 'initiate-update' ],
+        [ 'bob', 'charlie', 'satisfy-condition' ],
       ]);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
         [ 'alice', 'bob', 'confirm-update' ],
-        [ 'charlie', 'alice', 'satisfy-condition' ],
         [ 'charlie', 'bob', 'initiate-update' ],
+        [ 'charlie', 'alice', 'satisfy-condition' ],
       ]);
       return messaging.flush();
     }).then(traffic => {
       console.log(messageTypes(traffic));
       assert.deepEqual(messageTypes(traffic), [
-        [ 'alice', 'charlie', 'initiate-update' ],
         [ 'bob', 'charlie', 'confirm-update' ],
-        [ 'charlie', 'bob', 'initiate-update' ],
+        [ 'alice', 'charlie', 'initiate-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'charlie', 'alice', 'confirm-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
       ]);
       return messaging.flush();
     });
   });
 });
 
-// describe('three agents racing', function() {
-//   var agents = {
-//     daphne: new Agent('daphne'),
-//     edward: new Agent('edward'),
-//     fred: new Agent('fred'),
-//   };
-//   it('should setlle debt loop', function() {  
-//     return agents.daphne.sendIOU('edward', 0.1, 'USD').then(() => {
-//       return agents.edward.sendIOU('fred', 0.1, 'USD');
-//     }).then(() => {
-//       return agents.fred.sendIOU('daphne', 0.1, 'USD');
-//     }).then(() => {
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'daphne', 'edward', 'initiate-update' ],
-//         [ 'edward', 'fred', 'initiate-update' ],
-//         [ 'fred', 'daphne', 'initiate-update' ],
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'edward', 'daphne', 'confirm-update' ],
-//         [ 'fred', 'edward', 'confirm-update' ],
-//         [ 'daphne', 'fred', 'confirm-update' ],
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'daphne', 'fred', 'update-status', true, false ],
-//         [ 'edward', 'daphne', 'update-status', true, false ],
-//         [ 'fred', 'edward', 'update-status', true, false ],
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'fred', 'daphne', 'update-status', true, true ],
-//         [ 'daphne', 'edward', 'update-status', true, true ],
-//         [ 'edward', 'fred', 'update-status', true, true ],
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'daphne', 'edward', 'update-status', true, false ],
-//         [ 'edward', 'fred', 'update-status', true, false ],
-//         [ 'fred', 'daphne', 'update-status', true, false ]
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'edward', 'daphne', 'update-status', true, true ],
-//         [ 'fred', 'edward', 'update-status', true, true ],
-//         [ 'daphne', 'fred', 'update-status', true, true ] ,
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//       ]);
-//       assert.deepEqual(agents.daphne._search._neighbors,
-//           { 'in': { '["fred","USD"]': { myPingPending: true, theirPingPending: true } },
-//              out: { '["edward","USD"]':     { myPingPending: true, theirPingPending: true } } });
-//       assert.deepEqual(agents.edward._search._neighbors,
-//           { 'in': { '["daphne","USD"]': { myPingPending: true, theirPingPending: true } },
-//            out: { '["fred","USD"]': { myPingPending: true, theirPingPending: true } } });
-//       assert.deepEqual(agents.fred._search._neighbors,
-//           { 'in': { '["edward","USD"]':   { myPingPending: true, theirPingPending: true } },
-//              out: { '["daphne","USD"]': { myPingPending: true, theirPingPending: true } } });
-//       return agents.daphne._probeTimerHandler();
-//     }).then(() => {
-//       return agents.edward._probeTimerHandler();
-//     }).then(() => {
-//       return agents.fred._probeTimerHandler();
-//     }).then(() => {
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'daphne', 'edward', 'probe' ],
-//         [ 'edward', 'fred', 'probe' ],
-//         [ 'fred', 'daphne', 'probe' ],
-//       ]);
-//       return messaging.flush();
-//     }).then(traffic => {
-//       console.log(messageTypes(traffic));
-//       assert.deepEqual(messageTypes(traffic), [
-//         [ 'edward', 'fred', 'probe' ],
-//         [ 'fred', 'daphne', 'probe' ],
-//         [ 'daphne', 'edward', 'probe' ],
-//       ]);
-//       return messaging.flush();
-//     }, err => {
-//       throw err; // errored too soon
-//     }).then(() => {
-//       throw new Error('should not reach here');
-//     }, err => {
-//       if (err.message === 'TODO: make this work in nodejs too') {
-//         assert.equal(err.message, 'TODO: make this work in nodejs too');
-//       } else {
-//         throw err;
-//       }
-//     });
-//   });
-// });
+describe('three agents racing', function() {
+  var agents = {
+    daphne: new Agent('daphne'),
+    edward: new Agent('edward'),
+    fred: new Agent('fred'),
+  };
+  it('should setlle debt loop', function() {  
+    return agents.daphne.sendIOU('edward', 0.1, 'USD').then(() => {
+      return agents.edward.sendIOU('fred', 0.1, 'USD');
+    }).then(() => {
+      return agents.fred.sendIOU('daphne', 0.1, 'USD');
+    }).then(() => {
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'edward', 'initiate-update' ],
+        [ 'edward', 'fred', 'initiate-update' ],
+        [ 'fred', 'daphne', 'initiate-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'daphne', 'confirm-update' ],
+        [ 'fred', 'edward', 'confirm-update' ],
+        [ 'daphne', 'fred', 'confirm-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'fred', 'update-status', true, false ],
+        [ 'edward', 'daphne', 'update-status', true, false ],
+        [ 'fred', 'edward', 'update-status', true, false ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'fred', 'daphne', 'update-status', true, true ],
+        [ 'daphne', 'edward', 'update-status', true, true ],
+        [ 'edward', 'fred', 'update-status', true, true ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'edward', 'update-status', true, false ],
+        [ 'edward', 'fred', 'update-status', true, false ],
+        [ 'fred', 'daphne', 'update-status', true, false ]
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'daphne', 'update-status', true, true ],
+        [ 'fred', 'edward', 'update-status', true, true ],
+        [ 'daphne', 'fred', 'update-status', true, true ] ,
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+      ]);
+      assert.deepEqual(agents.daphne._search._neighbors,
+          { 'in': { '["fred","USD"]': { myPingPending: true, theirPingPending: true } },
+             out: { '["edward","USD"]':     { myPingPending: true, theirPingPending: true } } });
+      assert.deepEqual(agents.edward._search._neighbors,
+          { 'in': { '["daphne","USD"]': { myPingPending: true, theirPingPending: true } },
+           out: { '["fred","USD"]': { myPingPending: true, theirPingPending: true } } });
+      assert.deepEqual(agents.fred._search._neighbors,
+          { 'in': { '["edward","USD"]':   { myPingPending: true, theirPingPending: true } },
+             out: { '["daphne","USD"]': { myPingPending: true, theirPingPending: true } } });
+      return agents.daphne._probeTimerHandler();
+    }).then(() => {
+      return agents.edward._probeTimerHandler();
+    }).then(() => {
+      return agents.fred._probeTimerHandler();
+    }).then(() => {
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'edward', 'probe' ],
+        [ 'edward', 'fred', 'probe' ],
+        [ 'fred', 'daphne', 'probe' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'fred', 'probe' ],
+        [ 'fred', 'daphne', 'probe' ],
+        [ 'daphne', 'edward', 'probe' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'fred', 'daphne', 'probe' ],
+        [ 'daphne', 'edward', 'probe' ],
+        [ 'edward', 'fred', 'probe' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'fred', 'conditional-promise' ],
+        [ 'edward', 'daphne', 'conditional-promise' ],
+        [ 'fred', 'edward', 'conditional-promise' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'fred', 'edward', 'conditional-promise' ],
+        [ 'daphne', 'fred', 'conditional-promise' ],
+        [ 'edward', 'daphne', 'conditional-promise' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'daphne', 'conditional-promise' ],
+        [ 'fred', 'edward', 'conditional-promise' ],
+        [ 'daphne', 'fred', 'conditional-promise' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'edward', 'satisfy-condition' ],
+        [ 'edward', 'fred', 'satisfy-condition' ],
+        [ 'fred', 'daphne', 'satisfy-condition' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'daphne', 'initiate-update' ],
+        [ 'edward', 'fred', 'satisfy-condition' ],
+        [ 'fred', 'edward', 'initiate-update' ],
+        [ 'fred', 'daphne', 'satisfy-condition' ],
+        [ 'daphne', 'fred', 'initiate-update' ],
+        [ 'daphne', 'edward', 'satisfy-condition' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'daphne', 'edward', 'confirm-update' ],
+        [ 'fred', 'edward', 'initiate-update' ],
+        [ 'fred', 'daphne', 'satisfy-condition' ],
+        [ 'edward', 'fred', 'confirm-update' ],
+        [ 'daphne', 'fred', 'initiate-update' ],
+        [ 'daphne', 'edward', 'satisfy-condition' ],
+        [ 'fred', 'daphne', 'confirm-update' ],
+        [ 'edward', 'daphne', 'initiate-update' ],
+        [ 'edward', 'fred', 'satisfy-condition' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'edward', 'fred', 'confirm-update' ],
+        [ 'edward', 'daphne', 'update-status', false, false ],
+        [ 'daphne', 'fred', 'initiate-update' ],
+        [ 'fred', 'daphne', 'confirm-update' ],
+        [ 'fred', 'edward', 'update-status', false, false ],
+        [ 'edward', 'daphne', 'initiate-update' ],
+        [ 'daphne', 'edward', 'confirm-update' ],
+        [ 'daphne', 'fred', 'update-status', false, false ],
+        [ 'fred', 'edward', 'initiate-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+        [ 'fred', 'daphne', 'confirm-update' ],
+        [ 'daphne', 'edward', 'confirm-update' ],
+        [ 'edward', 'fred', 'confirm-update' ],
+      ]);
+      return messaging.flush();
+    }).then(traffic => {
+      console.log(messageTypes(traffic));
+      assert.deepEqual(messageTypes(traffic), [
+      ]);
+      return messaging.flush();
+    });
+  });
+});

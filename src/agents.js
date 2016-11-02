@@ -27,7 +27,7 @@ const SETTLEMENT_AMOUNT = { // lower values make it more likely a loop is found,
 };
 
 function Agent(myNick) {
-  this._settlementEngine = new SettlementEngine();
+  this._settlementEngine = new SettlementEngine((peerNick, obj) => { this._createPendingSettlement(peerNick, obj); });
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
   this._probeTimer = setInterval(() => { this._probeTimerHandler(); }, PROBE_INTERVAL);
@@ -38,6 +38,10 @@ function Agent(myNick) {
     return this._handleMessage(fromNick, JSON.parse(msgStr));
   });
 }
+
+Agent.prototype._createPendingSettlement = function(peerNick, obj) {
+  this._ledgers[peerNick].createPendingSettlement(obj.transactionId, obj.amount, obj.currency);
+};
 
 Agent.prototype._handleCycle = function(cycleObj) {
   if (cycleObj === null) {
@@ -133,7 +137,6 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   case 'confirm-update':
-    debug.setLevel(true);
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
     debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`, neighborChanges);
     return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
@@ -145,8 +148,10 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
       }
       return Promise.all(promises);
     }).then(() => {
-      // handle callbacks linked to this sentIOU:
-      this._sentIOUs[incomingMsgObj.transactionId].resolve();
+      // handle callbacks linked to this sentIOU (not applicable when a pending settlements is confirms instead of a pending IOU
+      if (typeof this._sentIOUs[incomingMsgObj.transactionId] !== 'undefined') {
+        this._sentIOUs[incomingMsgObj.transactionId].resolve();
+      }
       delete this._sentIOUs[incomingMsgObj.transactionId];
     });
     // break;
@@ -167,6 +172,8 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     // break;
 
   default: // msgType is related to settlements:
+  console.log([ 'probe', 'initiate-update', 'confirm-update', 'update-status', 'probe', ], incomingMsgObj.msgType, 'must be settlements! :)');
+console.log('routing negotiation message based on its routing info:', incomingMsgObj.routing);
     var peerPair = this._probeEngine.getPeerPair(incomingMsgObj.routing);
     var debtorNick = peerPair.inNeighborNick;
     var creditorNick = peerPair.outNeighborNick;

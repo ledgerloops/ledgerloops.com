@@ -7,12 +7,13 @@ var stringify = require('canonical-json');
 
 const FORWARDING_TIMEOUT = 50;
 
-function SettlementEngine() {
+function SettlementEngine(pendingDebtCallback) {
   this._signatures = new Signatures();
   this._outstandingNegotiations = {};
   this._fundingTransaction = {};
   this._fundedTransaction = {};
   this._pubkeyCreatedFor = {};
+  this._recordPendingDebt = pendingDebtCallback;
 }
 
 // required fields in obj:
@@ -39,6 +40,7 @@ SettlementEngine.prototype.initiateNegotiation = function(obj) {
     // boomerangs:
     this._pubkeyCreatedFor[obj.pubkey] = obj.transactionId;
   console.log('initiating negotiation, from obj:', obj);
+    this._recordPendingDebt(obj.inNeighborNick, obj); // obj should have transactionId, amount, currency
     return Promise.resolve([
       { toNick: obj.inNeighborNick, msg: messages.conditionalPromise(obj) },
     ]);
@@ -87,6 +89,9 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           var mySatisfyConditionObj = {
             transactionId: this._fundingTransaction[msgObj.transactionId],
             solution: msgObj.solution,
+            // TODO: get rid of routing info in satisfy-condition objects:
+            treeToken: msgObj.routing.treeToken,
+            pathToken: msgObj.routing.pathToken,
           };
           resolve([
             { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
@@ -116,6 +121,9 @@ console.log('I think I can solve this!', msgObj, this._signatures._challenges);
           this._signatures.sign(msgObj.challenge.cleartext, msgObj.challenge.pubkey).then(solution => {
             msgObj.solution = solution;
             msgObj.transactionId = msgObj.transaction.id;
+            // TODO: get rid of routing info in satisfy-condition objects:
+            msgObj.treeToken = msgObj.routing.treeToken;
+            msgObj.pathToken = msgObj.routing.pathToken;
             this._outstandingNegotiations[msgObj.transaction.id] = 'can-still-reject';
             setTimeout(() => {
               if (typeof this._outstandingNegotiations[msgObj.transaction.id] === 'undefined') {
@@ -154,6 +162,7 @@ console.log('not have keypair', this._signatures, msgObj);
             } else {
               // FIXME: messy way to get data fields in the right structure:
 console.log('forwarding negotiation, from obj:', newMsgObj);
+              this._recordPendingDebt(debtorNick, newMsgObj); // obj should have transactionId, amount, currency
               this._outstandingNegotiations[newMsgObj.transactionId] = JSON.parse(messages.conditionalPromise(newMsgObj));
               resolve([
                 { toNick: debtorNick, msg: messages.conditionalPromise(newMsgObj) },

@@ -110,6 +110,9 @@ module.exports = {
 //                               ${embeddablePromise}, ${signatureFromA1}.
 //                               Please distract it from my debt as promised.
   satisfyCondition: function(obj) {
+    if (typeof obj.treeToken === 'undefined') {
+      throw new Error('where is your treeToken?');
+    }
     return stringify({
       protocol: negotiationProtocolVersion,
       msgType: 'satisfy-condition',

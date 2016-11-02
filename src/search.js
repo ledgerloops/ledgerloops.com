@@ -22,6 +22,10 @@ function Search(messagesCallback) {
 // [in] [out]      [in]    [out]
 
 Search.prototype.onNeighborChange = function(neighborChange) {
+  if (neighborChange === null) {
+    return [];
+  }
+
   debug.log('incoming neighbor change', neighborChange);
   var newNeigbors = {
     'in': [],

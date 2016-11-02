@@ -108,7 +108,21 @@ Ledger.prototype.createIOU = function(amount, currency) {
   return debt;
 };
 
+Ledger.prototype.createPendingSettlement = function(transactionId, amount, currency) {
+  var debt = {
+    transactionId,
+    note: `Conditional Promise sent by ${this._myNick}, later triggered by ${this._peerNick}, see transactionId for details`,
+    debtor: this._myNick,
+    addedDebts: {
+      [currency]: amount,
+     },
+  };
+  this._pendingDebts[debt.transactionId] = debt;
+  return debt;
+};
+
 Ledger.prototype.markIOUConfirmed = function(transactionId) {
+console.log('looking in pending debts', transactionId, this._pendingDebts);
   var debt = this._pendingDebts[transactionId];
   return this.addDebt(debt);
 };
