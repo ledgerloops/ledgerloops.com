@@ -206,12 +206,109 @@ To reject the cryptographically-triggered IOU you received earlier, use this mes
 
 The rejection will only be valid if it is sent by the recipient of the conditional-promise message in question.
 
-\section(Security Discussion}
+\section{Security Discussion}
+\subsection{Assessment Scope}
+\subsubsection{At the participant level}
+A participant in the LedgerLoops protocol is a human person or legal organization (the "user") who uses a computer on which LedgerLoops software (the "app") runs. This computer is potentially also used for other purposes. The user supplies contact details about other users (the user's "neighbors") to the app. This list of neighbors (containing contact details as well as personal notes such as nick names and profile photos) is sensitive information.
 
+Once the user creates ledgers with their neighbors, the information in these ledgers (current balance as well as transaction history, and personal notes added to each transaction, which are likely to reflect evidence of real-world events) is the second item of sensitive information.
 
+Each ledger is also personal between the user and the neighbor involved in that particular ledger; information from one ledger should not be leaked to one of the other ledgers, or otherwise become known to one of the user's other neighbors.
 
+When the app starts trying to route and resolve loops, this activity affects other software on the same computer, by using network, CPU and storage resources. The app should also not leak or damage sensitive information pertaining to other software on the same computer.
 
+If incorrect information were to enter the user's ledgers, the user's real-world assets could be at risk.
+In this case, as well as when the app sends low-quality messages to neighbors, the user's reputation with their neighbors (debtors and creditors), and possibly the user's public reputation. An example of a low-quality message could be one that is malformed, or one that represents incorrect or unfounded information, like when the app were to continuously bother neighbors with messages that convey a statement of intent, convincing the neighbors to invest effort, but never or rarely leading to a trade deal, thus wasting other participants' time.
 
+To summarize, the user would be negatively affected if:
+
+\begin{itemize}
+\item any of the following information is leaked, either to one of the user's other neighbors, or publicly:
+  \begin{itemize}
+  \item identity of the user's neighbors
+  \item information contained in notes about the user's neighbors
+  \item ledgers (current balance as well as transaction history)
+  \item information contained in notes on the ledgers
+  \item other information, unrelated to the app but present on the computer
+  \end{itemize}
+  
+\item the app would make excessive use of any of the following computer resources:
+  \begin{itemize}
+  \item network bandwidth
+  \item CPU resources
+  \item storage resources
+  \end{itemize}
+  
+\item the app's copy of the following information would be damaged (it may trigger real-world events, or be the only copy of this data):
+  \begin{itemize}
+  \item ledger balance and transaction history
+  \item other information, unrelated to the app but present on the computer
+  \end{itemize}
+  
+\item the app's incorrect or unreasonable behavior damages the user's reputation with:
+  \begin{itemize}
+  \item debtor neighbors
+  \item creditor neighbors
+  \item third parties or the general public
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{At the network region level}
+Once a number of users rely on the network beyond their own neighbors to find and resolve ledger loops, these users would be negatively
+affected if this network clogs up or breaks down, affecting participants who are not neighbors of the user, but who would be candidates
+to participate in a ledger loop in which the user and their neighbors would also participate.
+
+Even if the valid participants of the network are unaffected, an excess number of useless participants would make the valid participants hard to find.
+
+Likewise, useless network traffic could slow down the processing of valid network traffic.
+
+The network as a whole is decentralized, and several independent regions (connected components in the network graph) could exist.
+Low-quality areas in the network will mostly affect users at a short network distance from the low-quality region. Therefore,
+in terms of valuable assets, we should consider network regions, more than the global network as a whole. We can write these assets at
+the network region level down as:
+
+\begin{itemize}
+\item average quality of participants at distance d from a user (d>=2)
+\item average quality of messages received from a user's neighbor, but triggered by messages at distance d>=2.
+\end{itemize}
+
+\subsection{System Modeling}
+As already defined a bit in the previous subsection, a user uses the app running on a computer. The app sends LedgerLoops messages, only to direct neighbors of the users, although these messages might cause ripple effects, triggering messages to other participants at distance d>=2.
+The messages sent between neighboring users travel over a secure communication channel (the sending and receiving client software for this communication channel is not part of the app). Neighbors of a user can be divided into two categories: debtor (owes or offers something to the user), and creditors (to whom the user owes or offers something). Incentives for cooperation can be different for debtors than for creditors. For instance, if a creditor misbehaves, the user can block them (ignore messages from them) and tell the neighbor user in question through a side channel to change their app's behavior if they still want to access their credit. If the creditor does not comply, the user can confiscate their credit. However, if a debtor misbehaves, the user cannot so easily block their messages, as this would effectively allow the debtor to never pay back their debt - or at least not pay it back via LedgerLoops.
+
+\subsection{Threats}
+\subsubsection{The user's own computer and LedgerLoops app}
+While the user's app is running on the computer, it needs to access all information and resources mentioned in the assessment scope above. Therefore, a malfunctioning app would put all these assets at risk. When the user's computer is running, even if the app is not, there is probably no way to protect against potential malware on the computer. Even if the app stores its data in encrypted format, the user would have to unlock this data when starting to use the app, and any passphrase or secret used to do this while starting up the app could be intercepted by such malware. The computer as a whole could, however, use disk encryption so that if an attacker gains physical access to the computer, but can not force the user to enter their passphrase, the data stored on the computer would be safe. In short, if the user's computer is compromised, the attacker could access the user's information, damage the user's reputation, damage the user's real-world assets, and the user's reputation. A malfunction (bug) in the app could also potentially put all of these assets at risk.
+
+The following threat descriptions all assume the user's computer is clean and the app functions correctly.
+
+\subsubsection{Social Engineering}
+A user could be convinced by an attacker to add a neighbor with whom they don't have a real-world trust relationship. Adding a malicious debtorcould expose information about the user's creditors. For instance, if an attacker wants to know if the user frequents a certain restaurant, they could buy a meal voucher from that restaurant, and at the same time offer something attractive to the user. If the user accepts the offer from the attacker, then the next time the user eats at that restaurant, the user's app could cooperate with the restaurant's app and the attacker's app to find a loop. If such a loop is found, then the attacker knows that either the user just visited the restaurant, or the user owes something to a participant, (who owes something to a participant, who \ldots) owes something to the restaurant.
+
+Adding a malicious creditor could likewise expose information about the user's debtors.
+
+\subsubsection{Network Area Attacks}
+Nobody except a user's own neighbors is allowed to send the user messages directly, so standard Spam and Denial-of-Service attacks will not work to degrade a user's LedgerLoops app (it might still work to affect the user's computer or the user's internet connection, of course).
+
+However, apart from the attacker becoming a neighbor of the victim (which should be quite hard if the user is careful), the attacker could try to control many nodes in the network area surrounding the user (so nodes that are two or three hops away from the victim). This would allow the attacker to degrade the quality of the user's network area,
+for instance by injecting a lot of useless messages (low-quality traffic), and by making nodes look attractive for cooperation but never reaching agreement.
+
+\subsubsection{Traffic Analysis}
+Even if all of the user's neighbors (and their computers and their apps) are clean, an attacker in the same network area as the user could obtain information about the user by analysing their own ledger loops. If the attacker has several two-hop connections with the user, they could potentially analyse the messages they receive, and send their own messages to test hypotheses, to gather metadata about the user. They will not be able to know which of the ledger loops the user took part in, and it could be that what they are modeling as the targeted user is in fact two or three different users, but by playing it smart, they could potentially create an ever more detailed model of the targeted user.
+
+\subsubsection{Figure-8 Attacks}
+An attacker could aim to control two or more participants in the same ledger loops. However, if a ledger loop goes through participants 0, 1, 2, \ldots, 9, 0 and the attacker controls nodes 3 and 7, we can write this as "0, 1, 2, (3/7), 4, 5, 6, (3/7), 8, 9, 0". This is equivalent to two separate ledger loops: "0, 1, 2, (3/7), 8, 9, 0" and "(3/7), 4, 5, 6, (3/7)", where the 3 \rightarrow 7 traffic from the first loop cancels out the 7 \rightarrow 3 traffic from the second one. A threat where the attacker controls two nodes in a ledger loop can therefore be analyzed as two separate attacks.
+
+\subsubsection{Timing Analysis}
+One of the most worrisome threats may be timing analysis: in principle, a participant in a ledger loop knows that the ledger loop contains at least three participants, but does not know an upper bound of the number of participants. However, knowledge about network link speeds can help reveal such an upper bound. For instance, if the attacker knows that each network hops takes one second, and that a message was passed around the loop in four seconds, then they know there are no more than four participants in the loop. It does not work in the other direction: if a message takes 1000 seconds to go around the loop, this might be because one of the participants stalled for 996 seconds before forwarding the message. However, if all participants are known to always stall one second, then a roundtrip time of 8 seconds can also give evidence of a length-four loop. Randomizing the stall time helps a little bit to obfuscate loop length, but the attacker can average out this randomization by analyzing a large number of ledger loops together. Also, if all participants happen to randomly pick a low stall time, then a message could still travel around that loop in under 5 seconds. The most dangerous form of this threat is that where the attacker discovers with reasonable certainty that they are participating in a length-three loop, since this tells the attacker that their own debtor is also a neighbor of their own creditor.
+
+\subsubsection{Lying}
+LedgerLoops is a tool with which a user keeps track of debts and credit between themselves and their direct neighbors. The app has no leverage on the real world, other than through the user's own actions. This is why the neighbor always relies on the real-world trustworthiness of their own neighbors. For instance, an attacker who owes the user a significant asset could simply tell the user that their computer was compromised, and they no longer have a record of this debt. Even if the communication channel used cryptographic signatures, the attacker could deny having signed that message, stating that in fact some malware on their computer must have caused this message to be sent.
+
+\subsection{Mitigation}
+Make sure your computer is clean and use a peer-reviewed LedgerLoops app. Regularly make backups of ledger data, and regularly check if all ledgers still look as expected. Block neighbors who send low-quality messages, and contact them through other channels before removing the block.
+
+\ldots
 
 \section{Conclusion}
 The ledger loop length can be quite short (three or four participants), but none of the participants know this precisely. Participants can roughly tell that a loop where the rounds take a long time is more likely to have more participants than one on which message loop around quickly,
