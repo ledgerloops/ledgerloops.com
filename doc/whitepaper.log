@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  30 OCT 2016 19:40
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  3 NOV 2016 18:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -93,21 +93,32 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 30.
  [1
 
-]
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 69.
- (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
+] [2]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 90.
+
+(/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 69.
-[2] [3] [4] (./whitepaper.aux) ) 
-Here is how much of TeX's memory you used:
- 1874 strings out of 493030
- 26519 string characters out of 6136260
- 129757 words of memory out of 5000000
- 5450 multiletter control sequences out of 15000+600000
- 9134 words of font info for 33 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 26i,6n,40p,388b,1034s stack positions out of 5000i,500n,10000p,200000b,80000s
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 90.
+ [3] [4] [5] [6]
+[7] [8] [9] [10]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 304.
+ [11] [12] [13] [14]
+Overfull \hbox (127.63763pt too wide) in paragraph at lines 342--343
+[]\OT1/cmr/m/n/10.95 Also, the cur-rent ver-sion of the soft-ware used on the d
+emo page (http://ledgerloops.com/demo.html)
+ []
 
-Output written on whitepaper.dvi (4 pages, 17148 bytes).
+[15] [16] (./whitepaper.aux) ) 
+Here is how much of TeX's memory you used:
+ 1940 strings out of 493030
+ 27227 string characters out of 6136260
+ 147757 words of memory out of 5000000
+ 5515 multiletter control sequences out of 15000+600000
+ 9980 words of font info for 35 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 26i,6n,40p,1449b,1559s stack positions out of 5000i,500n,10000p,200000b,80000s
+
+Output written on whitepaper.dvi (16 pages, 65304 bytes).

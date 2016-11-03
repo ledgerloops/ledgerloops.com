@@ -24,131 +24,334 @@
 }
 
 \begin{document}
-\title{Ledger Loops: Debt loops across local ledgers (Work in Progress)}
+\title{{\em Ledger Loops}: Using cryptographically triggered IOUs to make the world go round.}
 \author{Michiel B. de Jong}
 \date{November 2016}
 \maketitle
 \begin{abstract}
-LedgerLoops is a protocol for clearing debts and credits across multiple ledgers. Unlike Bitcoin, which introduces one global public ledger, LedgerLoops acts on a loop of two or more local ledgers.
-This whitepaper introduces the concept of cryptographically triggered debts, which is at the core of LedgerLoops, and explains how they can be represented in a LedgerLoops contract. It also defines a messaging protocol which can be used to send these contracts along the ledger loop in a peer-to-peer fashion, and a decentralized algorithm to find cycles in a debt graph.
+LedgerLoops is a novel financial technology. Rather than a crypto-currency, it is better viewed as a decentralized protocol for ledger federation. At its core is the concept of {\em cryptographically triggered IOUs}.
+
+In this whitepaper, the Whispering Merchants problem serves as a simplified abstraction of economic exchange in general, where assets flow in loops. Traditionally, money would flow in the opposite direction, thus solving the coordination problem by effectively reducing the loop to a chain of one-to-one transactions. But money has a number of downsides, mainly due to the need to trust people other than your direct economical neighbors. Value fluctuations in a currency act as a single point of failure, which can have devastating effects on economic trade. LedgerLoops aims to allow assets to move around, while every trader only needs to trusts their own direct peers.
+
+In the Whispering Merchants problem, merchants sit in a circle, facing outward. Each merchant can only communicate with their two direct neighbors. Each merchant wants to sell an asset to their left neighbor, and buy an asset from their right neighbor. Each merchant only trusts their immediate neighbors, and they trust no one else (thus excluding fiat money as an option), nor are they interested in any other asset than the item offered by their right neighbor (thus excluding commodity money). The problem exists in achieving cooperation between the merchants so that all assets move one merchant to the left.
+
+LedgerLoops is a novel solution to the Whispering Merchants problem, based on cryptographically triggering each local IOU, rather than moving some sort of currency around the circle of merchants.
 \end{abstract}
-\section{Cryptographically Triggered Debts}
-A debt can be represented by an "I owe you asset A"-message ("IOU" for short), sent from the debtor to the creditor.
-A cryptographically triggered debt would take the form "I owe you asset A from the moment person X signs a certain cleartext".
-It doesn't matter who this person X is (they might be a complete stranger). In fact, person X is only identified by a public key. The cleartext holds no meaning either, and can be chosen at random; it only acts as a trigger to activate the debt.
+\section{Cryptographically Triggered IOUs}
+An IOU (short for "I owe you") is a message or document representing a debt.
+A cryptographically triggered IOU contains the same data as a standard IOU (debtor, beneficiary, asset owed, etc.), plus a cryptographic challenge.
 
-A cryptographically triggered debt does not immediately give the receiver a claim to the asset that would be owed by the sender; however, if the receiver can present cryptographic proof that at any point in time,
-person X signed the cleartext in question, this triggers the sender's debt into action.
-So a cryptographically triggered debt, combined with a valid signature for the cleartext it refers to, created with the key pair it refers to, is equivalent to a standard IOU.
-We say the existence of a valid signature {\em activates} all all cryptographically triggered debts that refer to this cleartext and this public key.
+The IOU is without value until the beneficiary presents a valid solution to the challenge. In the current version of the LedgerLoops protocol, the cryptographic challenge is defined by a public key and a cleartext; the challenge is simply to sign the cleartext. Only the person holding the corresponding private key will be able to do this, yet everybody can easily verify and agree if a solution to the challenge is valid or not.
 
-Settling a cryptographically triggered debt (after it has been activated) works the same way as settling
-a standard IOU: the IOU-receiver sends a message back to the IOU-sender, stating that the IOU-sender no longer owes
-the assets mentioned in that specific debt statement.
+The Whispering Merchants can use cryptographically triggered IOUs as follows to facilitate their trade. One merchant creates a cryptographic challenge. The identity of this initiator stays obfuscated. Remember all merchants are willing to give their asset to their left neighbor, but only if they can be sure that their own right neighbor will do the same.
 
-\section{The LedgerLoops Contract Format (version 0.5)}
-A LedgerLoops Contract is used to define cryptographically triggered debts. It refers to exactly one combination of a {\tt cleartext} and a {\tt pubkey}. It contains the following data (in UTF-8 JSON format):
+The initiator gives a cryptographically triggered IOU to his left neighbor, for the item he wants to offer. Each next left neighbor does the same. The details of the challenge are reused each time, but the item offered is different in each locally created IOU.
 
+Once the initiator receives a cryptographically triggered IOU from his own right neighbor, for the item he wants to receive, he solves the challenge and presents the solution to his right neighbor. Each next right neighbor now gives they asset they offered in exchange to the solution to the challenge.
+
+Since the challenge used in all cryptographically triggered IOUs was the same one for all trades along the loop, the solution to this challenge acts as a cryptographic coin, which has a well-defined value for each participant, but which loses its value as soon as the loop of trades has been settled.
+
+\section{The LedgerLoops Protocol (version 0.5)}
+In the last few weeks, I have implemented a few design iterations of the LedgerLoops protocol. Future versions are likely to differ from this, but let me describe roughly how it currently works.
+
+\subsection{Peer-to-peer Ledgers}
+As Graeber noted in his book "Debt: the first 5,000 years", peer-to-peer debt is useful for time-skewed barter between two peers; I give you something now, and you give me something in exchange tomorrow; in the meantime, a debt exists. This is why LedgerLoops is based on peer-to-peer ledgers (that is, ledgers on which two people keep track of what they owe each other).
+
+Before finding a loop along which assets can move around, the first step of the algorithm consists of agents building up a ledger with each of their neighbors in the graph, by sending each other standard, unconditional IOUs, of the following format:
 \begin{lstlisting}
 {
-  "protocolVersion": "ledgerloops-0.5",
-  "msgType": "cryptographically-triggered-contract",
-  "keyAlgorithm": "ed25519", // TODO: add requirements about key format, hashing, padding, etc.
-  "pubkey": <some public key, compatible with keyAlgorithm>,
-  "cleartext": "Go!",
-  "debtor": <a string which both parties understand to identify the debtor>,
-  "beneficiary": <a string which both parties understand to identify the beneficiary>,
-  "deliverable": <a string which both parties understand to define both the maximum and minimum conditions for considering this debt paid>
+  protocol: 'local-ledgers-0.1',
+  msgType: 'initiate-update',
+  transactionId: <a unique string>,
+  note: <a description of why this IOU is being sent, for instance "you paid for dinner yesterday">,
+  debtor: <identifier of the sender; this can be just a first name, as long as it's different from the first name of the recipient>,
+  addedDebts: {
+    [currency]: amount, // for instance 'USD': 10,
+  },
 }
 \end{lstlisting}
 
-\section{The Algorithm}
-To get a feel for how the LedgerLoops algorithm works, consider the following minimal example, involving three ledgers:
+Even if the communication network is reliable and would detect network outages without losing any messages, a malfunction in the receiver's software could make it look like this message was received successfully when in fact it was not, so to confirm receipt, the recipient replies with:
+\begin{lstlisting}
+{
+  protocol: 'local-ledgers-0.1',
+  msgType: 'confirm-update',
+  transactionId: <a unique string>,
+}
+\end{lstlisting}
+
+So in the current implementation, the exchange of assets is done asynchronously, creating debts on local ledgers, which then get fed into the cycle detection and settlement algorithm. Each participant will be happy if they can exchange one of their incoming debts against one of their outgoing debt, since the balance of each debt will go down, thereby minimizing their exposure to credit risk and enabling new trades to take place.
+
+\subsection{Routing}
+
+Finding cycles in a graph of which no one has a bird's eye view is an interesting computer science problem. Recently, 'Decentralized Cycle Detection' was included in a non-free IEEE publication. Unfortunately, due to the scientific journal's policy, no public version of the algorithm is available yet, but I can try to explain it in my own words:
 
 \begin{itemize}
-\item Bob and Otto maintain a peer-to-peer ledger, on which Bob owes Otto a banana.
-\item Otto and Michael maintain a peer-to-peer ledger, on which Otto owes Michael an orange.
-\item Michael and Bob maintain a peer-to-peer ledger, on which Michael owes Bob a mango.
+\item each leaf node (one that has either only in-neighbors or only out-neighbors), goes into 'deactivated' mode, and initiates a bread-first wave of messages through the network; from the point of view of each node, these messages mean as much as "I am sure I'm not part of a cycle".
+\item each internal node will go into 'deactivated' mode and forward the wave of messages to their out-neighbors as soon as they have received a message from each of their in-neighbors, and vice versa.
+\item nodes that have many in- and out-neighbors, but have at least one in-neighbor and at least one out-neighbor left from whom they have not yet received a message, can know that they are either on a cycle, or on a path from one cycle to another. At least, they can now discard all neighbors from whom they receive such a message, and drastically reduce their search space if they want to look for cycles.
 \end{itemize}
 
-Bob, Otto, and Michael can each only see two of these three ledgers, so none of them know that a debt cycle
-Bob -> Otto -> Michael -> back to Bob exists. To find this out and settle all three debts, they send the
-following messages:
+I adapted this algorithm slightly to make it work in graphs whose topology can change while the algorithm is running. At first, if a node has not sent or received any "confirm-update" messages yet, it has no neighbors in the debt graph, and is therefore created in deactivated mode.
 
-\subsection{Search round (debtor to creditor)}
-Bob, Otto and Michael all send the following message to Otto, Michael and Bob, respectively:
-"I have you as a creditor, but I also have at least one debtor, who may have other debtors, etc.,
-which may eventually lead back to you."
-
-In the actual implementation of the
-search round, a second message type is used - one like the one above, indicating "Yes, I'm interested in moving on to the probe round",
-and one indicating "No, count me out". 
-This round only establishes a best-effort statement of intent between peers, and its only
-goal is to reduce the search space for the probe round.
-
-\subsection{Probe round (creditor to debtor)}
-Bob, Michael and Otto all send the following message to Michael, Otto and Bob, respectively:
-"Right, so you said you have at least one debtor; try sending them this token, instructing them to forward it,
-so I can see if it comes back to me." (accompanied by a long random string which is generated by Bob).
-
-In the actual implementation, two tokens are used, one identifying the Depth-First-Search tree, the other identifying
-(backtrack-)paths along this tree.
-After this round, if the token string used was long enough to be unguessable, and the token makes it back to Bob,
-then Bob knows that a potential ledger loop exists (even though some participants may still pull out of the negotiations
-in a later phase).
-
-\subsection{Negotiation Round (creditor to debtor)}
-Bob now generates an asymmetric cryptographic key pair, keeps the private key safe, and sends Michael
-a LedgerLoops contract mentioning:
 \begin{itemize}
-\item the public key from the keypair,
-\item himself as the debtor,
-\item Michael as the beneficiary,
-\item as the deliverable he describes cancelling out Michael's mango debt.
+\item When a link is added, the nodes connected by the link both send out a breadth-first wave of messages meaning "I might be part of a cycle".
+\item These messages travel to the leafs of the network, where they bounce back and become reply messages meaning "No cycles here".
+\item Like in the original DCD algorithm, a node deactivates if it has received a "No" from either all out-neighbors or all in-neighbors, and then sends the "No cycles here" message on forward in its direction of travel.
+\item Nodes also deactivate as necessary when links disappear from the network.
 \end{itemize}
 
-Note that Bob does not intend to give Michael the equivalent of a mango, he instead states that he's willing to cancel
-Michael's debt if this cryptographically triggered debt gets activated. So maybe 'cryptographically activated debt cancellation'
- is a better name in this example than 'cryptographically triggered debt'. In general though, any transaction that updates the
-private peer-to-peer ledger between Bob and Michael could be sent in this way, as long as the recipient Michael is also the person
-benefitting from the ledger update (the beneficiary).
+As a special remedy against race conditions, when an internal node has already been activated, and then gets another positive "I might be part of a cycle" from a neighbor, it does not forward that message (since its state does not change, so there's no news to report). This means that this second message dies at this internal node, and does not get a chance to bounce against the leaf nodes at the edge of the network. The naive solution for this would be to wait for the first message to come back (either bouncing against leaves, or cycling around), but if a cycle is created by adding a lot of new links at almost the same time, a race condition can occure where both messages get suppressed along the way. Therefore, the internal node that suppresses the second message gives back a positive reply in this special case.
 
-Michael then sends an analoguous LedgerLoops contract to Otto (replacing the names and the asset referred to), and Otto does the
-same again, so that Bob now has a Cryptographically activated debt cancellation from Otto, and holds the private key that activates it.
+The current version of the LedgerLoops protocol is still a very simplified proof-of-concept, and participants in a loop are not yet allowed to negotiate exchange rates for assets; they need to indicate the value of their asset in terms of a unit of value, which is now (confusingly, I admit) called currency. All trades in a Ledger Loop still need to have exactly the same value, expressed in the same unit of value.
 
-This round is called the negotiation round because, in future versions, peers may get a chance to haggle over exchange rates. That
-way, agents may for instance charge small transaction fees for converting between currencies - the smaller the transaction fee,
-the higher the chance all peers in the ledger loop accept the offer. But for now, a transaction fee of zero works best. :)
+A node can send its "I'm not on a cycle" message in error or while lying on purpose - when this happens, this messages more precisely means "I'm not on a cycle of nodes that cooperate correctly".
 
-\subsection{Settlement Round (debtor to creditor)}
+\begin{lstlisting}
+{
+  protocol: 'ddcd-dfs-0.1',
+  msgType: 'update-status',
+  currency: <used as a unit of value here; for instance 'USD'>,
+  value: <true if the sending node might be on a cycle, false if it definitely isn't>
+  isReply: <true indicates this message is a reply to an earlier message>,
+}
+\end{lstlisting}
 
-In this round, the messages travel along the ledger loop in the opposite direction again: from debtor to creditor.
-First, Bob signs the
-cleartext, and presents Otto with the signature, thereby triggering Otto's contract and claiming his deliverable of cancelling out
-Bob's banana debt.
+Once the search space has been reduced using this 'Dynamic DCD' algorithm, depth-first-search (DFS) is used to find actual cycles. To start a DFS tree, generate a treeToken and a pathToken, two strings that are long enough to be hard to guess. Send the following message to one of your out-neighbors:
 
-Now that Otto has received the valid signature from Bob (even though he doesn't know the public key and signature belong
-directly to Bob),
-he can use that to tell Michael to cancel out to Otto's orange debt.
+\begin{lstlisting}
+{
+  protocol: 'ddcd-dfs-0.1',
+  msgType: 'probe',
+  currency: <used as a unit of value here; for instance 'USD'>,
+  treeToken: <a long string>,
+  pathToken: <a long string>,
+}
+\end{lstlisting}
 
-Michael is also happy, because now that he received the valid signature through Otto, he can tell Bob to cancel the mango debt.
+Each node forwards this message to one of their out-neighbors, until it reaches a leaf node. It is then backtracked to the last internal node which has more than one out-neighbor. This node generates a new pathToken but keeps the treeToken as it is, and sends the altered message to their next out-neighbor, until they also need to backtrack.
 
-All three debts have now been settled, and the goal has been achieved.
+The pathTokens which are included in addition to treeTokens are not really used yet; each node can remember what the last out-neighbor was they sent this treeToken to. However, a node may decide that its out-neighbor is unreachable, and after some timeout continue trying with the next sibling. Once this happens, it would be possible to find multiple cycles on one treeToken (but they would then have different pathTokens).
 
-In this case the ledger length was quite short, but none of the participants know this precisely. Participants can roughly tell that
-a loop where the rounds take a long time is more likely to have more participants than one on which message loop around quickly,
-but this information is obfuscated by differences in speed of the communication network, and by participants who choose to wait a
-little bit before forwarding a messages.
+If the probe reaches a node which it has already visited, this node intends to become the initiator of a LedgerLoop.
+\subsection{Cryptographically triggered IOUs}
 
-No central authority or Unique Node List was used, each participant only ever trusted their own direct peers, and none of the participants
-exposed the contents of their private ledgers to the rest of the network.
+The initiator generates a keypair and a random string to be signed. It then sends the following message to the out-neighbor to which it sent the treeToken that looped around:
 
-Also, nobody except Bob knows who the public key belonged to that triggered all three LedgerLoops contracts, and each peer only exposed
-their identity to their direct neighbors in the ledger loop. Unless participants volunteer to make this public,
-nobody (except for each participant's direct neighbors) knows exactly who particpated in which ledger loop.
+\begin{lstlisting}
+{
+  protocol: 'ledgerloops-0.5',
+  msgType: 'conditional-promise',
+  transaction: {
+    id: <a newly generated unique string>,
+    currency: <the currency from the probe>,
+    amount: <a small amount, for instance 0.01 USD, makes success more likely>,
+  },
+  challenge: {
+    name: 'ECDSA',
+    namedCurve: 'P-256',
+    pubkey: <base64 representation of public key in spki format>,
+    cleartext: <base64 representation of a random array of bytes>,
+  },
+  routing: {
+    protocol: 'ddcd-dfs-0.1',
+    treeToken: <the treeToken for which a loop was detected>,
+    pathToken: <the pathToken that looped back (so not the one that was sent forward initially>,
+  },
+}
+\end{lstlisting}
+
+Once this message reaches the initiator, the solution to its challenge is sent round in the opposite direction:
+
+\begin{lstlisting}
+{
+  protocol: 'ledgerloops-0.5',
+  msgType: 'satisfy-condition',
+  transactionId: <the transaction id from the conditional-promise message>,
+  solution: <the base64 representation of a valid signature  for the challenge from the conditional-promise message>,
+  routing: {
+    protocol: 'ddcd-dfs-0.1',
+    treeToken: <the treeToken for which a loop was detected>,
+    pathToken: <the pathToken that looped back (so not the one that was sent forward initially>,
+  },
+}
+\end{lstlisting}
+
+The routing information could be left out in this message type, but is in version 0.5 for practical reasons.
+
+After the receiver of a satisfy-condition message has verified its signature, it replies with the "confirm-update"
+message format earlier (using the transactionId from the "satisfy-condition" message, and once all nodes along the loop
+have done this, the trade is complete.
+
+If a node decides it has been waiting for too long, it can request a revokation of the cryptographically triggered IOU they sent earlier,
+by sending this messages behind it:
+
+\begin{lstlisting}
+{
+  protocol: 'ledgerloops-0.5',
+  msgType: 'please-reject',
+  transactionId: <the transaction id from the conditional-promise message>,
+}
+\end{lstlisting}
+
+A node should probably wait a few milliseconds before forwarding a cryptographically triggered IOU, in case the IOU has been buffered in
+a slow place for a while, and now has a "please-reject" message following directly behind it.
+
+To reject the cryptographically-triggered IOU you received earlier, use this message:
+
+\begin{lstlisting}
+{
+  protocol: 'ledgerloops-0.5',
+  msgType: 'reject',
+  transactionId: <the transaction id from the conditional-promise message>,
+}
+\end{lstlisting}
+
+
+The rejection will only be valid if it is sent by the recipient of the conditional-promise message in question.
+
+\section{Security Discussion}
+\subsection{Assessment Scope}
+\subsubsection{At the participant level}
+A participant in the LedgerLoops protocol is a human person or legal organization (the "user") who uses a computer on which LedgerLoops software (the "app") runs. This computer is potentially also used for other purposes. The user supplies contact details about other users (the user's "neighbors") to the app. This list of neighbors (containing contact details as well as personal notes such as nick names and profile photos) is sensitive information.
+
+Once the user creates ledgers with their neighbors, the information in these ledgers (current balance as well as transaction history, and personal notes added to each transaction, which are likely to reflect evidence of real-world events) is the second item of sensitive information.
+
+Each ledger is also personal between the user and the neighbor involved in that particular ledger; information from one ledger should not be leaked to one of the other ledgers, or otherwise become known to one of the user's other neighbors.
+
+When the app starts trying to route and resolve loops, this activity affects other software on the same computer, by using network, CPU and storage resources. The app should also not leak or damage sensitive information pertaining to other software on the same computer.
+
+If incorrect information were to enter the user's ledgers, the user's real-world assets could be at risk.
+In this case, as well as when the app sends low-quality messages to neighbors, the user's reputation with their neighbors (debtors and creditors), and possibly the user's public reputation. An example of a low-quality message could be one that is malformed, or one that represents incorrect or unfounded information, like when the app were to continuously bother neighbors with messages that convey a statement of intent, convincing the neighbors to invest effort, but never or rarely leading to a trade deal, thus wasting other participants' time.
+
+To summarize, the user would be negatively affected if:
+
+\begin{itemize}
+\item any of the following information is leaked, either to one of the user's other neighbors, or publicly:
+  \begin{itemize}
+  \item identity of the user's neighbors
+  \item information contained in notes about the user's neighbors
+  \item ledgers (current balance as well as transaction history)
+  \item information contained in notes on the ledgers
+  \item other information, unrelated to the app but present on the computer
+  \end{itemize}
+  
+\item the app would make excessive use of any of the following computer resources:
+  \begin{itemize}
+  \item network bandwidth
+  \item CPU resources
+  \item storage resources
+  \end{itemize}
+  
+\item the app's copy of the following information would be damaged (it may trigger real-world events, or be the only copy of this data):
+  \begin{itemize}
+  \item ledger balance and transaction history
+  \item other information, unrelated to the app but present on the computer
+  \end{itemize}
+  
+\item the app's incorrect or unreasonable behavior damages the user's reputation with:
+  \begin{itemize}
+  \item debtor neighbors
+  \item creditor neighbors
+  \item third parties or the general public
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{At the network region level}
+Once a number of users rely on the network beyond their own neighbors to find and resolve ledger loops, these users would be negatively
+affected if this network clogs up or breaks down, affecting participants who are not neighbors of the user, but who would be candidates
+to participate in a ledger loop in which the user and their neighbors would also participate.
+
+Even if the valid participants of the network are unaffected, an excess number of useless participants would make the valid participants hard to find.
+
+Likewise, useless network traffic could slow down the processing of valid network traffic.
+
+The network as a whole is decentralized, and several independent regions (connected components in the network graph) could exist.
+Low-quality areas in the network will mostly affect users at a short network distance from the low-quality region. Therefore,
+in terms of valuable assets, we should consider network regions, more than the global network as a whole. We can write these assets at
+the network region level down as:
+
+\begin{itemize}
+\item average quality of participants at distance d from a user (d>=2)
+\item average quality of messages received from a user's neighbor, but triggered by messages at distance d>=2.
+\end{itemize}
+
+\subsection{System Modeling}
+As already defined a bit in the previous subsection, a user uses the app running on a computer. The app sends LedgerLoops messages, only to direct neighbors of the users, although these messages might cause ripple effects, triggering messages to other participants at distance d>=2.
+The messages sent between neighboring users travel over a secure communication channel (the sending and receiving client software for this communication channel is not part of the app). Neighbors of a user can be divided into two categories: debtor (owes or offers something to the user), and creditors (to whom the user owes or offers something). Incentives for cooperation can be different for debtors than for creditors. For instance, if a creditor misbehaves, the user can block them (ignore messages from them) and tell the neighbor user in question through a side channel to change their app's behavior if they still want to access their credit. If the creditor does not comply, the user can confiscate their credit. However, if a debtor misbehaves, the user cannot so easily block their messages, as this would effectively allow the debtor to never pay back their debt - or at least not pay it back via LedgerLoops.
+
+\subsection{Threats}
+\subsubsection{The user's own computer and LedgerLoops app}
+While the user's app is running on the computer, it needs to access all information and resources mentioned in the assessment scope above. Therefore, a malfunctioning app would put all these assets at risk. When the user's computer is running, even if the app is not, there is probably no way to protect against potential malware on the computer. Even if the app stores its data in encrypted format, the user would have to unlock this data when starting to use the app, and any passphrase or secret used to do this while starting up the app could be intercepted by such malware. The computer as a whole could, however, use disk encryption so that if an attacker gains physical access to the computer, but can not force the user to enter their passphrase, the data stored on the computer would be safe. In short, if the user's computer is compromised, the attacker could access the user's information, damage the user's reputation, damage the user's real-world assets, and the user's reputation. A malfunction (bug) in the app could also potentially put all of these assets at risk.
+
+The following threat descriptions all assume the user's computer is clean and the app functions correctly.
+
+\subsubsection{Social Engineering}
+A user could be convinced by an attacker to add a neighbor with whom they don't have a real-world trust relationship. Adding a malicious debtorcould expose information about the user's creditors. For instance, if an attacker wants to know if the user frequents a certain restaurant, they could buy a meal voucher from that restaurant, and at the same time offer something attractive to the user. If the user accepts the offer from the attacker, then the next time the user eats at that restaurant, the user's app could cooperate with the restaurant's app and the attacker's app to find a loop. If such a loop is found, then the attacker knows that either the user just visited the restaurant, or the user owes something to a participant, (who owes something to a participant, who \ldots) owes something to the restaurant.
+
+Adding a malicious creditor could likewise expose information about the user's debtors.
+
+\subsubsection{Network Area Attacks}
+Nobody except a user's own neighbors is allowed to send the user messages directly, so standard Spam and Denial-of-Service attacks will not work to degrade a user's LedgerLoops app (it might still work to affect the user's computer or the user's internet connection, of course).
+
+However, apart from the attacker becoming a neighbor of the victim (which should be quite hard if the user is careful), the attacker could try to control many nodes in the network area surrounding the user (so nodes that are two or three hops away from the victim). This would allow the attacker to degrade the quality of the user's network area,
+for instance by injecting a lot of useless messages (low-quality traffic), and by making nodes look attractive for cooperation but never reaching agreement.
+
+\subsubsection{Traffic Analysis}
+Even if all of the user's neighbors (and their computers and their apps) are clean, an attacker in the same network area as the user could obtain information about the user by analysing their own ledger loops. If the attacker has several two-hop connections with the user, they could potentially analyse the messages they receive, and send their own messages to test hypotheses, to gather metadata about the user. They will not be able to know which of the ledger loops the user took part in, and it could be that what they are modeling as the targeted user is in fact two or three different users, but by playing it smart, they could potentially create an ever more detailed model of the targeted user.
+
+\subsubsection{Figure-8 Attacks}
+An attacker could aim to control two or more participants in the same ledger loops. However, if a ledger loop goes through participants 0, 1, 2, \ldots, 9, 0 and the attacker controls nodes 3 and 7, we can write this as "0, 1, 2, (3/7), 4, 5, 6, (3/7), 8, 9, 0". This is equivalent to two separate ledger loops: "0, 1, 2, (3/7), 8, 9, 0" and "(3/7), 4, 5, 6, (3/7)", where the $3 \rightarrow 7$ traffic from the first loop cancels out the $7 \rightarrow 3$ traffic from the second one. A threat where the attacker controls two nodes in a ledger loop can therefore be analyzed as two separate attacks.
+
+\subsubsection{Timing Analysis}
+One of the most worrisome threats may be timing analysis: in principle, a participant in a ledger loop knows that the ledger loop contains at least three participants, but does not know an upper bound of the number of participants. However, knowledge about network link speeds can help reveal such an upper bound. For instance, if the attacker knows that each network hops takes one second, and that a message was passed around the loop in four seconds, then they know there are no more than four participants in the loop. It does not work in the other direction: if a message takes 1000 seconds to go around the loop, this might be because one of the participants stalled for 996 seconds before forwarding the message. However, if all participants are known to always stall one second, then a roundtrip time of 8 seconds can also give evidence of a length-four loop. Randomizing the stall time helps a little bit to obfuscate loop length, but the attacker can average out this randomization by analyzing a large number of ledger loops together. Also, if all participants happen to randomly pick a low stall time, then a message could still travel around that loop in under 5 seconds. The most dangerous form of this threat is that where the attacker discovers with reasonable certainty that they are participating in a length-three loop, since this tells the attacker that their own debtor is also a neighbor of their own creditor.
+
+\subsubsection{Lying}
+LedgerLoops is a tool with which a user keeps track of debts and credit between themselves and their direct neighbors. The app has no leverage on the real world, other than through the user's own actions. This is why the neighbor always relies on the real-world trustworthiness of their own neighbors. For instance, an attacker who owes the user a significant asset could simply tell the user that their computer was compromised, and they no longer have a record of this debt. Even if the communication channel used cryptographic signatures, the attacker could deny having signed that message, stating that in fact some malware on their computer must have caused this message to be sent.
+
+\subsection{Mitigation}
+To mitigate the threats described above, a user should make sure their computer is clean, and use a peer-reviewed LedgerLoops app.
+They should regularly make backups of ledger data, and regularly check if all ledgers still look as expected.
+The app should help the use to block neighbors who send low-quality messages, and to contact them through other channels, resolving the issue before removing the block.
+Users should not rely on their LedgerLoops app as the only record of their credits and debts, so that users can fall back on other records (emails, chat logs, paper documents etc.) in case a the information in a ledger becomes incorrect. Also, settling peer-to-peer debts before they become to big (for instance using plain-old-banking-system bank transfers) can help to keep the credit risk to which a user is exposed within reasonable limits.
+
+\section{Roadmap}
+The current version of the LedgerLoops protocol still lacks a few features. Mainly, the "currency" field in probe messages can be removed, and the "currency" and "amount" fields in the "conditional-promise" message can be replaced by an opaque reference to an "asset", leaving it up to the sender and receiver of the cryptographically triggered IOU to agree on the minimum and maximum definition of what asset is being traded. For instance, instead of describing an amount in a real-world currency, the IOU could mention "a bicycle in reasonable working condition". Assets like that could be traded in smaller parts, for instance 10 parts which each represent 10\% of the asset.
+
+A LedgerLoops app could allow the user to define minimal exchange rates for pairs of assets the neighbor owes and is owed. The danger in this is that every candidate participant in a loop would try to make a profit, and the asset which the initiator is offered by their right neighbor would be worth much less than the asset the initiator offered for trade in the beginning. This brings the candidate participants into a sort of prisoner's dilemma: they should all try to make reasonable trade offers, otherwise no agreement will be reached, and nobody can trade. On the other hand, when agreement is reached, each participant could feel like they might have been able to negotiate a better deal if they would have negotiated a bit harder. This is a reality in all economic trade, but allowing it to occur in LedgerLoops negotiations will probably require more messages to be passed before a participants agree on a loop, and these extra messages may expose more information about each participant than in the current version of the protocol.
+
+Finally, the current version of the protocol is limited to each participant trading part of one of their credits against part of one of their debts. In practice, it may be attractive for a user to exchange part a reduction of debt at one creditor against an increase of debt at another creditor, or to exchange an increase of credit at one debtor for a decrease of credit at another debtor. This would require a change in the routing algorithm, since this makes every debtor and every creditor both a potential in-neighbor and a potential out-neighbor. The app would then probably allow users to indicate in more detail which creditors and which debtors they prefer over others (for instance, a user would typically prefer to have a credit at a neighbor they trust more, or with whom they have closer or more frequent real-world contact).
+
+An advantage of this would be that users can choose to increase the general liquidity of their network surroundings by defining capacitances - for instance, instruct the app to always participate in a ledger loop in either direction with their closest friends for up to a set maximum of for instance 10 USD. If a close-nit group of friends all set a 10 USD capacitance with all their neighbors, this means more trades become routable between one group member, and outsider, and another group member, become routable. Likewise, local hubs (like for instance a neighborhood community center, a bar, a sportsclub, or another place where people socialize) could act as capacitors, providing liquidity for users who often visit this place and have a ledger between themselves and the hub. Users could use a credit at the hub to pay for their drinks at the bar there, or in the case of a sports club, to pay their membership fee. Mobile phone operators who provide prepaid SIM cards could also act as capacitors, since the prepaid SIM card is essentially already a ledger (this is part of the reason behind the success of M-Pesa in Kenya).
+
+The term capacitor / capacitance here comes from the analogy with the role these terms play in analysis of AC currents in analogue electronic circuits.
+
+\section{Usability Discussion}
+\subsection{Comparison with other financial technologies}
+LedgerLoops has an obvious downside when compared to for instance crypto-currencies: a ledger update is has no real-world effect unless you trust your own neighbors. You can only obtain credit in a LedgerLoops network if you have neighbors who you trust to keep this credit safe for you. Crypto-currencies don't perform very well either as a long-term value store, but at least they allow you to store your value against "the network in general", instead of having to pick a specific other participant.
+
+However, given that users will supposedly have to trust their direct trade peers anyway, and as long as the user defines a maximum credit/debt level for which it trusts each neighbor, it also has obvious advantages over other currently known financial technologies.
+
+Without the use of LedgerLoops, trade can only be facilited, and value can only flow around the economy, if it is offset by a counter-flow of some sort. This could be either a commodity that has real value, or some sort of token whose value is based on trust that your future trade peers will also attribute value to this sort of token.
+
+Such trust in a (by itself worthless) token is often based on hype (hoping a certain crypto-currency will stay popular), or on war (politicians will generally send their soldiers to war to defend a government-issued currency when the power of the government is at risk), or on citizen-paid taxes (often used to bail out failing banks). LedgerLoops avoids this reliance on globally defined tokens, which makes it a much more decentralized technology. Any group of people can start to use the LedgerLoops protocol within their community, without relying on the health of a globally defined currency or on the health of a global network. If a hype of activity in LedgerLoops transaction rises and falls in some local geographic area, this has very little effect on the ability of people in another geographic area to use the LedgerLoops protocol. That being said, of course, communities would benefit from connecting with another community, and this would automatically happen if a few users form part of both communities. This network effect is very similar to how the internet works.
+
+\subsection{Starting to use LedgerLoops}
+First of all, let me state that version 0.5 of LedgerLoops should be considered a developer preview, and further development will most likely be needed before the protocol is production-ready. Until we gain a better understanding of the network dynamics in more complex topologies, its use is only recommended for academic experiments, not for real-world trade. Users are advised to only trade very small assets, for instance up to 1 USD, since we can't yet predict what dynamics would arise, and what other security considerations may be discovered during such initial experiments.
+
+Also, the current version of the software used on the demo page (http://ledgerloops.com/demo.html) is not recommended for production; I probably need to rewrite it from scratch, using what I learned in the last few weeks developing this version 0.5 of LedgerLoops. Importantly, the code has also not been reviewed by a security expert yet, so it's not unlikely that this implementation contains a few vulnerabilities; in short, please only use it to run simulations, don't entrust it with data about your real-world trade peers yet.
+
+One path to start using LedgerLoops in the real world, would be to develop an Android app which can access a smartphone's addressbook, and use the API of an existing end-to-end encrypted messaging platform for delivering the LedgerLoops messages to the user's neighbors. This would require a potential user to convince their real-world trade peers to install the same app, which would be impractical for casual one-time trade peers, but could work well for, for instance, people who share a house, or for the members of a sports club (where the administration of membership fees could be a driving use case).
+
+Another path would be integration in existing peer-to-peer ledger apps, like Splitwise, Settle Up, and (to a lesser extent) payment and banking apps like the Dutch Bunq app and the German Opentabs.de app. Integration with LedgerLoops could be an interesting option for the publishers of such apps, as it could allow them to offer their existing users an attractive new feature: the ability to settle bills without requiring the user to register their creditcard or link their traditional bank account.
+
+In any case, integrating the current version of the LedgerLoops protocol in an existing app is not yet recommended, but it could become an interesting innovation opportunity in the near future, once LedgerLoops grows out of the experimentation phase.
 
 \section{Conclusion}
-This is a work in progress. Full implementation details of LedgerLoops 0.5, as well as an initial discussion of security considerations,
-will be documented soon, once the list of unresolved issues stabilizes a little bit more:
+This is a work in progress, I hope you enjoyed reading it. Your comments and contributions would be very welcome, please post them as
+GitHub issues for public discussion, here:
+
 https://github.com/michielbdejong/ledgerloops/issues
+
+LedgerLoops is a research project by Michiel de Jong, and is published patent-free under a Creative Commons license (CC-BY-SA 3.0).
 \end{document}

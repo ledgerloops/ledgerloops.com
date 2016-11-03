@@ -143,7 +143,7 @@ Search.prototype._handleNeighborStateChange = function(neighborDirection, newNei
       isReply: true,
     }];
   }
-  // initiate positive reply to outgoing ping, but not don't reply to replies:
+  // initiate positive reply to outgoing ping, but don't reply to replies:
   if (newNeighborState === true && !this._haveInactiveNeighbors(OPPOSITE[neighborDirection], currency) && !isReply) {
     // I have nowhere to forward their ping to, not because I'm a dead-end, but because I already sent a ping myself which masks theirs:
     // This is necessary for the race test in test/integration/full-flow.js

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>LedgerLoops</title>
+    <title>LedgerLoops: Cryptographically triggered IOUs</title>
     <meta charset="utf-8" />
     <style>
       body { margin: 0px auto; padding: 3em 0em 3em 0em; font:15px sans-serif; line-height:1.4em; width:40em; background-color: #B00000; color: #FFFFFF }
@@ -15,7 +15,7 @@
     <!-- img src="https://unhosted.org/img/opentabs.png" / -->
     <a href="https://github.com/michielbdejong/ledgerloops"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a> 
 
-    <h1>LedgerLoops (<a href="https://github.com/michielbdejong/ledgerloops/issues">Work in Progress</a>)</h1>
+    <h1>LedgerLoops</h1>
     <h2>The Tale of the Whispering Merchants</h2>
 
     <h3>The bench around the old Tree</h3>
@@ -29,7 +29,7 @@
     <h3>Peer-to-peer Barter, and the Deadlock Situation</h3>
       <p>On some days, trade would be plentiful, as each merchant would bring various items, trade some of those against other items with their left neighbor, and do the same with their right neighbor, always looking for items they think they can sell again in a next barter transaction. Sometimes items would travel halfway around the tree before they reach a merchant who cannot sell it on further.</p>
       
-      <p>But on this particular Monday, none of the merchants is able to reach a barter trade with either of their neighbors. The problem is that each merchant has an interesting item to offer to the person on their left, but not to the person on their right.</p>
+      <p>But after some time, a trade deadlock occurs: none of the merchants is able to reach a barter trade with either of their neighbors. The problem is that each merchant has an interesting item to offer to the person on their left, but not to the person on their right.</p>
       
       <p>Conversely, each merchant is only interested in the item offered by the person on their right, but not in the item offered by the person on their left.</p>
       
@@ -88,17 +88,11 @@
       <p>Merchants no longer need to ask their banker to move fruit vouchers from their bank account to another merchant's bank account, or even know if the other merchant has an account at a banker that is federated with their own banker; they just see if a LedgerLoop exists that passes through their own banker on one side, and through their neighbor merchant on the other side. So although they still need to trust bankers who act as their neighbors in a LedgerLoop, they no longer rely on bankers to issue fruit vouchers.</p>
       <p>The mayor is also happy about this, because it means that although merchants still rely on bankers as a safe value store and as a source of bank loans, they no longer rely so heavily on banker's vouchers for facilitating trade.</p>
 
-    <h2>Whitepaper</h2>
+    <h2>Whitepaper: Using cryptographically triggered IOUs to make the world go round.</h2>
       This story is of course fictional. LedgerLoops was not invented by a merchant under a tree, but by
-<a href="//michielbdejong.com">Michiel B. de Jong</a>. He is currently working on <a href="/doc/whitepaper.pdf">this whitepaper draft (pdf)</a> about it, and is publishing LedgerLoops under the CC-BY-SA license. LedgerLoops is free for all to use and profit from without his prior permission, as long as you include a reference to LedgerLoops somewhere in your documentation. LedgerLoops is decentralized and for everybody, which also means it's not for sale, although Michiel is currently <a href="https://www.linkedin.com/in/michielbdejong">available for hire</a>.
+<a href="//michielbdejong.com">Michiel de Jong</a>. To read about the technical details, please see the <a href="/doc/whitepaper.pdf">LedgerLoops whitepaper (pdf)</a>. LedgerLoops is decentralized and for everybody, which also means it's not for sale, although Michiel is currently <a href="https://www.linkedin.com/in/michielbdejong">available for hire</a>.
 
-    <h2>Discussion at Complicity'13</h2>
-    This was recorded at a conference in Berlin, when LedgerLoops was still called Opentabs and didn't use cryptographic challenges yet:
-    <iframe src="//player.vimeo.com/video/79024018?portrait=0&amp;color=aeb0b0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> <p><a href="http://vimeo.com/79024018">COMPLICITY | Michiel de Jong & Eleanor Saitta | #bgcon13</a> from <a href="http://vimeo.com/berlinergazette">Berliner Gazette</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
-
-   <h2>Participate</h2>
-   <p>See <a href="https://github.com/michielbdejong/ledgerloops/issues">the github repo for this website, the whitepaper, and the demo implementation</a>.
-
+    <h2>Participate</h2>
+    <p>See the <a href="https://github.com/michielbdejong/ledgerloops/issues">github repo</a> for this website, the whitepaper, and the <a href="./demo.html">demo</a> implementation.
   </body>
-  <!-- script src="./js/bundle.js"></script  -->
 </html>
