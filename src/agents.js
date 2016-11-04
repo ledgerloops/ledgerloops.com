@@ -26,9 +26,11 @@ const SETTLEMENT_AMOUNT = { // lower values make it more likely a loop is found,
   USD: 0.05,
 };
 
-function Agent(myNick) {
+function Agent(myNick, shouldReprobe) {
   this._settlementEngine = new SettlementEngine((peerNick, obj) => { this._createPendingSettlement(peerNick, obj); }, () => {
-    this._probeEngine.reprobe();
+    if (shouldReprobe) {
+      this._probeEngine.reprobe();
+    }
   });
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
@@ -50,7 +52,7 @@ Agent.prototype._handleCycle = function(cycleObj) {
     return Promise.resolve();
   }
   var myDebtAtOutNeighbor = this._ledgers[cycleObj.outNeighborNick].getMyDebtAmount(cycleObj.currency);
-  if (myDebtAtOutNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]*.9999) { // because of rounding errors in demo
+  if (myDebtAtOutNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]*0.9999) { // because of rounding errors in demo
     return Promise.resolve();
   }
 
@@ -58,7 +60,7 @@ Agent.prototype._handleCycle = function(cycleObj) {
   if (myCreditAtInNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
   }
-  cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency]*.9999; // because of rounding errors in demo
+  cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency]*0.9999; // because of rounding errors in demo
   return this._settlementEngine.initiateNegotiation(cycleObj).then(this._sendMessages.bind(this));
 };
 
