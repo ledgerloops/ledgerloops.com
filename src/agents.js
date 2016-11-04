@@ -50,12 +50,12 @@ Agent.prototype._handleCycle = function(cycleObj) {
     return Promise.resolve();
   }
   var myDebtAtOutNeighbor = this._ledgers[cycleObj.outNeighborNick].getMyDebtAmount(cycleObj.currency);
-  if (myDebtAtOutNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
+  if (myDebtAtOutNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
   }
 
   var myCreditAtInNeighbor = this._ledgers[cycleObj.inNeighborNick].getMyCreditAmount(cycleObj.currency);
-  if (myCreditAtInNeighbor < SETTLEMENT_AMOUNT[cycleObj.currency]) {
+  if (myCreditAtInNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
   }
   cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency];

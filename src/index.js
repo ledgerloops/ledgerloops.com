@@ -58,7 +58,11 @@ function sendButton(amount) {
     pickButton('receiver');
     to = document.getElementById('receiver').value;
   }
-  sendIOU(from, to, amount, 'USD');
+  if (from === to) {
+    window.alert('Receiver nick should be different from sender nick');
+  } else {
+    sendIOU(from, to, amount, 'USD');
+  }
 }
 
 function pickButton(actor) {
