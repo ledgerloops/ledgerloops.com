@@ -65,19 +65,35 @@ function sendButton(amount) {
   }
 }
 
-function pickButton(actor) {
+function pickAgent(actor) {
   var nicks = [
+    'Marsellus',
     'Mia',
     'Vincent',
+    'Jules',
     'Pumpkin',
     'Honeybunny',
-    'Jules',
     'Butch',
-    'Marsellus',
-    'Jody',
-    'Lance',
+    'Fabienne',
   ];
-  document.getElementById(actor).value = nicks[Math.floor(Math.random()*nicks.length)];
+  return nicks[Math.floor(Math.random()*nicks.length)];
+}
+
+function pickAgents(num, have = []) {
+  if (num === 0) {
+    return have;
+  }
+  var newAgent = pickAgent();
+  if (have.indexOf(newAgent) !== -1) {
+    // try again to pick one we don't have yet:
+    return pickAgents(num, have);
+  }
+  have.push(newAgent);
+  return pickAgents(num-1, have);
+}
+
+function pickButton(actor) {
+  document.getElementById(actor).value = pickAgent();
 }
 
 document.getElementById('pick-sender').onclick = function() {
@@ -102,8 +118,8 @@ document.getElementById('send-100').onclick = function() {
   sendButton(1.00);
 };
 
-
-sendIOU('Alice', 'Bob', 1, 'USD');
-sendIOU('Bob', 'Charlie', 1, 'USD');
-sendIOU('Charlie', 'Alice', 1, 'USD');
+var initialAgents = pickAgents(3);
+sendIOU(initialAgents[0], initialAgents[1], 1, 'USD');
+sendIOU(initialAgents[1], initialAgents[2], 1, 'USD');
+sendIOU(initialAgents[2], initialAgents[0], 1, 'USD');
 setInterval(displayAgents, 1000);
