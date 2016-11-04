@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  4 NOV 2016 15:07
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2016.10.6)  4 NOV 2016 15:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -106,9 +106,9 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <10.95> on input line 304.
  [11] [12] [13] [14]
-Overfull \hbox (127.63763pt too wide) in paragraph at lines 342--343
+Overfull \hbox (131.9568pt too wide) in paragraph at lines 342--343
 []\OT1/cmr/m/n/10.95 Also, the cur-rent ver-sion of the soft-ware used on the d
-emo page (http://ledgerloops.com/demo.html)
+emo page (https://ledgerloops.com/demo.html)
  []
 
 [15] [16] (./whitepaper.aux) ) 
