@@ -7,13 +7,14 @@ var stringify = require('canonical-json');
 
 const FORWARDING_TIMEOUT = 50;
 
-function SettlementEngine(pendingDebtCallback) {
+function SettlementEngine(pendingDebtCallback, reProbeCallback) {
   this._signatures = new Signatures();
   this._outstandingNegotiations = {};
   this._fundingTransaction = {};
   this._fundedTransaction = {};
   this._pubkeyCreatedFor = {};
   this._recordPendingDebt = pendingDebtCallback;
+  this._triggerReProbe = reProbeCallback;
 }
 
 // required fields in obj:
@@ -76,27 +77,28 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           resolve([]);
           return;
         }
-        this._signatures.verify(
-            pendingNegotiation.challenge.cleartext, 
-            pendingNegotiation.challenge.pubkey,
-            msgObj.solution).then(verdict => {
-          if (!verdict) { // reject silently 
-            resolve([]);
-            return;
-          }
-          var ledgerUpdateObj = {
-            transactionId: msgObj.transactionId,
-            addedDebts: {
-              [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
-                  -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
-            },
-            debtor: debtorNick,
-          };
-          if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
-            resolve([
-              { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
-            ]);
-          } else {
+        if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
+          this._triggerReProbe();
+          resolve([
+            { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
+          ]);
+        } else {
+          this._signatures.verify(
+              pendingNegotiation.challenge.cleartext, 
+              pendingNegotiation.challenge.pubkey,
+              msgObj.solution).then(verdict => {
+            if (!verdict) { // reject silently 
+              resolve([]);
+              return;
+            }
+            var ledgerUpdateObj = {
+              transactionId: msgObj.transactionId,
+              addedDebts: {
+                [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
+                    -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
+              },
+              debtor: debtorNick,
+            };
             var mySatisfyConditionObj = {
               transactionId: this._fundingTransaction[msgObj.transactionId],
               solution: msgObj.solution,
@@ -108,8 +110,8 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
               { toNick: debtorNick, msg: messages.ledgerUpdateInitiate(ledgerUpdateObj) },
               { toNick: creditorNick, msg: messages.satisfyCondition(mySatisfyConditionObj) },
             ]);
-          }
-        }, reject);
+          }, reject);
+        }
         break;
       default:
         reject(new Error(`unknown msgType to debtor: ${msgObj.msgType}`));

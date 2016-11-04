@@ -27,7 +27,9 @@ const SETTLEMENT_AMOUNT = { // lower values make it more likely a loop is found,
 };
 
 function Agent(myNick) {
-  this._settlementEngine = new SettlementEngine((peerNick, obj) => { this._createPendingSettlement(peerNick, obj); });
+  this._settlementEngine = new SettlementEngine((peerNick, obj) => { this._createPendingSettlement(peerNick, obj); }, () => {
+    this._probeEngine.reprobe();
+  });
   this._search = new Search(this._sendMessages.bind(this));
   this._probeEngine = new ProbeEngine();
   this._probeTimer = setInterval(() => { this._probeTimerHandler(); }, PROBE_INTERVAL);
@@ -118,6 +120,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
     debt.confirmedByPeer = true;
     this._ensurePeer(fromNick);
     neighborChanges = this._ledgers[fromNick].addDebt(debt);
+console.log('creditor neighborChanges', fromNick, this._myNick, neighborChanges);
     return this._sendMessages([{
       toNick: fromNick,
       msg: messages.ledgerUpdateConfirm(debt),
@@ -136,7 +139,7 @@ Agent.prototype._handleMessage = function(fromNick, incomingMsgObj) {
 
   case 'confirm-update':
     neighborChanges = this._ledgers[fromNick].markIOUConfirmed(incomingMsgObj.transactionId);
-    debug.log(`${this._myNick} handles neighbor changes after receiving a confirm-IOU from ${fromNick}:`, neighborChanges);
+console.log('debtor neighborChanges', this._myNick, fromNick, neighborChanges);
     return Promise.all(neighborChanges.map(neighborChange => Promise.resolve(this._search.onNeighborChange(neighborChange)))).then(results => {
       var promises = [];
       for (var i=0; i<results.length; i++) {
