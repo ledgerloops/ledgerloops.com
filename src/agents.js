@@ -50,7 +50,7 @@ Agent.prototype._handleCycle = function(cycleObj) {
     return Promise.resolve();
   }
   var myDebtAtOutNeighbor = this._ledgers[cycleObj.outNeighborNick].getMyDebtAmount(cycleObj.currency);
-  if (myDebtAtOutNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]) {
+  if (myDebtAtOutNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]*.9999) { // because of rounding errors in demo
     return Promise.resolve();
   }
 
@@ -58,7 +58,7 @@ Agent.prototype._handleCycle = function(cycleObj) {
   if (myCreditAtInNeighbor <= SETTLEMENT_AMOUNT[cycleObj.currency]) {
     return Promise.resolve();
   }
-  cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency];
+  cycleObj.amount = SETTLEMENT_AMOUNT[cycleObj.currency]*.9999; // because of rounding errors in demo
   return this._settlementEngine.initiateNegotiation(cycleObj).then(this._sendMessages.bind(this));
 };
 

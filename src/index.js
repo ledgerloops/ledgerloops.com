@@ -28,10 +28,10 @@ if (typeof window !== 'undefined') {
 }
 
 function displayLedger(ledger) {
-  if (typeof ledger._debts.USD === 'undefined') {
+  if (typeof ledger._debts.USD === 'undefined' || ledger._debts.USD.amount < .0001) {// because of rounding errors
     return `Quits`;
   }
-  return `${ledger._debts.USD.debtor} now owes ${(Math.floor(100*ledger._debts.USD.amount+0.5))/100}`;
+  return `${ledger._debts.USD.debtor} now owes ${(Math.floor(100*ledger._debts.USD.amount+.5))/100}`;
 }
 
 function displayAgents() {
