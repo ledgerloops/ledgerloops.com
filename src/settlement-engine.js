@@ -77,6 +77,14 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
           resolve([]);
           return;
         }
+        var ledgerUpdateObj = {
+          transactionId: msgObj.transactionId,
+          addedDebts: {
+            [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
+                -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
+          },
+          debtor: debtorNick,
+        };
         if (this._signatures.haveKeypair(this._outstandingNegotiations[msgObj.transactionId].challenge.pubkey)) { // you are the initiator
           this._triggerReProbe();
           resolve([
@@ -91,14 +99,6 @@ SettlementEngine.prototype.generateReactions = function(fromRole, msgObj, debtor
               resolve([]);
               return;
             }
-            var ledgerUpdateObj = {
-              transactionId: msgObj.transactionId,
-              addedDebts: {
-                [this._outstandingNegotiations[msgObj.transactionId].transaction.currency]:
-                    -this._outstandingNegotiations[msgObj.transactionId].transaction.amount,
-              },
-              debtor: debtorNick,
-            };
             var mySatisfyConditionObj = {
               transactionId: this._fundingTransaction[msgObj.transactionId],
               solution: msgObj.solution,

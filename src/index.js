@@ -31,7 +31,7 @@ function displayLedger(ledger) {
   if (typeof ledger._debts.USD === 'undefined') {
     return `Quits`;
   }
-  return `${ledger._debts.USD.debtor} now owes ${ledger._debts.USD.amount}`;
+  return `${ledger._debts.USD.debtor} now owes ${(Math.floor(100*ledger._debts.USD.amount+0.5))/100}`;
 }
 
 function displayAgents() {
