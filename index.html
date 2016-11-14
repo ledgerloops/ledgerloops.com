@@ -11,7 +11,7 @@
       h2 { font:25px sans-serif }
       p { text-aling: justify }
       a { color: #00FF00 }
-      img { box-shadow: 0 0 2em #FFFFFF; border-radius: 1em }
+      table a { color: #008F00 }
     </style>
   </head>
   <body>
@@ -21,12 +21,12 @@
     <h2>The Tale of the Whispering Merchants</h2>
       <p>Once upon a time, merchants would sit around an old tree to seek shade and, of course, trade.</p>
       <p>Each merchant would with their back to the tree, looking out over the village square, and chatting with the two persons sitting directly on either side of them. They can't see or directly communicate with anyone beyond their immediate neighbors, and don't trust anybody except their own direct neighbors.</p>
-      <p style="text-align: center"><img src="./doc/photo-by-njoku-johnston.jpg" /></p>
+      <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/photo-by-njoku-johnston.jpg" /></p>
       <p>As the merchants tend to speak in whispers, none of them know exactly how many people are sitting around the tree, nor who the other merchants are, nor what trades they are discussing - except of course, for their own direct neighbors.</p>
       <p>The Whispering Merchants problem arises as follows: each merchant only has an item to offer to their left neighbor, and only desires an item from their right neighbor.</p>
       <p>This creates a deadlock situation, since no two neighboring merchants can barter one-on-one. Some sort of financial technology will be needed, and the merchants start experimenting with different money systems.</p>
       <p>How can each merchant obtain the item they desire from their right neighbor, given that each merchant only has something to offer to their own left neighbor, and doesn't trust anybody except their own two immediate neighbors?</p>
-      <p style="text-align: center"><img src="./doc/figure-1.png" /></p>
+      <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-1.png" /></p>
 
     <h3>Monday: Transitivity of Trust</h3>
       <p>On Monday, one merchant has an idea: he explains to his left neighbor that he is interested in an item from his own right neighbor, and is willing to take a little risk, in everybody's benefit. He offers to <i>lend</i> the item he owns to his left neighbor, in the hope his neighbor would do the same, until his own right neighbor has lent the item he wants to him.
@@ -37,7 +37,7 @@
 
     <h3>Tuesday: Commodity Money</h3>
       <p>Having learned from their first experiment, on Tuesday, the merchants try out a different system. They realize that each of them eats fruits from the tree they're sitting under, and fruits on the tree are getting scarce. They decide to use fruit as a commodity currency. Each merchant offers the item they have for sale to their left neighbor in exchange for one piece of fruit.</p>
-      <p style="text-align: center"><img src="./doc/figure-2.png" /></p>
+      <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-2.png" /></p>
       <p>The merchants have invented money, which allows them to make local trades, exchanging an item for a piece of fruit each time. The items all move one merchant to the left, as pieces of fruit are moved to the right.</p>
       <p>Even though this solves the basic problem of the Whispering Merchants, moving fruit around is cumbersome, and the solution breaks down when the value of fruit fluctuates too much.</p>
 
@@ -78,7 +78,7 @@
     <h3>Sunday: LedgerLoops</h3>
     <p>On the seventh day, one of the merchants invents LedgerLoops. What he does is actually quite simple: he creates a cryptographic challenge which he knows only he can solve, but for which anyone could verify and agree whether a given solution is correct. He tells his left neighbor: I will give you this item if you can show me the solution of this cryptographic challenge. Each merchant tells his left neighbor the same, until the initiator's own right neighbor does so. Now that the initiator of the challenge has a promise from his right neighbor, mentioning the challenge he himself invented, he can safely solve the challenge and publish the solution. After this, the correct solution is sent back in the other direction, and all trades are completed.</p>
     <p>To give a concrete example of how this would work, consider Abraham, Bethany, Chad and Dorus are sitting around the tree that day. Abraham has a banana to offer Bethany. Bethany has a carrot for Chad. Chad has a durian for Dorus. Dorus, in turn, has an apple to offer, in which Abraham is interested.</p>
-    <p style="text-align: center"><img src="./doc/figure-3.png" /></p>
+    <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-3.png" /></p>
     <p>Abraham tells Bethany: "I will give you the banana if you can show the solution to the following cryptographic challenge: (includes details of the challenge)". An example of such a cryptographic challenge could finding a string that has a certain hash value when applying a one-way hash function to it. So to create a LedgerLoops challenge, Abraham could generate a random string, and keep this string secret, but include the SHA-256 hash value of the secret in the challenge details.</p>
     <p>Abraham knows that only he (holding the secret string) will be able to solve the challenge, and he plans to only do so if he can be sure to receive the apple he wants.</p>
     <p>Bethany reuses the challenge details received from Abraham, and promises to give Chad the carrot if he can show her a valid solution to the challenge (which she herself can then use to obtain the banana from Abraham).</p>
@@ -111,15 +111,20 @@
     <p>You're also welcome to make your own closed-source software "LedgerLoops-compatible". As long as you don't directly call your software "LedgerLoops", you're welcome to claim that it's "LedgerLoops-compatible". Since LedgerLoops is patent-free, anybody will be allowed to build LedgerLoops-compatible software without prior permission. We might create a test suite to certify compatibility, if people are interested in that.</p>
 
     <h2>About the Author</h2>
-    <p>You may know <a href="https://twitter.com/michielbdejong">@michielbdejong</a> from his earlier work attempting to <a href="http://redecentralize.org">Redecentralize the Internet</a>, for instance:</p>
-    <img src="./doc/michiel.png" style="float:right;border-radius:2em">
-    <ul>
-      <li>Firefox OS Data Sync (at <a href="https://www.mozilla.org">Mozilla</a>)</li>
-      <li><a href="https://tosdr.org">Terms of Service; Didn't Read</a> (co-founder)</li>
-      <li><a href="http://unhosted.org">Unhosted Web Apps</a> project</li>
-      <li><a href="https://remotestorage.io">remoteStorage</a> (spec author)</li>
-      <li><a href="https://indiehosters.net">IndieHosters</a> (co-founder)</li>
-      <li>Currently <a href="https://www.linkedin.com/in/michielbdejong">available for hire</a></li>
-    </ul>
+    <p>You may know <a href="https://twitter.com/michielbdejong">@michielbdejong</a> from his earlier work aimed to <a href="http://redecentralize.org">Redecentralize the Internet</a>, for instance:</p>
+    <table style="margin: 2em; box-shadow: 0 0 2em #FFFFFF; border-radius: 1em; height: 18em; background-color:#DFDFDF; color:#101010">
+      <tr><td>
+        <img src="./doc/michiel.png" style="margin: 1em; margin-left: 2em; border-radius: 1em">
+      </td><td>
+        <ul style="margin: 1em; margin-right: 2em">
+          <li>Firefox OS Data Sync (at <a href="https://www.mozilla.org">Mozilla</a>)</li>
+          <li><a href="https://tosdr.org">Terms of Service; Didn't Read</a> (co-founder)</li>
+          <li><a href="http://unhosted.org">Unhosted Web Apps</a> project</li>
+          <li><a href="https://remotestorage.io">remoteStorage</a> (spec author)</li>
+          <li><a href="https://indiehosters.net">IndieHosters</a> (co-founder)</li>
+          <li>Currently <a href="https://www.linkedin.com/in/michielbdejong">available for hire</a></li>
+        </ul>
+      </td></tr>
+    </table>
   </body>
 </html>
