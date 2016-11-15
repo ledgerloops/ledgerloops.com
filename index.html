@@ -6,10 +6,11 @@
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <style>
-      body { margin: 0px auto; padding: 3em 0em 3em 0em; font:15px sans-serif; line-height:1.4em; width:50em; background-color: #3010B0; color: #FFFFFF }
+      body { margin: 0px auto; padding: 3em 0em 3em 0em; font:15px sans-serif; line-height:1.4em; width:50em; background-color: #101050; color: #EFEFEF }
       h1 { font:75px sans-serif }
       h2 { font:25px sans-serif }
-      p { text-aling: justify }
+      p { text-align: justify }
+      p img { margin-top: 2em; margin-bottom: 2em; box-shadow: 0 0 2em #2020A0; border-radius: 0.5em  }
       a { color: #00FF00 }
       table a { color: #008F00 }
     </style>
@@ -22,11 +23,11 @@
       <p>Once upon a time, merchants would sit around an old tree to seek shade and, of course, trade.</p>
       <p>Each merchant would sit with their back to the tree, looking out over the village square, and chatting with the two persons sitting directly on either side of them. They can't see or directly communicate with anyone beyond their immediate neighbors, and don't trust anybody except their own direct neighbors.</p>
 <!--      <p style="text-align: center"><a href="http://people.wku.edu/johnston.njoku/arochukwu/ozu_item/">
-        <img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/photo-by-njoku-johnston.jpg"
+        <img src="./doc/photo-by-njoku-johnston.jpg"
             title="Image borrowed from http://people.wku.edu/johnston.njoku/arochukwu/ozu_item/" /></a></p> -->
       <p>As the merchants tend to speak in whispers, none of them know exactly how many people are sitting around the tree, nor who the other merchants are, nor what trades they are discussing - except of course, for their own direct neighbors.</p>
       <p>The Whispering Merchants problem arises as follows: each merchant only has an item to offer to their left neighbor, and only desires an item from their right neighbor.</p>
-      <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-1.png" /></p>
+      <p style="text-align: center"><img src="./doc/figure-1.png" /></p>
       <p>This creates a deadlock situation, since no two neighboring merchants can barter one-on-one. Some sort of financial technology will be needed, and the merchants start experimenting with different money systems.</p>
       <p>How can each merchant obtain the item they desire from their right neighbor, given that each merchant only has something to offer to their own left neighbor, and doesn't trust anybody except their own two immediate neighbors?</p>
 
@@ -39,7 +40,7 @@
 
     <h3>Tuesday: Commodity Money</h3>
       <p>Having learned from their first experiment, on Tuesday, the merchants try out a different system. They realize that each of them likes gold, and gold is scarce. They decide to use gold as a commodity currency. Each merchant offers the item they have for sale to their left neighbor in exchange for a grain of gold.</p>
-      <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-2.png" /></p>
+      <p style="text-align: center"><img src="./doc/figure-2.png" /></p>
       <p>The merchants have invented money, which allows them to make local trades, exchanging an item for a grain of gold each time. The items all move one merchant to the left, as grains of gold are moved to the right.</p>
       <p>Even though this solves the basic problem of the Whispering Merchants, carrying gold around is not without risk, and the solution breaks down when the value of gold fluctuates too much.</p>
 
@@ -87,7 +88,7 @@
     <p>Chad reuses the challenge details he got from Bethany, and promises to give Dorus the durian if she can show him a valid solution to the challenge.</p>
     <p>Likewise, Dorus promises to give Abraham the apple if Abraham shows her the solution to the LedgerLoops challenge which she forwards from Chad.</p>
     <p>Ah, but wait: Abraham now recognizes the challenge details as his own! This is a challenge to which he holds the solution. He publishes the solution by sending it to Dorus, and obtains his apple (step 2) in figure 3). The solution is now public, and Dorus forwards it to Chad to obtain her durian. Chad forwards the solution to Bethany to obtain the carrot. Bethany forwards the solution back to Abraham to obtain her banana.</p>
-    <p style="text-align: center"><img style="box-shadow: 0 0 2em #FFFFFF; border-radius: 1em" src="./doc/figure-3.png" /></p>
+    <p style="text-align: center"><img src="./doc/figure-3.png" /></p>
     <p>During this process, only Abraham knows that he is the creator and solver of the challenge; the other participants just forward the challenge to their left neighbor, and a while later, forward the solution to their right neighbor to obtain their own desired item.</p>
     <p>The big advantage is that merchants now only have to trust their immediate neighbors. To take Chad as an example, he trusts Bethany to keep her promise about the carrot, and Dorus trusts him to deliver the durian. He knows there is a connection around the tree, linking his direct neighbors Bethany and Dorus to form a loop, but he does not know that Abraham is one of them, or that a person named Abraham even exists; there may just as well be zero or five merchants sitting between Chad's immediate neighbors.</p>
     <p>All merchants are amazed at how it took them an entire week to come up with this solution, but are happy that they did now. They send the bankers away and shut down their crypto-currency computers. From now on, they use LedgerLoops challenges to coordinate all their trades, and live happily ever after.</p>
@@ -115,9 +116,9 @@
 
     <h2>About the Author</h2>
     <p>You may know <a href="https://twitter.com/michielbdejong">@michielbdejong</a> from his earlier work aimed to <a href="http://redecentralize.org">Redecentralize the Internet</a>, for instance:</p>
-    <table style="margin: 2em; box-shadow: 0 0 2em #FFFFFF; border-radius: 1em; height: 18em; background-color:#DFDFDF; color:#101010">
+    <table style="margin: 2em; box-shadow: 0 0 2em #2020A0; border-radius: 1em; height: 18em; background-color:#EADADA; color:#101010">
       <tr><td>
-        <img src="./doc/michiel.png" style="margin: 1em; margin-left: 2em; border-radius: 1em">
+        <img src="./doc/michiel.png">
       </td><td>
         <ul style="margin: 1em; margin-right: 2em">
           <li>Firefox OS Data Sync (at <a href="https://www.mozilla.org">Mozilla</a>)</li>
