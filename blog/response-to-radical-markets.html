@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>LedgerLoops: Cryptographically triggered IOUs</title>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+      body { margin: 0px auto; padding: 3em 0em 3em 0em; font:15px sans-serif; line-height:1.4em; width:50em; background-color: #101050; color: #EFEFEF }
+      h1 { font:75px sans-serif }
+      h2 { font:25px sans-serif }
+      p { text-align: justify }
+      p img { margin-top: 2em; margin-bottom: 2em; box-shadow: 0 0 2em #2020A0; border-radius: 0.5em  }
+      td img { margin: 1em; margin-left: 2em; border-radius: 0.5em }
+      a { color: #00FF00 }
+      table a { color: #008F00 }
+    </style>
+  </head>
+  <body>
+
+    <h1>Response to Radical Marketss</h1>
+    <p> This is a slightly longer-form reply to <a href="https://assets.press.princeton.edu/chapters/s11222.pdf">Chapter 1</a> of 'Radical Markets'</p>
+    <h2>Buying things to annoy the current owner</h2>
+    <img src="https://i.pinimg.com/564x/50/47/56/504756cb6dd6ef944329e451ef3d3bec.jpg">
+    <p>Yesterday, I <a href="https://twitter.com/michielbdejong/status/1001407971853787136">wrote on Twitter</a> that if domain names would be assigned to the highest bidder in a continuous auction, where the current owner has to pay a tax to avoid speculation (in a nutshell, the COST system proposed in the 50-page paper linked above) an attacker could then just buy your domain name to annoy/blackmail you, and "Nondelivery would be penalized as theft." :( The paper gives an example of a domain name that was related to an election campaign, and that had been squatted. Domain name squatting is a problem, but at least, once you have a domain name, you can plan your business around the near-certainty that you will not suddenly lose it. In this sense, Zooko's <a href="https://twitter.com/zooko/status/1001374774973509632">suggestion</a> of allowing the current owner to counter-bid any hostile takeover attempt would make a lot of sense. But as I <a href="https://twitter.com/michielbdejong/status/1001754594756710400">replied</a> this morning, allowing the current owner to refuse sale would undo COST's advantage that it allows prospectors to atomically buy multiple plots of land before their intention to buy drices up the price.</p>
+    <p>Another option may be if you group all your assets into a single cluster, a mix only you want, to protect each individual asset against hostile takeover. But then the problem remains, the tax you pay is not over the value of owning the domain name, it's over what the highest bidder is willing to pay.</p>
+    <p>A bidder may have multiple motivations to make a bid; one is obviously that they want to become the possessor of the asset, but it could also be that they want to cause damage to the current possessor, either because of anger, or because of competition, or as a bargaining (blackmailing) chip.</p>
+    <p>Maybe we should accept that COST cannot be used for assets whose value is highly personal (the authors also propose to exclude heirloom etc., I think pets are another important one).</p>
+    <p>Another issue we could address is the cost of transfer of ownership. Changing your domain name is cumbersome. Suppose two people both want to have a certain domain name. On even days, one person's value of owning the domain name increases by one dollar, and on odd days, the this happens for the other person. The domain name would change hands every day, and the website hosted on it would be unusable because of lack of continuity. Maybe COST should specify that each transfer of ownership should also imply a tax, so as to slow down the trade frequency?</p>
+    <h2>Temporarily increasing an assets self-assessed value on days where you need it</h2>
+    <p>Another remark I made <a href="https://twitter.com/michielbdejong/status/1001416526715670529">on Twitter yesterday</a> was "If someone stops you and buys your bicycle, continuing to ride it would be theft! :) So whenever you're on your way to an important appointment, you have to temporarily set the value of your bicycle to 10x its material value? Maybe prevents bicycle squatting, but also cumbersome." - I think the overhead of constantly updating the reported monetary value of each of your assets could take several hours of work per week, but if you put in more effort you pay less tax. So again, maybe COST should only be applied to assets where it's worth that effort (such as spectrum auctions), and not where the overhead would be wasteful (such as for bicycle ownership).</p>
+    <h2>COST and the inequality</h2>
+    <p>This is the <a href="https://twitter.com/michielbdejong/status/1001412281819979777">remark which I rewrote several times</a> as I was reading the 50-page paper, and I agree the final version was not very readable: "like capitalism, it values rich people's needs higher than poor people's needs. A world where 1 person owns 5 houses, and 4 people are homeless may obey 'allocative efficiency' but is still bad".</p>
+    <p>First, let me highlight that COST would be effective in avoiding speculation on housing, because owning a valuable plot of land would become more expensive. I get this point, and it's exciting! I can definitely see how a system like that would instantly eradicate suboptimal practices like domain name squatting.</p>
+    <p>But what I don't like about COST is the "one dollar, one vote" principle. What I meant was the following - let me give an example:</p>
+    <p>Peter earns 1000 USD per day, and is looking for a fifth house, for which he is willing to spend 100 USD per day. Bobby earns 1 USD per day, and is able to spend 0.10 USD per day on his little self-built hut.</p>
+    <p>Is it fair that Bobby owns his self-built hut, if Peter only has four houses, and is willing to pay 1000x what Bobby can pay? Based on the principle of allocative efficiency, assets should be owned by the person who is willing to pay most for it. So that would be Peter, and the new situation would be that Peter buys Bobby's hut as a fifth house, making poor Bobby homeless.</p>
+    <img src="https://www.thefreshquotes.com/wp-content/uploads/2016/12/Everyone-Has-A-Price-The-Important-Thing-Is-To-Find-Out-What-It-Is.-%C2%BB-Pablo-Escoba.png">
+    <p>Of course, in the current world, something very similar happens: even though Bobby does not have to pay the COST tax over his hut, if Peter comes along and offers to pay him thousands of dollars for his hut, Bobby will likely say yes. I guess this is not a problem that COST is trying to solve. It does not solve differences in wealth between people. It only solves asset squatting. But that's already a great thing! :) For making sure that Peter can only buy Bobby's house if the things that made him rich actually indirectly benefit Bobby, we can continue to work on <a href="/">LedgerLoops</a>. :)</p>
+  </body>
+</html>
