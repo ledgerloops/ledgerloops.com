@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2018.9.5)  17 SEP 2018 10:51
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=latex 2018.9.5)  17 SEP 2018 11:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -578,47 +578,55 @@ n anti-clockwise
 [3]
 LaTeX Font Info:    Font shape `T1/fve/b/n' will be
 (Font)              scaled to size 10.79993pt on input line 278.
-
-
-LaTeX Warning: Citation `Graeber2011' on page 4 undefined on input line 279.
-
 LaTeX Font Info:    Try loading font information for T1+fvm on input line 283.
-(/usr/share/texlive/texmf-dist/tex/latex/bera/t1fvm.fd
+ (/usr/share/texlive/texmf-dist/tex/latex/bera/t1fvm.fd
 File: t1fvm.fd 2004/09/07 scalable font definitions for T1/fvm.
 )
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
 (Font)              scaled to size 9.85492pt on input line 283.
 
-Overfull \hbox (24.34563pt too wide) in paragraph at lines 288--289
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+Overfull \hbox (59.82368pt too wide) in paragraph at lines 289--290
+[][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (53.7011pt too wide) in paragraph at lines 295--296
+Overfull \hbox (101.21475pt too wide) in paragraph at lines 290--291
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (53.7011pt too wide) in paragraph at lines 296--297
 \T1/fve/m/n/10.95 rel-a-tive to a trade-weighted bas-ket of ref-er-ence cur-ren
 -cies, see https://unicurn.com
  []
 
 [4]
+LaTeX Font Info:    Try loading font information for TS1+fve on input line 319.
 
-LaTeX Warning: Citation `Oliva2016' on page 5 undefined on input line 314.
-
-LaTeX Font Info:    Try loading font information for TS1+fve on input line 317.
-
-(/usr/share/texlive/texmf-dist/tex/latex/bera/ts1fve.fd
+ (/usr/share/texlive/texmf-dist/tex/latex/bera/ts1fve.fd
 File: ts1fve.fd 2004/09/07 scalable font definitions for TS1/fve.
 )
 LaTeX Font Info:    Font shape `TS1/fve/m/n' will be
-(Font)              scaled to size 9.85492pt on input line 317.
- [5] [6]
-Overfull \hbox (2.06879pt too wide) in paragraph at lines 346--352
+(Font)              scaled to size 9.85492pt on input line 319.
+ [5]
+Overfull \hbox (256.36504pt too wide) in paragraph at lines 337--346
+[]\T1/fve/m/n/10.95 The for-mat for a PROBES mes-sage is as fol-lows: [] 
+ []
+
+[6]
+Overfull \hbox (2.06879pt too wide) in paragraph at lines 347--353
 []\T1/fve/m/n/10.95 When a PROBES mes-sage comes in from neigh-bor C, the agent
  should
  []
 
 
-Overfull \hbox (24.34563pt too wide) in paragraph at lines 369--370
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+Overfull \hbox (59.82368pt too wide) in paragraph at lines 368--369
+[][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (101.21475pt too wide) in paragraph at lines 369--370
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
@@ -628,44 +636,44 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 3118) has occurred while \output is active []
 
  [8]
-Overfull \hbox (30.25864pt too wide) in paragraph at lines 397--398
-[][][][][][][][][][][][][][][][][][][][][][][][] 
+Overfull \hbox (24.34563pt too wide) in paragraph at lines 399--400
+[][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (42.08466pt too wide) in paragraph at lines 413--414
+Overfull \hbox (42.08466pt too wide) in paragraph at lines 415--416
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Underfull \vbox (badness 2644) has occurred while \output is active []
+Underfull \vbox (badness 6284) has occurred while \output is active []
 
  [9]
-Overfull \hbox (27.73152pt too wide) in paragraph at lines 435--436
+Overfull \hbox (27.73152pt too wide) in paragraph at lines 437--438
 \T1/fve/m/n/10.95 COND-[PLEASE-FINALIZE]*-FULFILL-ACK, (4) COND-[PLEASE-FINALIZ
 E]*-
  []
 
 
-Overfull \hbox (9.80534pt too wide) in paragraph at lines 435--436
+Overfull \hbox (9.80534pt too wide) in paragraph at lines 437--438
 \T1/fve/m/n/10.95 FULFILL-REJECT, (4) COND-[PLEASE-FINALIZE]*-REJECT. Mes-sages
  can
  []
 
-[10] [11] [12] [13] [14] [15] [16] [17] [18]
-No file whitepaper.bbl.
-[19] (./whitepaper.aux)
-
-LaTeX Warning: There were undefined references.
-
- ) 
+[10] [11] [12] [13] [14] [15] [16] [17] [18] [19] (./whitepaper.bbl
+LaTeX Font Info:    Font shape `T1/fve/m/it' in size <10.95> not available
+(Font)              Font shape `T1/fve/m/sl' tried instead on input line 5.
+LaTeX Font Info:    Font shape `T1/fve/m/sl' will be
+(Font)              scaled to size 9.85492pt on input line 5.
+) [20]
+(./whitepaper.aux) ) 
 Here is how much of TeX's memory you used:
- 12427 strings out of 494911
- 245848 string characters out of 6179863
- 309659 words of memory out of 5000000
- 15516 multiletter control sequences out of 15000+600000
- 29715 words of font info for 40 fonts, out of 8000000 for 9000
+ 12431 strings out of 494911
+ 245912 string characters out of 6179863
+ 311665 words of memory out of 5000000
+ 15518 multiletter control sequences out of 15000+600000
+ 31620 words of font info for 41 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  55i,6n,54p,1449b,859s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on whitepaper.dvi (19 pages, 113136 bytes).
+Output written on whitepaper.dvi (20 pages, 116572 bytes).
