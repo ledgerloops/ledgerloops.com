@@ -94,13 +94,11 @@ Each merchant tells his counter-clockwise neighbor the same, until the initiator
     <h2>Who is working on LedgerLoops and how can I contribute?</h2>
     <p>Good question! :) In the real world, LedgerLoops was invented in October 2016 by <a href="https://michielbdejong.com">Michiel de Jong</a>, and is hereby published free of patents, under the CreativeCommons <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.en">BY-SA</a> license.</p>
     <p>To read about the technical details of the LedgerLoops messaging protocol, including not only the hashlock and solution message format, but also a routing algorithm and security discussion, please download the <a href="/doc/whitepaper.pdf">LedgerLoops whitepaper (pdf)</a>. You can suggest improvements to the various sections of the whitepaper <a href="https://github.com/ledgerloops/whitepaper/issues">via GitHub</a>.</p>
-    <p>In order to use LedgerLoops in practice, you will need software. Currently, the software is not ready for use yet, but we've set up a test net with three nodes
-(<a href="https://ledgerloops-testnet-marsellus.herokuapp.com/">Marsellus</a>,
-<a href="https://ledgerloops-testnet-mia.herokuapp.com/">Mia</a>, and
-<a href="https://ledgerloops-testnet-vincent.herokuapp.com/">Vincent</a>),
-and you can connect to it using the latest build of our browser extension
-(Firefox coming soon, or
-<a href="https://chrome.google.com/webstore/detail/ledgerloops/fhfpbcganamchopcjnoedjdbfebhlcfi">for Chrome</a>).</p>
+    <p>In order to use LedgerLoops in practice, you will need software. Currently, the software is not ready for use yet, but we're running scalability tests with an early version of it.
+If you know how to clone a git repo and run a node script, you can try out the examples from the github repo.</p>
+    <p>Otherwise you can try out the latest build of our browser extension (Firefox coming soon, or
+<a href="https://chrome.google.com/webstore/detail/ledgerloops/fhfpbcganamchopcjnoedjdbfebhlcfi">for Chrome</a>).
+and visit our <a href="https://monetization-hubbie.herokuapp.com/">WebMonetization demo</a> to see how a blog could make money by accepting LedgerLoops donations. </p>
     <p>The software is written in JavaScript, although compatible implementations in other programming languages could appear in the future. There is a browser extension and a NodeJS application. Eventually, the code of the browser extension will probably also be published as an unhosted web app and packaged for Android, iOS, and Desktop.</p>
     <p>The current development focus is on making the software more robust, and making the testnet more reliable. Since this software would be used to keep track of debts and balances, it would be very annoying if ledgers between neighbors would get out of sync due to a bug.</p>
     <p>Development of LedgerLoops software (including reusable software components), is done via <a href="https://github.com/ledgerloops">LedgerLoops on GitHub</a>, and you can contribute there. We'll tweet from <a href="https://twitter.com/ledgerloops">@LedgerLoops</a> to announce when alpha/beta versions of software products become available, so follow <a href="https://twitter.com/ledgerloops">@LedgerLoops on Twitter</a> to stay up to date!</p>
