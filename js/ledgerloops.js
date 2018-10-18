@@ -9897,6 +9897,7 @@ PeerHandler.prototype = {
 
   // to be executed in cside peerHandler, where the fwise loop is detected:
   _startLoop: function (routeId, fsidePeer, amount) {
+    if (amount == 0) { return; }
     // fsidePeer has sent us a fside probe, meaning they want to send a COND.
     // This Ledger said it's usable, so we should start a loop
     const preimage = randomBytes(256)
