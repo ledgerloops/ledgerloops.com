@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=latex 2024.2.28)  28 FEB 2024 12:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=latex 2024.2.28)  28 FEB 2024 13:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -556,39 +556,31 @@ File: ts1fve.fd 2004/09/07 scalable font definitions for TS1/fve.
 LaTeX Font Info:    Font shape `TS1/fve/m/n' will be
 (Font)              scaled to size 9.85492pt on input line 321.
  [5] [6]
-Overfull \hbox (256.36504pt too wide) in paragraph at lines 339--348
-[]\T1/fve/m/n/10.95 The for-mat for a PROBES mes-sage is as fol-lows: [] 
- []
-
-
-Overfull \hbox (2.06879pt too wide) in paragraph at lines 349--355
+Overfull \hbox (2.06879pt too wide) in paragraph at lines 350--356
 []\T1/fve/m/n/10.95 When a PROBES mes-sage comes in from neigh-bor C, the agent
  should
  []
 
 
-Overfull \hbox (59.82368pt too wide) in paragraph at lines 370--371
+Overfull \hbox (59.82368pt too wide) in paragraph at lines 371--372
 [][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (101.21475pt too wide) in paragraph at lines 371--372
+Overfull \hbox (101.21475pt too wide) in paragraph at lines 372--373
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-
-Underfull \vbox (badness 2158) has occurred while \output is active []
-
- [7]
+[7]
 Underfull \vbox (badness 3118) has occurred while \output is active []
 
  [8]
-Overfull \hbox (24.34563pt too wide) in paragraph at lines 401--402
+Overfull \hbox (24.34563pt too wide) in paragraph at lines 402--403
 [][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (42.08466pt too wide) in paragraph at lines 417--418
+Overfull \hbox (42.08466pt too wide) in paragraph at lines 418--419
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
@@ -596,13 +588,13 @@ Overfull \hbox (42.08466pt too wide) in paragraph at lines 417--418
 Underfull \vbox (badness 6284) has occurred while \output is active []
 
  [9]
-Overfull \hbox (27.73152pt too wide) in paragraph at lines 439--440
+Overfull \hbox (27.73152pt too wide) in paragraph at lines 440--441
 \T1/fve/m/n/10.95 COND-[PLEASE-FINALIZE]*-FULFILL-ACK, (4) COND-[PLEASE-FINALIZ
 E]*-
  []
 
 
-Overfull \hbox (9.80534pt too wide) in paragraph at lines 439--440
+Overfull \hbox (9.80534pt too wide) in paragraph at lines 440--441
 \T1/fve/m/n/10.95 FULFILL-REJECT, (4) COND-[PLEASE-FINALIZE]*-REJECT. Mes-sages
  can
  []

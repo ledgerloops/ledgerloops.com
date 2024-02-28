@@ -330,19 +330,20 @@ I previously worked on a combination of DCD with DFS, but I now think that DCD's
 \subsubsection{Bidirectional Breadth-First Search (BBFS)}
 Consider a network of interconnected agents. Each agent can decide that they want to participate in a LedgerLoop, accepting a COND message from what we'll call their "C-side" neighbor, and forwarding it to what we will call their "F-side" neighbor. When the F-side neighbor sends a FULFILL message in response, they'll also send a FULFILL message to their own C-side neighbor.
 
-In order to coordinate the formation of LedgerLoops, agents can send each other PROBES messages. Each probe messages has a list of F-wise probes, traveling in the direction in which FULFILL messages would travel, and C-wise probes that travel in the direction in which COND messages would travel.
+In order to coordinate the formation of LedgerLoops, agents can send each other PROBES messages. Each PROBES message has a list of F-wise probes, traveling in the direction in which FULFILL messages would travel, and C-wise probes that travel in the direction in which COND messages would travel.
 
 Agents will generally be able to define a partial ordering on their list of neighbors, such that neighbor C comes before neighbor F in the list if the agent would like to participate in a LedgerLoops where that neighbor C acts as their C-side neighbor, and that neighbor F acts as their F-side neighbor.
 
-An agent can create a probe from scratch, by generating a random 16-byte string, and sending it as a C-wise probe to F, and also as an F-wise probe to C.
+An agent can create a probe from scratch, by generating a random 8-byte string, and sending it as a C-wise probe to F, and also as an F-wise probe to C.
 
 The format for a PROBES message is as follows:
+
 \vbox{\begin{lstlisting}
 {
   "protocol": "ledgerloops-0.8",
   "msgType": "PROBES",
-  "cwise": [ <64 bits in a lower-case hex string>* ],
-  "fwise": [ <64 bits in a lower-case hex string>* ]
+  "cwise": [ <8 bytes in a lower-case hex string>* ],
+  "fwise": [ <8 bytes in a lower-case hex string>* ]
 }
 \end{lstlisting}}
 
