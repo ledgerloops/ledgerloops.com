@@ -354,8 +354,35 @@ In case of a C-wise probe, the agent can send a COND instead.
 In case of an F-wise probe, the agent could send a COND back to the neighbor who sent the F-wise probe, although this may lead to duplication where one pair of probes would trigger two LedgerLoops. 
 It's up to each agent to decide how long to wait before forwarding probes, and whether to forward each probe to each eligible neighbor at all. That way, each agent has some say in how much bandwidth and CPU time they spend on the sending of probes.
 
-It might seem like a very unwise idea to potentially generate a flood of messages across the whole network in response to a single local interaction between peers, but in practice I think the number of messages necessary will be within reason. To find all triangles, two agents only have to communicate their own friends list. To find all squares, that would be their own lists of friends-of-friends, etcetera. Say each agent has 10 friends, then that means 20, 200, 2000, and 20,000 probes for triangles, squares, pentagons and hexagons, respectively. This means a
-Imagine each link between two agents is configured to have an amount of traffic comparable to one Internet Radio station (say 160 kbps, that's 20 Kb per second, that's 1280 probes/second), so this would mean that when a change in the network leads to the creation of a hexagon, it would be detected within 15 seconds. This is a conservative estimate, since nodes don't have to communicate their list of friends when the partial ordering on them hasn't changed.
+It might seem like a very unwise idea to potentially generate a flood of messages across the whole network in response to a single local interaction between peers, but in practice I think the number of messages necessary will be within reason.
+Let's calculate an estimation.
+Imagine each agent has plenty of neighbours but only seriously considers trading among a limited number of neighbour pairs, and each link between two agents is capped at 1 Mbps.
+Suppose an agent only forwards each probe along the top 8 pairs. It needs to remember over which pair it forwarded each probe.
+Suppose we cap trace lengths at 6 hops, and a probe will occupy the 32 bits of its UUID, plus 1 bit for cwise vs fwise = 33 bits.
+We could append a trace number to the probe string that gets longer each hop but that would probably leak too much information, so in our current design.
+The number of bits to be transmitted in each hop for one added network link is then:
+
+{\tt
+2 * (Math.pow(8, 1) + Math.pow(8, 2) + Math.pow(8, 3) + Math.pow(8, 4) + Math.pow(8, 5) + Math.pow(8, 6)) * 33 = 19,773,072
+}
+
+But this link also adds 1 Mbps bandwidth to the network. So it will occupy an amount of bandwidth in the network that is equivalent to what it adds back during the first 20 seconds of its own existence.
+I think this is an acceptable price to pay.
+
+--- brainstorm:
+So the Protocol will be to send 1 probe in both directions.
+One option is to label it and that's great because then you can TTL and prioritise it, but I also think that's leaking information
+So I think it's OK to just send the probe out into the network, and leave it to either die out at the edges, or find loops.
+
+When a loop is found, add a loop ID and send it along the loop.
+If one probe finds two loops (in an 8 figure), the forks points should make the loop IDs longer. E.g. add 4 bytes at every fork.
+How can you remove duplicate loops? Maybe that is impossible, you would just have to let them expire.
+
+How do I make those design decisions? I can start by building this simple node with the 33-bit probes, single probe ID per added link, each node forwarding along 8 favourite pairs, full flood,
+and then confirmation with a list of 32-bit loop IDs that grows at every branch.
+
+---
+
 
 \subsection{Hashlocked IOUs}
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=latex 2024.2.28)  28 FEB 2024 13:15
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=latex 2024.2.28)  28 FEB 2024 14:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -562,45 +562,51 @@ Overfull \hbox (2.06879pt too wide) in paragraph at lines 350--356
  []
 
 
-Overfull \hbox (59.82368pt too wide) in paragraph at lines 371--372
+Overfull \hbox (1.09445pt too wide) in paragraph at lines 366--368
+[]\T1/fvm/m/n/10.95 (20 * 35 + 200 * 39 + 2,000 * 43 + 20,000 * 47 + 200,000 *
+ []
+
+
+Overfull \hbox (59.82368pt too wide) in paragraph at lines 384--385
 [][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (101.21475pt too wide) in paragraph at lines 372--373
+Overfull \hbox (101.21475pt too wide) in paragraph at lines 385--386
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[7]
-Underfull \vbox (badness 3118) has occurred while \output is active []
 
- [8]
-Overfull \hbox (24.34563pt too wide) in paragraph at lines 402--403
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [7]
+[8]
+Overfull \hbox (24.34563pt too wide) in paragraph at lines 415--416
 [][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (42.08466pt too wide) in paragraph at lines 418--419
+Overfull \hbox (42.08466pt too wide) in paragraph at lines 431--432
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Underfull \vbox (badness 6284) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [9]
-Overfull \hbox (27.73152pt too wide) in paragraph at lines 440--441
+Overfull \hbox (27.73152pt too wide) in paragraph at lines 453--454
 \T1/fve/m/n/10.95 COND-[PLEASE-FINALIZE]*-FULFILL-ACK, (4) COND-[PLEASE-FINALIZ
 E]*-
  []
 
 
-Overfull \hbox (9.80534pt too wide) in paragraph at lines 440--441
+Overfull \hbox (9.80534pt too wide) in paragraph at lines 453--454
 \T1/fve/m/n/10.95 FULFILL-REJECT, (4) COND-[PLEASE-FINALIZE]*-REJECT. Mes-sages
  can
  []
 
-[10] [11] [12] [13] [14] [15] [16] [17] [18] [19] (./whitepaper.bbl) [20]
-(./whitepaper.aux) ) 
+[10] [11] [12] [13] [14] [15] [16] [17] [18] [19] (./whitepaper.bbl [20])
+[21] (./whitepaper.aux) ) 
 Here is how much of TeX's memory you used:
  13507 strings out of 476026
  271939 string characters out of 5790043
@@ -610,4 +616,4 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  102i,6n,104p,1464b,1007s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on whitepaper.dvi (20 pages, 123132 bytes).
+Output written on whitepaper.dvi (21 pages, 123400 bytes).
