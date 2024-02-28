@@ -6,10 +6,10 @@ For more info on [LedgerLoops](https://ledgerloops.com), see: https://ledgerloop
 # Build the [whitepaper](https://ledgerloops.com/doc/whitepaper.pdf) from LaTeX source:
 ```bash
 $ cd doc
-$ latex whitepaper.tex
-$ bibtex whitepaper.tex
-$ latex whitepaper.tex
-$ latex whitepaper.tex
+$ latex whitepaper
+$ bibtex whitepaper
+$ latex whitepaper
+$ latex whitepaper
 $ dvipdf whitepaper.dvi
 $ cd ..
 ```
