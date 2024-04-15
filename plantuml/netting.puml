@@ -1,0 +1,26 @@
+@startuml netting
+skinparam BackgroundColor #lightgrey
+participant "Abraham" as A #yellow
+participant "Bethany" as B #orange
+participant "Chad" as C #lightgreen
+participant "Dorus" as D #red
+participant "Money" as M #goldenrod
+note across
+  <color #48742c>Trade:</color>
+end note
+B -[#yellow]> A: IOU
+A -[#yellow]> B: Banana
+C -[#orange]> B: IOU
+B -[#orange]> C: Carrot
+D -[#lightgreen]> C: IOU
+C -[#lightgreen]> D: Durian
+A -[#red]> D: IOU
+D -[#red]> A: Apple
+note across
+  <color #48742c>Netting:</color>
+end note
+A -[#yellow]> B: -IOU
+B -[#orange]> C: -IOU
+C -[#lightgreen]> D: -IOU
+D -[#red]> A: -IOU
+@enduml

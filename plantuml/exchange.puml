@@ -1,0 +1,11 @@
+@startuml exchange
+skinparam BackgroundColor #lightgrey
+participant "Abraham" as A #yellow
+participant "Bethany" as B #orange
+participant "Chad" as C #lightgreen
+participant "Dorus" as D #red
+A -[#yellow]> B: Banana
+B -[#orange]> C: Carrot
+C -[#lightgreen]> D: Durian
+D -[#red]> A: Apple
+@enduml

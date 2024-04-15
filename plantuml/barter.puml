@@ -1,0 +1,28 @@
+@startuml barter
+skinparam BackgroundColor #lightgrey
+participant "Abraham" as A #yellow
+participant "Bethany" as B #orange
+participant "Chad" as C #lightgreen
+participant "Dorus" as D #red
+note across
+  <color #48742c>Exploration:</color>
+end note
+A -[#red]> D: Apple?
+C -[#orange]> B: Carrot?
+D -[#lightgreen]> C: Durian?
+B -[#yellow]> A: Banana?
+note across
+  <color #48742c>- (Loop Detection) -</color>
+end note
+A -[#yellow]> B: OK?
+B -[#orange]> C: OK?
+C -[#lightgreen]> D: OK?
+D -[#red]> A: OK?
+note across
+  <color #48742c>Commitment:</color>
+end note
+A -[#yellow]> B: Banana
+B -[#orange]> C: Carrot
+C -[#lightgreen]> D: Durian
+D -[#red]> A: Apple
+@enduml

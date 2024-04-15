@@ -1,0 +1,15 @@
+@startuml commodity
+skinparam BackgroundColor #lightgrey
+participant "Abraham" as A #yellow
+participant "Bethany" as B #orange
+participant "Chad" as C #lightgreen
+participant "Dorus" as D #red
+A -[#yellow]> B: Banana
+B -[#yellow]> A: Money
+B -[#orange]> C: Carrot
+C -[#orange]> B: Money
+C -[#lightgreen]> D: Durian
+D -[#lightgreen]> C: Money
+D -[#red]> A: Apple
+A -[#red]> D: Money
+@enduml

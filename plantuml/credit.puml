@@ -1,0 +1,24 @@
+@startuml credit
+skinparam BackgroundColor #lightgrey
+participant "Abraham" as A #yellow
+participant "Bethany" as B #orange
+participant "Chad" as C #lightgreen
+participant "Dorus" as D #red
+participant "Money" as M #goldenrod
+M -[#yellow]> B: Loan
+B -[#yellow]> A: Money
+A -[#yellow]> B: Banana
+A -[#yellow]> M: Savings
+M -[#orange]> C: Loan
+C -[#orange]> B: Money
+B -[#orange]> C: Carrot
+B -[#yellow]> M: Repayment
+M -[#lightgreen]> D: Loan
+D -[#lightgreen]> C: Money
+C -[#lightgreen]> D: Durian
+C -[#orange]> M: Repayment
+M -[#yellow]> A: Withdrawal
+A -[#red]> D: Money
+D -[#red]> A: Apple
+D -[#lightgreen]> M: Repayment
+@enduml
