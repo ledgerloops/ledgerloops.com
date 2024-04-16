@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>LedgerLoops: Cryptographically triggered IOUs</title>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+      body { margin: 0px auto; padding: 3em 0em 3em 0em; font:15px sans-serif; line-height:1.4em; width:50em; background-color: #101050; color: #EFEFEF }
+      h1 { font:50px sans-serif; color: #00FF00 }
+      h2 { font:30px sans-serif; color: #00FF00 }
+      h3 { font:20px sans-serif; color: #00FF00 }
+      p { text-align: justify }
+      p img { margin-top: 2em; margin-bottom: 2em; box-shadow: 0 0 2em #2020A0; border-radius: 0.5em  }
+      td img { margin: 1em; margin-left: 2em; border-radius: 0.5em }
+      a { color: #00FF00 }
+      table a { color: #008F00 }
+    </style>
+  </head>
+  <body>
+    <h1>Economic Arrangements</h1>
+    <p>LedgerLoops is a set of peer-to-peer protocols for Collaborative Finance, which can be used to support multiple economic arrangements. Here are some loose definitions of some of them (under construction).
+      See also <a href="https://matslats.net/sites/matslats.net/files/Constructing_systems_of_exchange_Slater.pdf">Constructing systems of exchange (PDF)</a> by Matthew Slater for some more precise definitions.
+    </p>
+
+    <h2>Barter exchange</h2>
+      <p>A single transaction in time, exchanging only goods or services and not currency or credit. Due to the rareness of <a href="https://en.wikipedia.org/wiki/Coincidence_of_wants">Coincidence of wants</a>
+        it is rarely used in practice by itself, but it can be combined with in-kind lending.</p>
+    <h2>Lending</h2>
+      <p>When two parts of a transaction cancel each other out, but they don't coincide in time.</p>
+    <h2>Netting</h2>
+    <p>Agreeing to cancel out a set of otherwise unrelated credits against each other.</p>
+    <h2>Payment</h2>
+    <p>Apart from barter, barter+lending, and barter+lending+netting, there are a number of other ways to complete a transaction of goods or services, that we would generally refer to as a payment:</p>
+    <h3>Currency ownership transfer</h3>
+    <p>The mechanics of the transaction work as if the currency were a (commodity) good exchanged in barter, but the asset changing owners is not something the recipient actually wants to use.</p>
+    <p>The commodity used as currency may be direct ownership of a physical good like gold, or commoditized credit, or (e.g. for collateral-backed credit) something in between.</p>
+    <p>The administration of ownership might be through physical possession (for instance a piece of gold, coin, or bank note changing hands),
+      or through a (system of) ledger(s) as is the case in bank transfers and crypto-currency payments.</p>
+    <p>We often think of bank transfers and cash payments as practically equivalent, and (even though banks can fail) we often think of money as a commodity good you can own.</p>
+    <h3>Named credit transfer</h3>
+    <p>Think exchange of bearer IOUs from a named party (whether physical bearer notes or on a ledger) rather than generic bank notes, e.g. paying with a voucher.</p>
+    <h3>Payment through netting ("rippling")</h3>
+    <p>Payment through netting can be modeled as an exchange of a named credit, while performing netting on the resulting credit balances in the same transaction. This is a core concept used
+      for multi-hop payments in systems like <a href="https://rumplepay.com/">Ripple Classic</a> and <a href="https://interledger.org">Interledger</a>.
+    </p>
+    <h2>Factoring</h2>
+    <p>Structuring different transferable credits into a named collection, to remove some of the stochastics (generally profitable but destructive, since it makes the resulting bundle hard to value accurately).</p>
+    <h2>Currency exchange</h2>
+    <p>Exchanging one currency or named credit against another (no goods or services involved).</p>
+    <h2>Market making</h2>
+    <p>Participating in currency exchange with the sole goal of making a profit.</p>
+    </body>
+</html>

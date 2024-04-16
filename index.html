@@ -3,16 +3,6 @@
   <head>
     <title>LedgerLoops: Cryptographically triggered IOUs</title>
     <meta charset="utf-8" />
-
-    <!-- Browser Donations: Flattr -->
-    <meta name="flattr:id" content="qjjrw5">
-
-    <!-- Browser Donations: LedgerLoops -->
-    <link rel="ledger" href="wss://monetization-hubbie.herokuapp.com">
-
-    <!-- Browser Donations: Coil -->
-    <meta name="monetization" content="$twitter.xrptipbot.com/michielbdejong" />
-
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <style>
@@ -29,28 +19,33 @@
   <body>
     <img style="width:200px; display: block; margin-left: auto; margin-right: auto; width: 50%" src="https://raw.githubusercontent.com/ledgerloops/ledgerloops.com/main/logo/lederlgoops-logo-800-650.png"></a>
     <h2>History of the LedgerLoops Project</h2>
-    <p>I (<a href="https://michielbdejong.com">Michiel de Jong</a>) started LedgerLoops as a simple IOU-centric e-invoicing protocol, proposed in <a href="https://groups.google.com/g/unhosted/c/2IUC2ralu-U/m/qwGENz65t_EJ">a 2011 post to the Unhosted mailinglist</a>.
-      Post-capitalism discussion and research on how this system could be used between humans and possibly
-      also organisations happened under the name "OpenTabs".</p>
-    <p>In the fall of 2016, I added a signature-based loop resolution algorithm (see <a href="./whispering-merchants.html">Whispering Merchants</a>) which <a href="https://lists.w3.org/Archives/Public/public-interledger/2016Dec/0032.html">
-      had a lot in common</a> with the Interledger protocol,
+    <p>After a simple IOU-centric e-invoicing protocol was proposed in <a href="https://groups.google.com/g/unhosted/c/2IUC2ralu-U/m/qwGENz65t_EJ">a 2011 post to the Unhosted mailinglist</a>,
+      there was some post-capitalism discussion and research on how this system could be used between humans and possibly also organisations.</p>
+    <p>In the fall of 2016, a "challenge and trigger" loop resolution algorithm was added (see <a href="./whispering-merchants.html">Whispering Merchants</a>) and due to a name clash the project was renamed from OpenTabs to LedgerLoops.
+      The "challenge and trigger" loop resolution algorithm soon turned out to <a href="https://lists.w3.org/Archives/Public/public-interledger/2016Dec/0032.html">
+      have a lot in common</a> with the Interledger protocol,
       or at least a <a href="https://github.com/interledger/rfcs/pull/408">circular version</a> thereof.</p>
     <p>In 2021 and 2022 we held a weekly brainstorm meeting around <a href="https://federatedbookkeeping.org">Federated Bookkeeping</a> which kept alive the original IOU-centric e-invoicing vision, adding a focus on data portability. A non-profit company,
-      <a href="https://pondersource.com">Ponder Source</a> was created with the goal of bringing <a href="https://github.com/pondersource/CYB">Connect Your Books</a> to market, which we basically failed to do.</p>
-    <p>And then in 2023, something amazing happened: at a meeting in the beautiful hills of Austria, <a href="https://matslats.net/cofi-is-now-a-thing=">Collaborative Finance (CoFi) was born</a>.
-      We can now refer to some <a href="https://matslats.net/sites/matslats.net/files/Constructing_systems_of_exchange_Slater.pdf">generic theory (PDF)</a> about
-      Collaborative Finance and can rephrase LedgerLoops as a P2P CoFi system.</p>
-    <p>LedgerLoops is published free of patents, under the CreativeCommons <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.en">BY-SA</a> license.</p>
-    <p>Since LedgerLoops is patent-free, anybody will be allowed to claim their software is "LedgerLoops-compatible" without prior permission, as long as you don't directly call your software "LedgerLoops".
-      We might create a test suite to certify compatibility, if people are interested in that.</p>
+      <a href="https://pondersource.com">Ponder Source</a> was created with the goal of bringing <a href="https://github.com/pondersource/CYB">Connect Your Books</a> to market, but we basically failed to do so.</p>
+    <p>And then in 2023, something amazing happened: at a gathering in the beautiful hills of Austria, <a href="https://matslats.net/cofi-is-now-a-thing=">Collaborative Finance (CoFi) was born</a>.
+      We can now refer to some <a href="https://matslats.net/sites/matslats.net/files/Constructing_systems_of_exchange_Slater.pdf">generic theory about
+        Collaborative Finance (PDF)</a> and can rephrase LedgerLoops as "a P2P CoFi system" - and that is where we are now.</p>
+    <p>LedgerLoops is published free of patents, under the CreativeCommons <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.en">BY-SA</a> license. <a href="https://michielbdejong.com">Michiel de Jong</a> is working on it full-time.</p>
+    <p>Since LedgerLoops is patent-free, you can join the network of LedgerLoops-compatible nodes without prior permission, as long as you don't use the name "LedgerLoops" in a misleading way.
+      We might create a test suite to certify software compatibility and bring the algorithms/protocols to a standards body, if there is interest in that.</p>
     <h2>Two Mechanisms for P2P CoFi</h2>
-    <p>In a credit networks, various economic arrangements can take place - the most important ones probably being barter, lending, netting, payment, factoring and market making (see <a href="./economic-arrangments.html">Economic Arrangements</a> for my definitions).
-      LedgerLoops offers two mechanisms that can help with that.</p>
+    <p>The ultimate end goal of LedgerLoops is to help to allow goods and services to move to where they are most valuable.
+      In society, this can happen through sharing (abundance based), but it often happens through win-win exchanges of property.
+      These can happen across time thanks to the use of commodity goods and/or the administration of credit. Credit arrangements can form a network, and that's where LedgerLoops mechanisms can add their value.</p>
+    <p>In a credit networks, various economic arrangements can take place - the most important ones probably being barter, lending, netting, payment, factoring and market making (see <a href="./economic-arrangements.html">Economic Arrangements</a> for my definitions).
+      I created this list of economic arrangements to make it clear that LedgerLoops is neither really an IOU system, nor a payment system nor a netting system. The credit graph exists on its own, independently. Different economic arrangements make the credit balances move, whereby
+      goods and services can move to where they are most valuable, as is the end goal.
+      LedgerLoops offers two mechanisms that can help with this.</p>
     <h3>Decentralised Loop Detection (DLD)</h3>
     <p>In the <a href="https://github.com/ledgerloops/strategy-pit">Strategy Pit</a> repository, I'm currently pitching different decentralised loop detection algorithms against each other. I hope to have something working before the
       <a href="https://commonseconomy.notion.site/COLLABORATIVE-FINANCE-2-Serving-Local-Communities-c2ae55edfce0439ab139b857ae8b3ee4">CoFi 2 gathering in Banja Luka</a>.</p>
     <h3>Hashlocked Loop Resolution (HLR)</h3>
-    <p>The loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be described as "making an Interledger payment to yourself", or as "a DEX on trustlines".
+    <p>The "challenge and trigger" loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be described as "making an Interledger payment to yourself", or as "a DEX on trustlines".
     There can be multiple variations of it in operation in the same credit network - for instance with / without timeouts, different mechanisms to express units of value, or with SHA-256 vs other hash functions.</p>
     </body>
 </html>
