@@ -33,19 +33,32 @@
     <p>LedgerLoops is published free of patents, under the CreativeCommons <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.en">BY-SA</a> license. <a href="https://michielbdejong.com">Michiel de Jong</a> is working on it full-time.</p>
     <p>Since LedgerLoops is patent-free, you can join the network of LedgerLoops-compatible nodes without prior permission, as long as you don't use the name "LedgerLoops" in a misleading way.
       We might create a test suite to certify software compatibility and bring the algorithms/protocols to a standards body, if there is interest in that.</p>
-    <h2>Two Mechanisms for P2P CoFi</h2>
+    <h2>Three Mechanisms for P2P CoFi</h2>
     <p>The ultimate end goal of LedgerLoops is to help to allow goods and services to move to where they are most valuable.
       In society, this can happen through sharing (abundance based), but it often happens through win-win exchanges of property.
       These can happen across time thanks to the use of commodity goods and/or the administration of credit. Credit arrangements can form a network, and that's where LedgerLoops mechanisms can add their value.</p>
-    <p>In a credit networks, various economic arrangements can take place - the most important ones probably being barter, lending, netting, payment, factoring and market making (see <a href="./economic-arrangements.html">Economic Arrangements</a> for my definitions).
-      I created this list of economic arrangements to make it clear that LedgerLoops is neither really an IOU system, nor a payment system nor a netting system. The credit graph exists on its own, independently. Different economic arrangements make the credit balances move, whereby
+    <p>In a credit networks, various economic arrangements can take place - the most important ones probably being barter, lending, netting, payment, factoring and market making
+      (see <a href="./economic-arrangements.html">Economic Arrangements</a> for my definitions).
+      I created this list of economic arrangements to make it clear that LedgerLoops is neither really an IOU system, nor a payment system nor a netting system. The credit graph exists on its own, independently.
+      Different economic arrangements make the credit balances move, whereby
       goods and services can move to where they are most valuable, as is the end goal.
-      LedgerLoops offers two mechanisms that can help with this.</p>
-    <h3>Decentralised Loop Detection (DLD)</h3>
-    <p>In the <a href="https://github.com/ledgerloops/strategy-pit">Strategy Pit</a> repository, I'm currently pitching different decentralised loop detection algorithms against each other. I hope to have something working before the
+      What is probably a more fundamental economic construct than payment is what the MyCHIPs project calls a "credit lift", i.e. a transaction in which a number of debts are (partially) netted against each other.
+      LedgerLoops offers three mechanisms that can help with this.</p>
+    <h3>Decentralized Loop Detection (DLD)</h3>
+      <p>In the <a href="https://github.com/ledgerloops/strategy-pit">Strategy Pit</a> repository, I'm currently pitching different decentralised loop detection algorithms against each other. I hope to have something working before the
       <a href="https://commonseconomy.notion.site/COLLABORATIVE-FINANCE-2-Serving-Local-Communities-c2ae55edfce0439ab139b857ae8b3ee4">CoFi 2 gathering in Banja Luka</a>.</p>
-    <h3>Hashlocked Loop Resolution (HLR)</h3>
-    <p>The "challenge and trigger" loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be described as "making an Interledger payment to yourself", or as "a DEX on trustlines".
+    <h3>Lift Negotiation</h3>
+    <p>In our current research, we assume that a credit lift is negotiated independently from the negotiation of trades. This is fine if there is enough local credit available in the network, and cost functions
+      are more or less linear. In practice, a combined negotiation mechanism that optimizes trades and lifts at the same
+      time would probably be more widely applicable, for instance, to only let a trade happen if the resulting credit relationship can be settled immediately. So then the handover of the goods between two parties
+      and the credit lift cancel each other out for these two parties, and only their other credit balances change. In this situation we would call the lift a payment, and the payment and handover together would
+      constitute a sale.
+    </p>
+    <h3>Lift Resolution</h3>
+    <p>The "challenge and trigger" loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be
+      described as "making an Interledger payment to yourself", "making a rippling payment to yourself" or as "a DEX on trustlines". If you use a referee instead of a hashlock, then it is a <a href="https://mychips.org/">MyCHIPs</a> credit lift.
+      If you use a smart contract instead of a hashlock or referee, then this becomes similar to systems like <a href="https://sikoba.com/">Sikoba</a>, <a href="https://trustlines.network/">Trustlines Network</a>, and probably <a href=""https://twitter.com/cyclesmoney">CyclesMoney</a>.
+      then this is 
     There can be multiple variations of it in operation in the same credit network - for instance with / without timeouts, different mechanisms to express units of value, or with SHA-256 vs other hash functions.</p>
     </body>
 </html>
