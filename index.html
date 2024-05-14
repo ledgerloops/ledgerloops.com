@@ -46,7 +46,9 @@
       What is probably a more fundamental economic construct than payment is what the MyCHIPs project calls a "credit lift", i.e. a transaction in which a number of debts are (partially) netted against each other.
       LedgerLoops offers three mechanisms that can help with this.</p>
     <h3>Decentralized Loop Detection (DLD)</h3>
-      <p>In the <a href="https://github.com/ledgerloops/strategy-pit">Strategy Pit</a> repository, I'm currently pitching different decentralised loop detection algorithms against each other. I hope to have something working before the
+      <p>In the <a href="https://github.com/ledgerloops/strategy-pit">Strategy Pit</a> repository, I pitched different decentralised loop detection algorithms against each other.
+        I found one, which I simply call  <a href="https://github.com/ledgerloops/strategy-pit/blob/main/DLD.md">DLDt</a>, which seems to work.
+        I hope to present these results at the
       <a href="https://commonseconomy.notion.site/COLLABORATIVE-FINANCE-2-Serving-Local-Communities-c2ae55edfce0439ab139b857ae8b3ee4">CoFi 2 gathering in Belgium</a>.</p>
     <h3>Lift Negotiation</h3>
     <p>In our current research, we assume that a credit lift is negotiated independently from the negotiation of trades. This is fine if there is enough local credit available in the network, and cost functions
@@ -56,7 +58,10 @@
       constitute a sale (see <a href="https://michielbdejong.com/blog/32.html">my blogpost about lifts vs payments</a>).
     </p>
     <h3>Lift Resolution</h3>
-    <p>The "challenge and trigger" loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be
+    <p>There are various ways to execute a lift resolution, see <a href="https://github.com/ledgerloops/strategy-pit/blob/main/Lift-Resolution.md">Lift Resolution</a>
+    in the Strategy Pit repo for more details.</p>
+    <p>It's worth noting that many projects came up with different ways to do lift resolution.
+      The "challenge and trigger" loop resolution algorithm I invented in 2016 and described on this website as a <a href="./whispering-merchants.html">solution to the Whispering Merchants problem</a> can be
       described as "making an Interledger payment to yourself", "making a rippling payment to yourself" or as "a DEX on trustlines". If you use a referee instead of a hashlock, then it is a <a href="https://mychips.org/">MyCHIPs</a> credit lift.
       If you use a smart contract instead of a hashlock or referee, then this becomes similar to systems like <a href="https://sikoba.com/">Sikoba</a>, <a href="https://trustlines.network/">Trustlines Network</a>, and probably <a href=""https://twitter.com/cyclesmoney">CyclesMoney</a>.
  
