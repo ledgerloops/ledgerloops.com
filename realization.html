@@ -213,21 +213,18 @@ Transaction <span class="hljs-number">5</span>c: <span class="hljs-keyword">Node
                                 </table>
                                 <p>The total deployed balance has now been reduced by 3 times 25 units, from 50 + (150-25) + 25 = 200 units to (50-25) + (150-25-25) + (25-25) = 125 units.</p>
                                 <h3 id="performance">Performance</h3>
-                                <h4 id="bandwidth">Bandwidth</h4>
-                                <p>In the simulation, our algorithm triggered an average of 13 messages per transaction. This includes the transfer message itself, plus all probe and nack messages used for loop detection, plus all scout, propose and commit used for loop removal. The messages were roughly 64 bytes each, so the total amount of bandwidth used for one transfer was roughly 1 Kb.</p>
-                                <p>We think this is a very reasonable requirement on modern internet-connected systems.</p>
-                                <p>Processor Time using a benchmark bird&#39;s eye view algorithm in a single thread took 21 seconds.</p>
-                                <p>The simulation, reading all 440,000 <code>STANDARD</code> transactions from the <code>sarafu_txns_20200125-20210615.csv</code> file,
-keeping track of the balances of each of the 40,000 participants, and detecting 7,000 loops in a single thread, took 90 seconds.</p>
-                                <p>In these 90 seconds, 5 million messages were processed, so this is equivalent to 60,000 messages processed per second, in a single-thread, on a laptop from 2019.</p>
-                                <p>We think this is also a very reasonable Processor Time requirement.</p>
+                                <h4 id="bandwidth">Snake Game Search</h4>
+                                <p>Until recently, most loop detection algorithms were based on min-cost-flow (MCF) algorithms. However, a decentralised implementation of MCF would require nodes that are not part of the globally best solution to cooperate altruistically. We therefore explored the use of &quot;Snake Game&quot; search algorithms, in which forwarded messages between nodes cause a 'snake' to form through the network, similar to the Snake Game that was popular on feature phones.</p>
+                                <p>The presence of a loop would cause the &quot;snake&quot; to encounter its own &quot;tail&quot;. Our <a href="https://github.com/ledgerloops/strategy-pit?tab=readme-ov-file#sarafu-based-netting-challenge">strategy pit</a> compares such a snake-like Depth-First Search (DFS) algorithm against MCF.</p>
+                                
                                 <h3 id="conclusion">Conclusion</h3>
                                 <h4 id="observations">Observations</h4>
-                                <p>The current algorithm is a first versions, and we expect that over time it will get even better. However, the current performance is very impressive both in terms of low cost and in terms of high benefits.</p>
-                                <h4 id="tech-preview">Tech Preview</h4>
-                                <p>Our implementation of the LedgerLoops algorithm is now available for use in technology pilot projects. Please contact ledgerloops@pondersource.com to book a free demonstration.</p>
+                                <p>The results are very encouraging. MCF does clear more debt, namely 67% instead of 60%, so snake-like DFS is underperforming by about 10%. But we believe this is an acceptable performance gap, and have plans for enhancements that will make this gap even smaller.</p>
+                                <p>The currently tested DFS algorithm is written in 350 lines of TypeScript and finds around 1,000 loops per second in a single execution thread on a regular modern laptop.</p>
                                 <h4 id="algorithm-open-standard">Algorithm Open Standard</h4>
-                                <p>We invite other implementers to implement software compatible with ours, by following the IETF internet draft which will be published soon.</p>
+                                <p>We are working on a messaging-based version of this algorithm that uses the messaging protocol specified by the <a href="https://datatracker.ietf.org/doc/draft-dejong-decentralized-cycle-detection/">Decentralized Cycle Detection</a> Internet Draft, and this is rather straightforward when using a central orchestrator to decide which node moves next.</p>
+                                <h4 id="tech-preview">Tech Preview</h4>
+                                <p>So far, it has proven more difficult than we had anticipated to make the algorithm run not only through node-to-node messaging but also without any central coordination, but we're making good progress on this goal and hope to launch an MVP of a fully peer-to-peer obligation clearing network in 2025.</p>
         </section>
         <section data-bs-version="5.1" class="news08 cid-ur9axhZok2" id="news08-1c">
             <div class="container-fluid">
