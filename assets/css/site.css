@@ -3,3 +3,5 @@
 @media(max-width:850px){.wrap{width:calc(100% - 40px)}.site-header{flex-direction:column;align-items:flex-start;gap:18px}.hero{padding:50px 0}.split{grid-template-columns:1fr;gap:32px}.columns{grid-template-columns:1fr;gap:16px}.columns article{max-width:620px}.site-footer{flex-direction:column;gap:0}.site-footer a{margin:0 18px 0 0}.page-intro{padding-top:45px}.section{padding:42px 0}.repo-list{grid-template-columns:1fr}}
 @media(max-width:440px){body{font-size:16px}.wrap{width:calc(100% - 32px)}h1{font-size:46px}nav{gap:8px 18px}.lede{font-size:21px}.loop-panel{padding:16px}.eyebrow{font-size:10px}.panel-heading{font-size:10px}.repo-list article{padding:20px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.wordmark{display:inline-flex;align-items:center;gap:12px}.wordmark img{display:block;width:96px;height:58px;object-fit:contain}

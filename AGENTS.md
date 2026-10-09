@@ -4,6 +4,8 @@
 
 This repository is the public LedgerLoops website, not the current protocol implementation. The site should feel like a grassroots programmers’ project: curious, technically concrete, open to experimentation, and candid about unfinished work. The owner requested a cypherpunk rewrite in October 2026. Favor local trust, user-controlled ledgers, open protocols, and contributions over business growth, sales copy, or promises of financial freedom.
 
+Keep the existing green loop logo (`assets/images/ledgerloops-logo-new-144x87.jpg`) in the site header. The owner builds with coding tools and does not hand-write code; prefer inclusive language such as “People building their own tools” over “People who write code.”
+
 Use **LedgerLoops** consistently. Explain terms before relying on them. Separate aspirations, historical results, and behavior verified in a particular implementation. Cryptographic coordination does not eliminate counterparty trust, guarantee anonymity, or physically enforce delivery. An Internet-Draft is not an adopted IETF standard. Do not describe every repository as having the website’s historical CC BY-SA license; check individual licenses.
 
 ## Website development
